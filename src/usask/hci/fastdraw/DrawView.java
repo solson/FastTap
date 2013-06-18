@@ -3,6 +3,7 @@ package usask.hci.fastdraw;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
 import android.view.MotionEvent;
 import android.view.View;
@@ -16,7 +17,7 @@ public class DrawView extends View {
     public DrawView(Context c) {
         super(c);
 
-		mTool = new PencilTool(0xFFFF0000);
+		mTool = new PenTool(Color.RED, 16);
         mBitmapPaint = new Paint(Paint.DITHER_FLAG);
     }
 	
