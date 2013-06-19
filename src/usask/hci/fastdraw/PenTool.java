@@ -50,6 +50,10 @@ public class PenTool implements Tool {
         canvas.drawLine(point.x, point.y, x, y, mPaint);
         mPoints.delete(id);
 	}
+	
+	public void clearFingers() {
+		mPoints.clear();
+	}
 
 	@Override
 	public String getName() {

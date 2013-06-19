@@ -1,5 +1,8 @@
 package usask.hci.fastdraw;
 
+import java.util.Timer;
+import java.util.TimerTask;
+
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -18,9 +21,14 @@ public class DrawView extends View {
 	private final int mRows = 6;
 	private float mColWidth;
 	private float mRowHeight;
-	private boolean showCM;
+	private boolean mShowCM;
 	private Paint mCMPaint;
 	private int mSelected;
+	private long mPressedOutsideTime;
+	private long mPressedInsideTime;
+	private boolean mSwitchTools;
+	private int mFingerInside;
+    boolean mCheckToolSwitch;
 
     public DrawView(Context c) {
         super(c);
@@ -31,6 +39,24 @@ public class DrawView extends View {
         mCMPaint.setTextSize(26);
         mCMPaint.setTextAlign(Align.CENTER);
         mSelected = -1;
+        mFingerInside = -1;
+        mCheckToolSwitch = true;
+        
+        Timer timer = new Timer();
+        timer.schedule(new TimerTask() {
+        	@Override
+        	public void run() {
+        		long now = System.nanoTime();
+        		
+        		if (now - mPressedOutsideTime < 1000 * 1000 * 200 && now - mPressedInsideTime < 1000 * 1000 * 200 && mCheckToolSwitch) {
+        			mSwitchTools = true;
+        			mCheckToolSwitch = false;
+        		} else if (mFingerInside != -1) {
+        			mShowCM = true;
+        			mTool.clearFingers();
+        		}
+        	}
+        }, 25, 25);
     }
 	
 	@Override
@@ -51,7 +77,7 @@ public class DrawView extends View {
     	canvas.drawRect(0, mRowHeight * (mRows - 1), mColWidth, mRowHeight * mRows, mCMPaint);
     	mCMPaint.setColor(0x88888888);
     	
-        if (showCM) {
+        if (mShowCM) {
         	for (int i = 0; i < mRows; i++) {
         		float top = i * mRowHeight;    		
         		canvas.drawLine(0, top, mColWidth * mCols, top, mCMPaint);
@@ -81,23 +107,32 @@ public class DrawView extends View {
         switch (event.getActionMasked()) {
             case MotionEvent.ACTION_DOWN:
             case MotionEvent.ACTION_POINTER_DOWN:
-            	if (event.getPointerCount() == 1 && x < mColWidth && y > mRowHeight * (mRows - 1)) {
-            		showCM = true;
-            	} else if (showCM && event.getPointerCount() == 2) {
+            	long now = System.nanoTime();
+            	if (x < mColWidth && y > mRowHeight * (mRows - 1)) {
+            		mFingerInside = id;
+            		mPressedInsideTime = now;
+            		mCheckToolSwitch = true;
+            	} else {
             		int col = (int) (x / mColWidth);
             		int row = (int) (y / mRowHeight);
             		mSelected = row * mCols + col;
-        			mTool = getSelectedTool(mSelected);
+            		
+            		mPressedOutsideTime = now;
+            		mCheckToolSwitch = true;
             	}
             	
-            	if (showCM)
+            	if (mShowCM) {
+            		if (event.getPointerCount() == 2)
+            			mTool = getSelectedTool(mSelected);
+            		
             		break;
+            	}
             	
             	mTool.touchStart(id, x, y, mCanvas);
                 break;
                 
             case MotionEvent.ACTION_MOVE:
-            	if (showCM)
+            	if (mShowCM)
             		break;
             	
             	int count = event.getPointerCount();
@@ -112,15 +147,24 @@ public class DrawView extends View {
                 
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_POINTER_UP:
-            	if (showCM) {
+            	if (id == mFingerInside)
+            		mFingerInside = -1;
+            	
+            	if (mShowCM) {
             		if (event.getPointerCount() == 1) {
-            			showCM = false;
+            			mShowCM = false;
             		}
-            		
-            		break;
+            	} else {
+            		mTool.touchStop(id, x, y, mCanvas);
             	}
             	
-            	mTool.touchStop(id, x, y, mCanvas);
+        		if (event.getPointerCount() == 1) {
+        	    	if (mSwitchTools) {
+        				mTool = getSelectedTool(mSelected);
+        				mSwitchTools = false;
+        	    	}
+        		}
+        		
                 break;
         }
 
