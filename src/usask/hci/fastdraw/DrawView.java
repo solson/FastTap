@@ -87,6 +87,7 @@ public class DrawView extends View {
             		int col = (int) (x / mColWidth);
             		int row = (int) (y / mRowHeight);
             		mSelected = row * mCols + col;
+        			mTool = getSelectedTool(mSelected);
             	}
             	
             	if (showCM)
@@ -114,7 +115,6 @@ public class DrawView extends View {
             	if (showCM) {
             		if (event.getPointerCount() == 1) {
             			showCM = false;
-            			handleSelection(mSelected);
             		}
             		
             		break;
@@ -128,19 +128,12 @@ public class DrawView extends View {
         return true;
     }
     
-    private void handleSelection(int selected) {
+    private Tool getSelectedTool(int selected) {
     	switch (selected) {
-    		case 0:
-    			mTool = new PencilTool(Color.RED);
-    			break;
-    		case 1:
-    			mTool = new PenTool(Color.RED, 16);
-    			break;
-    		case 2:
-    			mTool = new EraserTool();
-    			break;
-    		default:
-    			break;
+    		case 0: return new PencilTool(Color.RED);
+    		case 1: return new PenTool(Color.RED, 16);
+    		case 2: return new EraserTool();
+    		default: return mTool;
     	}
     }
 }
