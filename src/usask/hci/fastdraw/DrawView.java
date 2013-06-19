@@ -55,7 +55,7 @@ public class DrawView extends View {
         		if (now - mPressedOutsideTime < 1000 * 1000 * 200 && now - mPressedInsideTime < 1000 * 1000 * 200 && mCheckToolSwitch) {
         			mSwitchTools = true;
         			mCheckToolSwitch = false;
-        		} else if (mFingerInside != -1) {
+        		} else if (mFingerInside != -1 && mCheckToolSwitch) {
         			mShowCM = true;
         			mTool.clearFingers();
         		}
@@ -111,23 +111,26 @@ public class DrawView extends View {
         switch (event.getActionMasked()) {
             case MotionEvent.ACTION_DOWN:
             case MotionEvent.ACTION_POINTER_DOWN:
+            	if (event.getPointerCount() == 1)
+            		mCheckToolSwitch = true;
+            	
             	long now = System.nanoTime();
             	if (x < mColWidth && y > mRowHeight * (mRows - 1)) {
             		mFingerInside = id;
             		mPressedInsideTime = now;
-            		mCheckToolSwitch = true;
             	} else {
             		int col = (int) (x / mColWidth);
             		int row = (int) (y / mRowHeight);
             		mSelected = row * mCols + col;
             		
             		mPressedOutsideTime = now;
-            		mCheckToolSwitch = true;
             	}
             	
             	if (mShowCM) {
             		if (event.getPointerCount() == 2) {
             			mTool = getSelectedTool(mSelected);
+            			mSwitchTools = false;
+            			mCheckToolSwitch = false;
             			mShowCM = false;
             			mFingerInside = -1;
             			
