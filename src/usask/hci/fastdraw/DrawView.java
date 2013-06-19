@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Paint.Align;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -27,6 +28,8 @@ public class DrawView extends View {
 		mTool = new PenTool(Color.RED, 16);
         mBitmapPaint = new Paint(Paint.DITHER_FLAG);
         mCMPaint = new Paint();
+        mCMPaint.setTextSize(26);
+        mCMPaint.setTextAlign(Align.CENTER);
         mSelected = -1;
     }
 	
@@ -63,6 +66,9 @@ public class DrawView extends View {
         	canvas.drawLine(0, top, right, top, mCMPaint);
         	canvas.drawLine(right, top, right, mRowHeight * mRows, mCMPaint);
         }
+
+    	float top = mRowHeight * (mRows - 1);
+        canvas.drawText(mTool.getName(), mColWidth / 2, top + mRowHeight / 2, mCMPaint);
     }
     
     @Override
