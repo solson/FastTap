@@ -19,8 +19,8 @@ public class DrawView extends View {
     private Canvas mCanvas;
     private Paint mBitmapPaint;
 	private Tool mTool;
-	private final int mCols = 5;
-	private final int mRows = 6;
+	private final int mCols = 4;
+	private final int mRows = 5;
 	private float mColWidth;
 	private float mRowHeight;
 	private boolean mShowCM;
