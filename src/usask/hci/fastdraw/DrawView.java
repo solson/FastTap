@@ -1,5 +1,7 @@
 package usask.hci.fastdraw;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -28,7 +30,8 @@ public class DrawView extends View {
 	private long mPressedInsideTime;
 	private boolean mSwitchTools;
 	private int mFingerInside;
-    boolean mCheckToolSwitch;
+    private boolean mCheckToolSwitch;
+    private Set<Integer> mIgnoredFingers;
 
     public DrawView(Context c) {
         super(c);
@@ -41,6 +44,7 @@ public class DrawView extends View {
         mSelected = -1;
         mFingerInside = -1;
         mCheckToolSwitch = true;
+        mIgnoredFingers = new HashSet<Integer>();
         
         Timer timer = new Timer();
         timer.schedule(new TimerTask() {
@@ -122,8 +126,14 @@ public class DrawView extends View {
             	}
             	
             	if (mShowCM) {
-            		if (event.getPointerCount() == 2)
+            		if (event.getPointerCount() == 2) {
             			mTool = getSelectedTool(mSelected);
+            			mShowCM = false;
+            			mFingerInside = -1;
+            			
+            			for (int i = 0; i < 2; i++)
+            				mIgnoredFingers.add(event.getPointerId(i));
+            		}
             		
             		break;
             	}
@@ -138,9 +148,14 @@ public class DrawView extends View {
             	int count = event.getPointerCount();
             	
             	for (int i = 0; i < count; i++) {
+            		int fingerId = event.getPointerId(i);
+            		
+            		if(mIgnoredFingers.contains(fingerId))
+            			continue;
+            		
                     float x2 = event.getX(i);
                     float y2 = event.getY(i);
-                	mTool.touchMove(event.getPointerId(i), x2, y2, mCanvas);
+                	mTool.touchMove(fingerId, x2, y2, mCanvas);
             	}
             	
                 break;
@@ -149,6 +164,11 @@ public class DrawView extends View {
             case MotionEvent.ACTION_POINTER_UP:
             	if (id == mFingerInside)
             		mFingerInside = -1;
+            	
+            	if (mIgnoredFingers.contains(id)) {
+            		mIgnoredFingers.remove(id);
+            		break;
+            	}
             	
             	if (mShowCM) {
             		if (event.getPointerCount() == 1) {
