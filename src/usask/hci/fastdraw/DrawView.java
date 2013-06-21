@@ -33,6 +33,7 @@ public class DrawView extends View {
     private boolean mCheckToolSwitch;
     private Set<Integer> mIgnoredFingers;
     private int mColor;
+    private Object[] mSelections;
 
     public DrawView(Context c) {
         super(c);
@@ -47,6 +48,14 @@ public class DrawView extends View {
         mFingerInside = -1;
         mCheckToolSwitch = true;
         mIgnoredFingers = new HashSet<Integer>();
+        
+        mSelections = new Object[] {
+        	new PencilTool(this), new PenTool(this, 16), new EraserTool(this), null,
+        	Color.BLACK, Color.RED, Color.GREEN, Color.BLUE,
+        	null, null, null, null,
+        	null, null, null, null,
+        	null, null, null, null
+        };
         
         Timer timer = new Timer();
         timer.schedule(new TimerTask() {
@@ -134,7 +143,7 @@ public class DrawView extends View {
             	
             	if (mShowCM) {
             		if (event.getPointerCount() == 2) {
-            			mTool = getSelectedTool(mSelected);
+            			changeSelection(mSelected);
             			mSwitchTools = false;
             			mCheckToolSwitch = false;
             			mShowCM = false;
@@ -189,7 +198,7 @@ public class DrawView extends View {
             	
         		if (event.getPointerCount() == 1) {
         	    	if (mSwitchTools) {
-        				mTool = getSelectedTool(mSelected);
+        				changeSelection(mSelected);
         				mSwitchTools = false;
         	    	}
         		}
@@ -201,19 +210,13 @@ public class DrawView extends View {
         return true;
     }
     
-    private Tool getSelectedTool(int selected) {
-    	Tool tool = mTool;
+    private void changeSelection(int selected) {
+    	Object selection = mSelections[selected];
     	
-    	switch (selected) {
-    		case 0: tool = new PencilTool(this); break;
-    		case 1: tool = new PenTool(this, 16); break;
-    		case 2: tool = new EraserTool(this); break;
-    		case 4: mColor = Color.BLACK; break;
-    		case 5: mColor = Color.RED; break;
-    		case 6: mColor = Color.GREEN; break;
-    		case 7: mColor = Color.BLUE; break;
+    	if (selection instanceof Tool) {
+    		mTool = (Tool) selection;
+    	} else if (selection instanceof Integer) {
+    		mColor = (Integer) selection;
     	}
-    	
-    	return tool;
     }
 }
