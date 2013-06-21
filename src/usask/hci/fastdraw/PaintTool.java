@@ -9,11 +9,11 @@ import android.graphics.Paint.Join;
 import android.graphics.Paint.Style;
 import android.util.SparseArray;
 
-public class PenTool extends Tool {
+public class PaintTool extends Tool {
 	private Paint mPaint;
 	private SparseArray<PointF> mPoints;
 	
-	public PenTool(DrawView drawView, int width) {
+	public PaintTool(DrawView drawView, int width) {
 		super(drawView);
 		
         mPaint = new Paint();
