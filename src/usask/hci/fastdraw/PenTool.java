@@ -9,15 +9,16 @@ import android.graphics.Paint.Join;
 import android.graphics.Paint.Style;
 import android.util.SparseArray;
 
-public class PenTool implements Tool {
+public class PenTool extends Tool {
 	private Paint mPaint;
 	private SparseArray<PointF> mPoints;
 	
-	public PenTool(int color, int width) {
+	public PenTool(DrawView drawView, int width) {
+		super(drawView);
+		
         mPaint = new Paint();
         mPaint.setAntiAlias(true);
         mPaint.setDither(true);
-        mPaint.setColor(color);
         mPaint.setStyle(Style.STROKE);
         mPaint.setStrokeJoin(Join.ROUND);
         mPaint.setStrokeCap(Cap.ROUND);
@@ -39,6 +40,7 @@ public class PenTool implements Tool {
     	Path path = new Path();
     	path.moveTo(point.x, point.y);
     	path.quadTo(point.x, point.y, midX, midY);
+        mPaint.setColor(getColor());
     	canvas.drawPath(path, mPaint);
     	
     	point.x = midX;
@@ -47,6 +49,7 @@ public class PenTool implements Tool {
 
 	public void touchStop(int id, float x, float y, Canvas canvas) {
     	PointF point = mPoints.get(id);
+        mPaint.setColor(getColor());
         canvas.drawLine(point.x, point.y, x, y, mPaint);
         mPoints.delete(id);
 	}

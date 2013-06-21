@@ -32,11 +32,13 @@ public class DrawView extends View {
 	private int mFingerInside;
     private boolean mCheckToolSwitch;
     private Set<Integer> mIgnoredFingers;
+    private int mColor;
 
     public DrawView(Context c) {
         super(c);
 
-		mTool = new PenTool(Color.RED, 16);
+        mColor = Color.RED;
+		mTool = new PenTool(this, 16);
         mBitmapPaint = new Paint(Paint.DITHER_FLAG);
         mCMPaint = new Paint();
         mCMPaint.setTextSize(26);
@@ -61,6 +63,10 @@ public class DrawView extends View {
         		}
         	}
         }, 25, 25);
+    }
+    
+    public int getColor() {
+    	return mColor;
     }
 	
 	@Override
@@ -196,11 +202,18 @@ public class DrawView extends View {
     }
     
     private Tool getSelectedTool(int selected) {
+    	Tool tool = mTool;
+    	
     	switch (selected) {
-    		case 0: return new PencilTool(Color.RED);
-    		case 1: return new PenTool(Color.RED, 16);
-    		case 2: return new EraserTool();
-    		default: return mTool;
+    		case 0: tool = new PencilTool(this); break;
+    		case 1: tool = new PenTool(this, 16); break;
+    		case 2: tool = new EraserTool(this); break;
+    		case 4: mColor = Color.BLACK; break;
+    		case 5: mColor = Color.RED; break;
+    		case 6: mColor = Color.GREEN; break;
+    		case 7: mColor = Color.BLUE; break;
     	}
+    	
+    	return tool;
     }
 }

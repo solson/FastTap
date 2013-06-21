@@ -2,10 +2,20 @@ package usask.hci.fastdraw;
 
 import android.graphics.Canvas;
 
-public interface Tool {
-	public void touchStart(int id, float x, float y, Canvas canvas);
-	public void touchMove(int id, float x, float y, Canvas canvas);
-	public void touchStop(int id, float x, float y, Canvas canvas);
-	public void clearFingers();
-	public String getName();
+public abstract class Tool {
+	private DrawView mDrawView;
+	
+	public Tool(DrawView drawView) {
+		mDrawView = drawView;
+	}
+	
+	public int getColor() {
+		return mDrawView.getColor();
+	}
+	
+	public abstract void touchStart(int id, float x, float y, Canvas canvas);
+	public abstract void touchMove(int id, float x, float y, Canvas canvas);
+	public abstract void touchStop(int id, float x, float y, Canvas canvas);
+	public abstract void clearFingers();
+	public abstract String getName();
 }

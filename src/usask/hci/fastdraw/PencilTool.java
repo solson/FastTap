@@ -1,8 +1,8 @@
 package usask.hci.fastdraw;
 
 public class PencilTool extends PenTool {
-	public PencilTool(int color) {
-		super(color, 1);
+	public PencilTool(DrawView drawView) {
+		super(drawView, 1);
 	}
 
 	@Override
