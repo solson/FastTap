@@ -34,6 +34,7 @@ public class DrawView extends View {
     private Set<Integer> mIgnoredFingers;
     private int mColor;
     private Object[] mSelections;
+    private String[] mSelectionNames;
 
     public DrawView(Context c) {
         super(c);
@@ -55,6 +56,14 @@ public class DrawView extends View {
         	null, null, null, null,
         	null, null, null, null,
         	null, null, null, null
+        };
+        
+        mSelectionNames = new String[] {
+    		"Pencil", "Pen", "Eraser", "",
+    		"Black", "Red", "Green", "Blue",
+    		"", "", "", "",
+    		"", "", "", "",
+    		"", "", "", ""
         };
         
         Timer timer = new Timer();
@@ -104,6 +113,13 @@ public class DrawView extends View {
         	for (int i = 0; i < mCols; i++) {
         		float left = i * mColWidth;    		
         		canvas.drawLine(left, 0, left, mRowHeight * mRows, mCMPaint);
+        	}
+        	
+        	for (int y = 0; y < mRows; y++) {
+        		for (int x = 0; x < mCols; x++) {
+        			int i = y * mCols + x;
+        			canvas.drawText(mSelectionNames[i], (x + 0.5f) * mColWidth, (y + 0.5f) * mRowHeight, mCMPaint);
+        		}
         	}
         } else {
         	float top = mRowHeight * (mRows - 1);
