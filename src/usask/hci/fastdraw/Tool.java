@@ -17,5 +17,4 @@ public abstract class Tool {
 	public abstract void touchMove(int id, float x, float y, Canvas canvas);
 	public abstract void touchStop(int id, float x, float y, Canvas canvas);
 	public abstract void clearFingers();
-	public abstract String getName();
 }

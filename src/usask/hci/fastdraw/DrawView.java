@@ -35,12 +35,12 @@ public class DrawView extends View {
     private int mColor;
     private Object[] mSelections;
     private String[] mSelectionNames;
+    private String mToolName;
+    private String mColorName;
 
     public DrawView(Context c) {
         super(c);
 
-        mColor = Color.RED;
-		mTool = new PenTool(this, 16);
         mBitmapPaint = new Paint(Paint.DITHER_FLAG);
         mCMPaint = new Paint();
         mCMPaint.setTextSize(26);
@@ -65,6 +65,10 @@ public class DrawView extends View {
     		"", "", "", "",
     		"", "", "", ""
         };
+        
+        // Default to red pen
+        changeSelection(1);
+        changeSelection(5);
         
         Timer timer = new Timer();
         timer.schedule(new TimerTask() {
@@ -129,7 +133,8 @@ public class DrawView extends View {
         }
 
     	float top = mRowHeight * (mRows - 1);
-        canvas.drawText(mTool.getName(), mColWidth / 2, top + mRowHeight / 2, mCMPaint);
+        canvas.drawText(mToolName, mColWidth / 2, top + mRowHeight / 2 - 20, mCMPaint);
+        canvas.drawText(mColorName, mColWidth / 2, top + mRowHeight / 2 + 20, mCMPaint);
     }
     
     @Override
@@ -231,8 +236,10 @@ public class DrawView extends View {
     	
     	if (selection instanceof Tool) {
     		mTool = (Tool) selection;
+    		mToolName = mSelectionNames[selected];
     	} else if (selection instanceof Integer) {
     		mColor = (Integer) selection;
+    		mColorName = mSelectionNames[selected];
     	}
     }
 }

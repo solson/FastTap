@@ -57,9 +57,4 @@ public class PenTool extends Tool {
 	public void clearFingers() {
 		mPoints.clear();
 	}
-
-	@Override
-	public String getName() {
-		return "Pen";
-	}
 }

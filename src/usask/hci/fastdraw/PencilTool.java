@@ -4,9 +4,4 @@ public class PencilTool extends PenTool {
 	public PencilTool(DrawView drawView) {
 		super(drawView, 1);
 	}
-
-	@Override
-	public String getName() {
-		return "Pencil";
-	}
 }
