@@ -13,8 +13,9 @@ public abstract class Tool {
 		return mDrawView.getColor();
 	}
 	
-	public abstract void touchStart(int id, float x, float y, Canvas canvas);
-	public abstract void touchMove(int id, float x, float y, Canvas canvas);
+	public abstract void touchStart(int id, float x, float y);
+	public abstract void touchMove(int id, float x, float y);
 	public abstract void touchStop(int id, float x, float y, Canvas canvas);
 	public abstract void clearFingers();
+	public abstract void draw(Canvas canvas);
 }

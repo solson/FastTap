@@ -12,6 +12,7 @@ import android.util.SparseArray;
 public class PaintTool extends Tool {
 	private Paint mPaint;
 	private SparseArray<PointF> mPoints;
+	private SparseArray<Path> mPaths;
 	
 	public PaintTool(DrawView drawView, int width) {
 		super(drawView);
@@ -25,36 +26,48 @@ public class PaintTool extends Tool {
         mPaint.setStrokeWidth(width);
         
         mPoints = new SparseArray<PointF>();
+        mPaths = new SparseArray<Path>();
 	}
     
-	public void touchStart(int id, float x, float y, Canvas canvas) {
+	public void touchStart(int id, float x, float y) {
+		Path path = new Path();
+		path.moveTo(x, y);
+		
+		mPaths.put(id, path);
     	mPoints.put(id, new PointF(x, y));
 	}
 
-	public void touchMove(int id, float x, float y, Canvas canvas) {
+	public void touchMove(int id, float x, float y) {
     	PointF point = mPoints.get(id);
+    	Path path = mPaths.get(id);
     	
     	float midX = (point.x + x) / 2;
     	float midY = (point.y + y) / 2;
     	
-    	Path path = new Path();
-    	path.moveTo(point.x, point.y);
     	path.quadTo(point.x, point.y, midX, midY);
-        mPaint.setColor(getColor());
-    	canvas.drawPath(path, mPaint);
     	
-    	point.x = midX;
-    	point.y = midY;
+    	point.x = x;
+    	point.y = y;
 	}
 
 	public void touchStop(int id, float x, float y, Canvas canvas) {
-    	PointF point = mPoints.get(id);
-        mPaint.setColor(getColor());
-        canvas.drawLine(point.x, point.y, x, y, mPaint);
+    	Path path = mPaths.get(id);
+    	canvas.drawPath(path, mPaint);
+    	
         mPoints.delete(id);
+    	mPaths.delete(id);
 	}
 	
 	public void clearFingers() {
 		mPoints.clear();
+	}
+	
+	public void draw(Canvas canvas) {
+        mPaint.setColor(getColor());
+        
+        for (int i = 0; i < mPaths.size(); i++) {
+        	Path path = mPaths.valueAt(i);
+        	canvas.drawPath(path, mPaint);
+        }
 	}
 }

@@ -104,6 +104,7 @@ public class DrawView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         canvas.drawBitmap(mBitmap, 0, 0, mBitmapPaint);
+        mTool.draw(canvas);
         
     	mCMPaint.setColor(0x88FFFF00);
     	canvas.drawRect(0, mRowHeight * (mRows - 1), mColWidth, mRowHeight * mRows, mCMPaint);
@@ -177,7 +178,7 @@ public class DrawView extends View {
             		break;
             	}
             	
-            	mTool.touchStart(id, x, y, mCanvas);
+            	mTool.touchStart(id, x, y);
                 break;
                 
             case MotionEvent.ACTION_MOVE:
@@ -194,7 +195,7 @@ public class DrawView extends View {
             		
                     float x2 = event.getX(i);
                     float y2 = event.getY(i);
-                	mTool.touchMove(fingerId, x2, y2, mCanvas);
+                	mTool.touchMove(fingerId, x2, y2);
             	}
             	
                 break;
