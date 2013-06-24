@@ -2,35 +2,24 @@ package usask.hci.fastdraw;
 
 import android.graphics.Canvas;
 import android.graphics.Paint;
-import android.graphics.PointF;
-import android.graphics.Paint.Cap;
-import android.graphics.Paint.Join;
 import android.graphics.Paint.Style;
+import android.graphics.PointF;
 import android.util.SparseArray;
 
-public class LineTool extends Tool {
+public class CircleTool extends Tool {
 	private Paint mPaint;
-	private Paint mCirclePaint;
 	private SparseArray<PointF> mOrigins;
 	private SparseArray<PointF> mEnds;
-	private final int mWidth = 16;
-
-	public LineTool(DrawView drawView) {
+	
+	public CircleTool(DrawView drawView) {
 		super(drawView);
 		
 		mPaint = new Paint();
         mPaint.setAntiAlias(true);
         mPaint.setDither(true);
         mPaint.setStyle(Style.STROKE);
-        mPaint.setStrokeCap(Cap.ROUND);
-        mPaint.setStrokeJoin(Join.ROUND);
-        mPaint.setStrokeWidth(mWidth);
+        mPaint.setStrokeWidth(16);
         
-        mCirclePaint = new Paint();
-        mCirclePaint.setAntiAlias(true);
-        mCirclePaint.setDither(true);
-        mCirclePaint.setStyle(Style.FILL);
-
 		mOrigins = new SparseArray<PointF>();
 		mEnds = new SparseArray<PointF>();
 	}
@@ -71,11 +60,15 @@ public class LineTool extends Tool {
 		PointF end = mEnds.get(id);
 		
 		if (end != null) {
+			float dx = origin.x - end.x;
+			float dy = origin.y - end.y;
+			float dist = (float)Math.sqrt(dx*dx + dy*dy);
+			
+			float midX = (origin.x + end.x) / 2;
+			float midY = (origin.y + end.y) / 2;
+			
 			mPaint.setColor(getColor());
-			mCirclePaint.setColor(getColor());
-			canvas.drawLine(origin.x, origin.y, end.x, end.y, mPaint);
-			canvas.drawCircle(origin.x, origin.y, (float)mWidth / 2, mCirclePaint);
-			canvas.drawCircle(end.x, end.y, (float)mWidth / 2, mCirclePaint);
+			canvas.drawCircle(midX, midY, dist / 2, mPaint);
 		}
 	}
 }

@@ -54,7 +54,7 @@ public class DrawView extends View {
         	new PaintTool(this, 1), new PaintTool(this, 16), new PaintTool(this, 75), new LineTool(this),
         	Color.BLACK, Color.RED, Color.GREEN, Color.BLUE,
         	Color.WHITE, Color.YELLOW, Color.CYAN, Color.MAGENTA,
-        	null, null, null, null,
+        	new CircleTool(this), null, null, null,
         	null, null, null, null
         };
         
@@ -62,7 +62,7 @@ public class DrawView extends View {
     		"Pencil", "Pen", "Paintbrush", "Line",
     		"Black", "Red", "Green", "Blue",
     		"White", "Yellow", "Cyan", "Purple",
-    		"", "", "", "",
+    		"Circle", "", "", "",
     		"", "", "", ""
         };
         
