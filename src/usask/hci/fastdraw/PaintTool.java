@@ -60,6 +60,7 @@ public class PaintTool extends Tool {
 	
 	public void clearFingers() {
 		mPoints.clear();
+		mPaths.clear();
 	}
 	
 	public void draw(Canvas canvas) {

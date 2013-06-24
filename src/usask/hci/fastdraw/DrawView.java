@@ -51,7 +51,7 @@ public class DrawView extends View {
         mIgnoredFingers = new HashSet<Integer>();
         
         mSelections = new Object[] {
-        	new PaintTool(this, 1), new PaintTool(this, 16), new PaintTool(this, 75), null,
+        	new PaintTool(this, 1), new PaintTool(this, 16), new PaintTool(this, 75), new LineTool(this),
         	Color.BLACK, Color.RED, Color.GREEN, Color.BLUE,
         	Color.WHITE, Color.YELLOW, Color.CYAN, Color.MAGENTA,
         	null, null, null, null,
@@ -59,7 +59,7 @@ public class DrawView extends View {
         };
         
         mSelectionNames = new String[] {
-    		"Pencil", "Pen", "Paintbrush", "",
+    		"Pencil", "Pen", "Paintbrush", "Line",
     		"Black", "Red", "Green", "Blue",
     		"White", "Yellow", "Cyan", "Purple",
     		"", "", "", "",
