@@ -14,7 +14,7 @@ public class PaintTool extends Tool {
 	private SparseArray<PointF> mPoints;
 	private SparseArray<Path> mPaths;
 	
-	public PaintTool(DrawView drawView, int width) {
+	public PaintTool(DrawView drawView) {
 		super(drawView);
 		
         mPaint = new Paint();
@@ -23,7 +23,6 @@ public class PaintTool extends Tool {
         mPaint.setStyle(Style.STROKE);
         mPaint.setStrokeJoin(Join.ROUND);
         mPaint.setStrokeCap(Cap.ROUND);
-        mPaint.setStrokeWidth(width);
         
         mPoints = new SparseArray<PointF>();
         mPaths = new SparseArray<Path>();
@@ -52,6 +51,9 @@ public class PaintTool extends Tool {
 
 	public void touchStop(int id, float x, float y, Canvas canvas) {
     	Path path = mPaths.get(id);
+    	
+        mPaint.setColor(getColor());
+        mPaint.setStrokeWidth(getThickness());
     	canvas.drawPath(path, mPaint);
     	
         mPoints.delete(id);
@@ -65,6 +67,7 @@ public class PaintTool extends Tool {
 	
 	public void draw(Canvas canvas) {
         mPaint.setColor(getColor());
+        mPaint.setStrokeWidth(getThickness());
         
         for (int i = 0; i < mPaths.size(); i++) {
         	Path path = mPaths.valueAt(i);

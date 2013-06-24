@@ -13,7 +13,6 @@ public class LineTool extends Tool {
 	private Paint mCirclePaint;
 	private SparseArray<PointF> mOrigins;
 	private SparseArray<PointF> mEnds;
-	private final int mWidth = 16;
 
 	public LineTool(DrawView drawView) {
 		super(drawView);
@@ -24,7 +23,6 @@ public class LineTool extends Tool {
         mPaint.setStyle(Style.STROKE);
         mPaint.setStrokeCap(Cap.ROUND);
         mPaint.setStrokeJoin(Join.ROUND);
-        mPaint.setStrokeWidth(mWidth);
         
         mCirclePaint = new Paint();
         mCirclePaint.setAntiAlias(true);
@@ -72,10 +70,12 @@ public class LineTool extends Tool {
 		
 		if (end != null) {
 			mPaint.setColor(getColor());
+	        mPaint.setStrokeWidth(getThickness());
 			mCirclePaint.setColor(getColor());
+	        
 			canvas.drawLine(origin.x, origin.y, end.x, end.y, mPaint);
-			canvas.drawCircle(origin.x, origin.y, (float)mWidth / 2, mCirclePaint);
-			canvas.drawCircle(end.x, end.y, (float)mWidth / 2, mCirclePaint);
+			canvas.drawCircle(origin.x, origin.y, (float)getThickness() / 2, mCirclePaint);
+			canvas.drawCircle(end.x, end.y, (float)getThickness() / 2, mCirclePaint);
 		}
 	}
 }

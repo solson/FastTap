@@ -13,6 +13,10 @@ public abstract class Tool {
 		return mDrawView.getColor();
 	}
 	
+	public int getThickness() {
+		return mDrawView.getThickness();
+	}
+	
 	public abstract void touchStart(int id, float x, float y);
 	public abstract void touchMove(int id, float x, float y);
 	public abstract void touchStop(int id, float x, float y, Canvas canvas);

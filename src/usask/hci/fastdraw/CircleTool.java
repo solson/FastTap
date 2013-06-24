@@ -18,7 +18,6 @@ public class CircleTool extends Tool {
         mPaint.setAntiAlias(true);
         mPaint.setDither(true);
         mPaint.setStyle(Style.STROKE);
-        mPaint.setStrokeWidth(16);
         
 		mOrigins = new SparseArray<PointF>();
 		mEnds = new SparseArray<PointF>();
@@ -68,6 +67,7 @@ public class CircleTool extends Tool {
 			float midY = (origin.y + end.y) / 2;
 			
 			mPaint.setColor(getColor());
+	        mPaint.setStrokeWidth(getThickness());
 			canvas.drawCircle(midX, midY, dist / 2, mPaint);
 		}
 	}

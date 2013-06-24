@@ -18,7 +18,6 @@ public class DrawView extends View {
 	private Bitmap mBitmap;
     private Canvas mCanvas;
     private Paint mBitmapPaint;
-	private Tool mTool;
 	private final int mCols = 4;
 	private final int mRows = 5;
 	private float mColWidth;
@@ -32,11 +31,29 @@ public class DrawView extends View {
 	private int mFingerInside;
     private boolean mCheckToolSwitch;
     private Set<Integer> mIgnoredFingers;
+    private Selection[] mSelections;
+	private Tool mTool;
     private int mColor;
-    private Object[] mSelections;
-    private String[] mSelectionNames;
+    private int mThickness;
     private String mToolName;
     private String mColorName;
+    private String mThicknessName;
+
+    private enum SelectionType {
+    	TOOL, COLOR, THICKNESS
+    }
+    
+	private class Selection {
+		public Object object;
+		public String name;
+		public SelectionType type;
+		
+		public Selection(Object object, String name, SelectionType type) {
+			this.object = object;
+			this.name = name;
+			this.type = type;
+		}
+	}
 
     public DrawView(Context c) {
         super(c);
@@ -50,25 +67,37 @@ public class DrawView extends View {
         mCheckToolSwitch = true;
         mIgnoredFingers = new HashSet<Integer>();
         
-        mSelections = new Object[] {
-        	new PaintTool(this, 1), new PaintTool(this, 16), new PaintTool(this, 75), new LineTool(this),
-        	Color.BLACK, Color.RED, Color.GREEN, Color.BLUE,
-        	Color.WHITE, Color.YELLOW, Color.CYAN, Color.MAGENTA,
-        	new CircleTool(this), null, null, null,
-        	null, null, null, null
+        mSelections = new Selection[] {
+        	new Selection(new PaintTool(this), "Paintbrush", SelectionType.TOOL),
+        	new Selection(new LineTool(this), "Line", SelectionType.TOOL),
+        	new Selection(new CircleTool(this), "Circle", SelectionType.TOOL),
+        	null,
+        	
+        	new Selection(Color.BLACK, "Black", SelectionType.COLOR),
+        	new Selection(Color.RED, "Red", SelectionType.COLOR),
+        	new Selection(Color.GREEN, "Green", SelectionType.COLOR),
+        	new Selection(Color.BLUE, "Blue", SelectionType.COLOR),
+
+        	new Selection(Color.WHITE, "White", SelectionType.COLOR),
+        	new Selection(Color.YELLOW, "Yellow", SelectionType.COLOR),
+        	new Selection(Color.CYAN, "Cyan", SelectionType.COLOR),
+        	new Selection(Color.MAGENTA, "Magenta", SelectionType.COLOR),
+
+        	new Selection(1, "Fine", SelectionType.THICKNESS),
+        	new Selection(6, "Thin", SelectionType.THICKNESS),
+        	new Selection(16, "Normal", SelectionType.THICKNESS),
+        	new Selection(75, "Wide", SelectionType.THICKNESS),
+        	
+        	null,
+        	null,
+        	null,
+        	null
         };
         
-        mSelectionNames = new String[] {
-    		"Pencil", "Pen", "Paintbrush", "Line",
-    		"Black", "Red", "Green", "Blue",
-    		"White", "Yellow", "Cyan", "Purple",
-    		"Circle", "", "", "",
-    		"", "", "", ""
-        };
-        
-        // Default to red pen
-        changeSelection(1);
+        // Default to thin black paintbrush
+        changeSelection(0);
         changeSelection(5);
+        changeSelection(13);
         
         Timer timer = new Timer();
         timer.schedule(new TimerTask() {
@@ -89,6 +118,10 @@ public class DrawView extends View {
     
     public int getColor() {
     	return mColor;
+    }
+    
+    public int getThickness() {
+    	return mThickness;
     }
 	
 	@Override
@@ -123,7 +156,8 @@ public class DrawView extends View {
         	for (int y = 0; y < mRows; y++) {
         		for (int x = 0; x < mCols; x++) {
         			int i = y * mCols + x;
-        			canvas.drawText(mSelectionNames[i], (x + 0.5f) * mColWidth, (y + 0.5f) * mRowHeight, mCMPaint);
+        			if (mSelections[i] != null)
+        				canvas.drawText(mSelections[i].name, (x + 0.5f) * mColWidth, (y + 0.5f) * mRowHeight, mCMPaint);
         		}
         	}
         } else {
@@ -134,8 +168,9 @@ public class DrawView extends View {
         }
 
     	float top = mRowHeight * (mRows - 1);
-        canvas.drawText(mToolName, mColWidth / 2, top + mRowHeight / 2 - 20, mCMPaint);
-        canvas.drawText(mColorName, mColWidth / 2, top + mRowHeight / 2 + 20, mCMPaint);
+        canvas.drawText(mThicknessName, mColWidth / 2, top + mRowHeight / 2 - 30, mCMPaint);
+        canvas.drawText(mColorName, mColWidth / 2, top + mRowHeight / 2, mCMPaint);
+        canvas.drawText(mToolName, mColWidth / 2, top + mRowHeight / 2 + 30, mCMPaint);
     }
     
     @Override
@@ -233,14 +268,24 @@ public class DrawView extends View {
     }
     
     private void changeSelection(int selected) {
-    	Object selection = mSelections[selected];
+    	Selection selection = mSelections[selected];
     	
-    	if (selection instanceof Tool) {
-    		mTool = (Tool) selection;
-    		mToolName = mSelectionNames[selected];
-    	} else if (selection instanceof Integer) {
-    		mColor = (Integer) selection;
-    		mColorName = mSelectionNames[selected];
+    	if (selection == null)
+    		return;
+    	
+    	switch (selection.type) {
+    		case TOOL:
+    			mTool = (Tool) selection.object;
+    			mToolName = selection.name;
+    			break;
+    		case COLOR:
+    			mColor = (Integer) selection.object;
+    			mColorName = selection.name;
+    			break;
+    		case THICKNESS:
+    			mThickness = (Integer) selection.object;
+    			mThicknessName = selection.name;
+    			break;
     	}
     }
 }
