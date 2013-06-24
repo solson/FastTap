@@ -16,7 +16,6 @@ import android.view.View;
 
 public class DrawView extends View {
 	private Bitmap mBitmap;
-    private Canvas mCanvas;
     private Paint mBitmapPaint;
 	private final int mCols = 4;
 	private final int mRows = 5;
@@ -38,9 +37,14 @@ public class DrawView extends View {
     private String mToolName;
     private String mColorName;
     private String mThicknessName;
+    private Bitmap mUndo;
+    
+    private enum Action {
+    	CLEAR, UNDO
+    }
 
     private enum SelectionType {
-    	TOOL, COLOR, THICKNESS
+    	TOOL, COLOR, THICKNESS, ACTION
     }
     
 	private class Selection {
@@ -86,12 +90,12 @@ public class DrawView extends View {
         	new Selection(1, "Fine", SelectionType.THICKNESS),
         	new Selection(6, "Thin", SelectionType.THICKNESS),
         	new Selection(16, "Normal", SelectionType.THICKNESS),
-        	new Selection(75, "Wide", SelectionType.THICKNESS),
+        	new Selection(50, "Wide", SelectionType.THICKNESS),
         	
+        	null, // The position of the command map button
+        	new Selection(Action.CLEAR, "Clear", SelectionType.ACTION),
         	null,
-        	null,
-        	null,
-        	null
+        	new Selection(Action.UNDO, "Undo", SelectionType.ACTION)
         };
         
         // Default to thin black paintbrush
@@ -128,8 +132,8 @@ public class DrawView extends View {
 	protected void onSizeChanged(int w, int h, int oldw, int oldh) {
 		super.onSizeChanged(w, h, oldw, oldh);
         mBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
-        mCanvas = new Canvas(mBitmap);
-        mCanvas.drawRGB(0xFF, 0xFF, 0xFF);
+        Canvas canvas = new Canvas(mBitmap);
+        canvas.drawRGB(0xFF, 0xFF, 0xFF);
         mColWidth = (float)w / mCols;
         mRowHeight = (float)h / mRows;
 	}
@@ -250,7 +254,8 @@ public class DrawView extends View {
             			mShowCM = false;
             		}
             	} else {
-            		mTool.touchStop(id, x, y, mCanvas);
+            		mUndo = mBitmap.copy(mBitmap.getConfig(), true);
+            		mTool.touchStop(id, x, y, new Canvas(mBitmap));
             	}
             	
         		if (event.getPointerCount() == 1) {
@@ -278,13 +283,31 @@ public class DrawView extends View {
     			mTool = (Tool) selection.object;
     			mToolName = selection.name;
     			break;
+    			
     		case COLOR:
     			mColor = (Integer) selection.object;
     			mColorName = selection.name;
     			break;
+    			
     		case THICKNESS:
     			mThickness = (Integer) selection.object;
     			mThicknessName = selection.name;
+    			break;
+    			
+    		case ACTION:
+    			switch ((Action) selection.object) {
+    				case CLEAR:
+    					mUndo = mBitmap.copy(mBitmap.getConfig(), true);
+    			        Canvas canvas = new Canvas(mBitmap);
+    			        canvas.drawRGB(0xFF, 0xFF, 0xFF);
+    					break;
+    					
+    				case UNDO:
+    					Bitmap temp = mBitmap.copy(mBitmap.getConfig(), true);
+    					mBitmap = mUndo;
+    					mUndo = temp;
+    					break;
+    			}
     			break;
     	}
     }
