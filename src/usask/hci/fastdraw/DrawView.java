@@ -96,7 +96,7 @@ public class DrawView extends View {
         
         // Default to thin black paintbrush
         changeSelection(0);
-        changeSelection(5);
+        changeSelection(4);
         changeSelection(13);
         
         Timer timer = new Timer();
