@@ -194,6 +194,7 @@ public class DrawView extends View {
             	if (x < mColWidth && y > mRowHeight * (mRows - 1)) {
             		mFingerInside = id;
             		mPressedInsideTime = now;
+            		mIgnoredFingers.add(mFingerInside);
             	} else {
             		int col = (int) (x / mColWidth);
             		int row = (int) (y / mRowHeight);
@@ -241,29 +242,32 @@ public class DrawView extends View {
                 
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_POINTER_UP:
+        		boolean draw = true;
+        		
             	if (id == mFingerInside)
             		mFingerInside = -1;
-            	
+
+        		if (event.getPointerCount() == 1) {
+        	    	if (mSwitchTools) {
+        				changeSelection(mSelected);
+        				mSwitchTools = false;
+        				draw = false;
+        	    	}
+        		}
+        		
             	if (mIgnoredFingers.contains(id)) {
             		mIgnoredFingers.remove(id);
-            		break;
+            		draw = false;
             	}
             	
             	if (mShowCM) {
             		if (event.getPointerCount() == 1) {
             			mShowCM = false;
             		}
-            	} else {
+            	} else if (draw) {
             		mUndo = mBitmap.copy(mBitmap.getConfig(), true);
             		mTool.touchStop(id, x, y, new Canvas(mBitmap));
             	}
-            	
-        		if (event.getPointerCount() == 1) {
-        	    	if (mSwitchTools) {
-        				changeSelection(mSelected);
-        				mSwitchTools = false;
-        	    	}
-        		}
         		
                 break;
         }
