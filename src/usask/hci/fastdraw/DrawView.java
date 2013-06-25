@@ -11,6 +11,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Paint.Align;
+import android.graphics.RectF;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -38,6 +39,7 @@ public class DrawView extends View {
     private String mColorName;
     private String mThicknessName;
     private Bitmap mUndo;
+    private boolean mLeftHanded;
     
     private enum Action {
     	CLEAR, UNDO
@@ -70,6 +72,7 @@ public class DrawView extends View {
         mFingerInside = -1;
         mCheckToolSwitch = true;
         mIgnoredFingers = new HashSet<Integer>();
+        mLeftHanded = true;
         
         mSelections = new Selection[] {
         	new Selection(new PaintTool(this), "Paintbrush", SelectionType.TOOL),
@@ -137,14 +140,26 @@ public class DrawView extends View {
         mColWidth = (float)w / mCols;
         mRowHeight = (float)h / mRows;
 	}
+	
+	private RectF getCMButtonBounds() {
+		float top = mRowHeight * (mRows - 1);
+		float bottom = mRowHeight * mRows;
+		
+		if (mLeftHanded)
+			return new RectF(mColWidth * (mCols - 1), top, mColWidth * mCols, bottom);
+		else
+			return new RectF(0, top, mColWidth, bottom);
+	}
 
     @Override
     protected void onDraw(Canvas canvas) {
+    	RectF bounds = getCMButtonBounds();
+    	
         canvas.drawBitmap(mBitmap, 0, 0, mBitmapPaint);
         mTool.draw(canvas);
         
     	mCMPaint.setColor(0x88FFFF00);
-    	canvas.drawRect(0, mRowHeight * (mRows - 1), mColWidth, mRowHeight * mRows, mCMPaint);
+    	canvas.drawRect(bounds, mCMPaint);
     	mCMPaint.setColor(0x88888888);
     	
         if (mShowCM) {
@@ -159,22 +174,27 @@ public class DrawView extends View {
         	
         	for (int y = 0; y < mRows; y++) {
         		for (int x = 0; x < mCols; x++) {
-        			int i = y * mCols + x;
+        			int realX = x;
+        			if (mLeftHanded)
+        				realX = mCols - x - 1;
+        			
+        			int i = y * mCols + realX;
         			if (mSelections[i] != null)
         				canvas.drawText(mSelections[i].name, (x + 0.5f) * mColWidth, (y + 0.5f) * mRowHeight, mCMPaint);
         		}
         	}
         } else {
-        	float top = mRowHeight * (mRows - 1);
-        	float right = mColWidth;
-        	canvas.drawLine(0, top, right, top, mCMPaint);
-        	canvas.drawLine(right, top, right, mRowHeight * mRows, mCMPaint);
+        	canvas.drawLine(bounds.left, bounds.top, bounds.right, bounds.top, mCMPaint);
+        	
+        	if (mLeftHanded)
+        		canvas.drawLine(bounds.left, bounds.top, bounds.left, bounds.bottom, mCMPaint);
+        	else
+        		canvas.drawLine(bounds.right, bounds.top, bounds.right, bounds.bottom, mCMPaint);
         }
-
-    	float top = mRowHeight * (mRows - 1);
-        canvas.drawText(mThicknessName, mColWidth / 2, top + mRowHeight / 2 - 30, mCMPaint);
-        canvas.drawText(mColorName, mColWidth / 2, top + mRowHeight / 2, mCMPaint);
-        canvas.drawText(mToolName, mColWidth / 2, top + mRowHeight / 2 + 30, mCMPaint);
+    	
+        canvas.drawText(mThicknessName, bounds.left + mColWidth / 2, bounds.top + mRowHeight / 2 - 30, mCMPaint);
+        canvas.drawText(mColorName, bounds.left + mColWidth / 2, bounds.top + mRowHeight / 2, mCMPaint);
+        canvas.drawText(mToolName, bounds.left + mColWidth / 2, bounds.top + mRowHeight / 2 + 30, mCMPaint);
     }
     
     @Override
@@ -191,13 +211,17 @@ public class DrawView extends View {
             		mCheckToolSwitch = true;
             	
             	long now = System.nanoTime();
-            	if (x < mColWidth && y > mRowHeight * (mRows - 1)) {
+            	if (getCMButtonBounds().contains(x, y)) {
             		mFingerInside = id;
             		mPressedInsideTime = now;
             		mIgnoredFingers.add(mFingerInside);
             	} else {
             		int col = (int) (x / mColWidth);
             		int row = (int) (y / mRowHeight);
+            		
+            		if (mLeftHanded)
+            			col = mCols - col - 1;
+            		
             		mSelected = row * mCols + col;
             		
             		mPressedOutsideTime = now;
