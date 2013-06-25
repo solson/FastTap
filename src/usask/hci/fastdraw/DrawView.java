@@ -11,7 +11,9 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Paint.Align;
+import android.graphics.PointF;
 import android.graphics.RectF;
+import android.util.SparseArray;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -41,6 +43,8 @@ public class DrawView extends View {
     private Bitmap mUndo;
     private boolean mLeftHanded;
     private final int mChordDelay = 1000 * 1000 * 200; // 200ms in ns
+    private final float mThreshold = 10; // pixel distance before tool registers
+    private SparseArray<PointF> mOrigins;
     
     private enum Action {
     	CLEAR, UNDO
@@ -74,6 +78,7 @@ public class DrawView extends View {
         mCheckToolSwitch = true;
         mIgnoredFingers = new HashSet<Integer>();
         mLeftHanded = false;
+        mOrigins = new SparseArray<PointF>();
         
         mSelections = new Selection[] {
         	new Selection(new PaintTool(this), "Paintbrush", SelectionType.TOOL),
@@ -246,7 +251,8 @@ public class DrawView extends View {
             		
             		break;
             	}
-            	
+
+            	mOrigins.put(id, new PointF(x, y));
             	mTool.touchStart(id, x, y);
                 break;
                 
@@ -264,13 +270,30 @@ public class DrawView extends View {
             		
                     float x2 = event.getX(i);
                     float y2 = event.getY(i);
-                	mTool.touchMove(fingerId, x2, y2);
+                    PointF origin = mOrigins.get(fingerId);
+                    
+                    if (origin != null) {
+	                    float dx = origin.x - x2;
+	                    float dy = origin.y - y2;
+	                    double dist = Math.sqrt(dx*dx + dy*dy);
+	                    
+	                    if (dist > mThreshold) {
+	                    	mOrigins.delete(fingerId);
+	                    	origin = null;
+	                    }
+                    }
+                    
+                    if (origin == null) {
+                    	mTool.touchMove(fingerId, x2, y2);
+                    }
             	}
             	
                 break;
                 
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_POINTER_UP:
+            	mOrigins.delete(id);
+            	
         		boolean draw = true;
         		
             	if (id == mFingerInside)
