@@ -73,7 +73,7 @@ public class DrawView extends View {
         mFingerInside = -1;
         mCheckToolSwitch = true;
         mIgnoredFingers = new HashSet<Integer>();
-        mLeftHanded = true;
+        mLeftHanded = false;
         
         mSelections = new Selection[] {
         	new Selection(new PaintTool(this), "Paintbrush", SelectionType.TOOL),
