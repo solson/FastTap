@@ -306,6 +306,9 @@ public class DrawView extends View {
     }
     
     private void changeSelection(int selected) {
+		if (mTool != null)
+			mTool.clearFingers();
+		
     	Selection selection = mSelections[selected];
     	
     	if (selection == null)
