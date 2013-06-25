@@ -40,6 +40,7 @@ public class DrawView extends View {
     private String mThicknessName;
     private Bitmap mUndo;
     private boolean mLeftHanded;
+    private final int mChordDelay = 1000 * 1000 * 200; // 200ms in ns
     
     private enum Action {
     	CLEAR, UNDO
@@ -110,14 +111,18 @@ public class DrawView extends View {
         timer.schedule(new TimerTask() {
         	@Override
         	public void run() {
+        		if (!mCheckToolSwitch)
+        			return;
+        		
         		long now = System.nanoTime();
         		
-        		if (now - mPressedOutsideTime < 1000 * 1000 * 200 && now - mPressedInsideTime < 1000 * 1000 * 200 && mCheckToolSwitch) {
+        		if (now - mPressedOutsideTime < mChordDelay && now - mPressedInsideTime < mChordDelay) {
         			mSwitchTools = true;
         			mCheckToolSwitch = false;
-        		} else if (mFingerInside != -1 && mCheckToolSwitch) {
+        		} else if (mFingerInside != -1 && now - mPressedInsideTime > mChordDelay) {
         			mShowCM = true;
         			mTool.clearFingers();
+        			postInvalidate();
         		}
         	}
         }, 25, 25);
