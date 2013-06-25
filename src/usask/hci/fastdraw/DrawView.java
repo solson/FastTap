@@ -46,7 +46,7 @@ public class DrawView extends View {
     }
 
     private enum SelectionType {
-    	TOOL, COLOR, THICKNESS, ACTION
+    	TOOL, COLOR, THICKNESS, ACTION, NOOP
     }
     
 	private class Selection {
@@ -96,8 +96,8 @@ public class DrawView extends View {
         	new Selection(50, "Wide", SelectionType.THICKNESS),
         	
         	null, // The position of the command map button
+        	new Selection(null, "Save", SelectionType.NOOP),
         	new Selection(Action.CLEAR, "Clear", SelectionType.ACTION),
-        	null,
         	new Selection(Action.UNDO, "Undo", SelectionType.ACTION)
         };
         
@@ -338,6 +338,9 @@ public class DrawView extends View {
         				}
     					break;
     			}
+    			break;
+    			
+    		default:
     			break;
     	}
     }
