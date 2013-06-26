@@ -120,9 +120,9 @@ public class DrawView extends View {
         };
         
         // Default to thin black paintbrush
-        changeSelection(0);
-        changeSelection(4);
-        changeSelection(13);
+        changeSelection(0, false);
+        changeSelection(4, false);
+        changeSelection(13, false);
         
         Timer timer = new Timer();
         timer.schedule(new TimerTask() {
@@ -397,12 +397,18 @@ public class DrawView extends View {
     }
     
     private void changeSelection(int selected) {
+    	changeSelection(selected, true);
+    }
+    
+    private void changeSelection(int selected, boolean flash) {
 		if (mTool != null)
 			mTool.clearFingers();
 		
-		mFlashedSelection = selected;
-		mFlashedTime = System.nanoTime();
-		invalidate();
+		if (flash) {
+			mFlashedSelection = selected;
+			mFlashedTime = System.nanoTime();
+			invalidate();
+		}
 		
     	Selection selection = mSelections[selected];
     	
