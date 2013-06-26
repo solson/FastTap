@@ -357,6 +357,7 @@ public class DrawView extends View {
                 
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_POINTER_UP:
+            	PointF origin = mOrigins.get(id);
             	mOrigins.delete(id);
             	
         		boolean draw = true;
@@ -382,7 +383,9 @@ public class DrawView extends View {
             			mShowCM = false;
             		}
             	} else if (draw) {
-            		mUndo = mBitmap.copy(mBitmap.getConfig(), true);
+                    if (origin == null)
+                    	mUndo = mBitmap.copy(mBitmap.getConfig(), true);
+                    
             		mTool.touchStop(id, x, y, new Canvas(mBitmap));
             	}
         		
