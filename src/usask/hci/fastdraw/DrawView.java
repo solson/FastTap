@@ -46,6 +46,7 @@ public class DrawView extends View {
     private final int mChordDelay = 1000 * 1000 * 200; // 200ms in ns
     private final float mThreshold = 10; // pixel distance before tool registers
     private SparseArray<PointF> mOrigins;
+    private boolean mPermanentGrid;
     
     private enum Action {
     	CLEAR, UNDO
@@ -79,6 +80,7 @@ public class DrawView extends View {
         mCheckToolSwitch = true;
         mIgnoredFingers = new HashSet<Integer>();
         mLeftHanded = false;
+        mPermanentGrid = false;
         mOrigins = new SparseArray<PointF>();
         
         mSelections = new Selection[] {
@@ -171,9 +173,10 @@ public class DrawView extends View {
         
     	mCMPaint.setColor(0x88FFFF00);
     	canvas.drawRect(bounds, mCMPaint);
-    	mCMPaint.setColor(0x88888888);
     	
-        if (mShowCM) {
+        if (mShowCM || mPermanentGrid) {
+        	mCMPaint.setColor(0x44888888);
+
         	for (int i = 0; i < mRows; i++) {
         		float top = i * mRowHeight;    		
         		canvas.drawLine(0, top, mColWidth * mCols, top, mCMPaint);
@@ -182,7 +185,10 @@ public class DrawView extends View {
         		float left = i * mColWidth;    		
         		canvas.drawLine(left, 0, left, mRowHeight * mRows, mCMPaint);
         	}
-        	
+        }
+        
+        if (mShowCM) {
+    		mCMPaint.setColor(0xFF888888);
         	for (int y = 0; y < mRows; y++) {
         		for (int x = 0; x < mCols; x++) {
         			int realX = x;
@@ -194,7 +200,8 @@ public class DrawView extends View {
         				canvas.drawText(mSelections[i].name, (x + 0.5f) * mColWidth, (y + 0.5f) * mRowHeight, mCMPaint);
         		}
         	}
-        } else {
+        } else if (!mPermanentGrid) {
+    		mCMPaint.setColor(0x44888888);
         	canvas.drawLine(bounds.left, bounds.top, bounds.right, bounds.top, mCMPaint);
         	
         	if (mLeftHanded)
@@ -202,7 +209,8 @@ public class DrawView extends View {
         	else
         		canvas.drawLine(bounds.right, bounds.top, bounds.right, bounds.bottom, mCMPaint);
         }
-    	
+
+		mCMPaint.setColor(0x88888888);
         canvas.drawText(mThicknessName, bounds.left + mColWidth / 2, bounds.top + mRowHeight / 2 - 30, mCMPaint);
         canvas.drawText(mColorName, bounds.left + mColWidth / 2, bounds.top + mRowHeight / 2, mCMPaint);
         canvas.drawText(mToolName, bounds.left + mColWidth / 2, bounds.top + mRowHeight / 2 + 30, mCMPaint);
@@ -379,6 +387,7 @@ public class DrawView extends View {
 
 	public void loadPreferences(SharedPreferences sharedPreferences) {
 		mLeftHanded = sharedPreferences.getBoolean("pref_left_handed", false);
+		mPermanentGrid = sharedPreferences.getBoolean("pref_permanent_grid", false);
 		invalidate();
 	}
 }

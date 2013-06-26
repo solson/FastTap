@@ -5,4 +5,10 @@
         android:title="@string/pref_left_handed"
         android:summary="@string/pref_left_handed_summ"
         android:defaultValue="false" />
+    
+    <CheckBoxPreference
+        android:key="pref_permanent_grid"
+        android:title="@string/pref_permanent_grid"
+        android:summary="@string/pref_permanent_grid_summ"
+        android:defaultValue="false" />
 </PreferenceScreen>

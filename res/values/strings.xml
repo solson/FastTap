@@ -3,5 +3,7 @@
     <string name="app_name">Fast Draw</string>
     <string name="action_settings">Settings</string>
     <string name="pref_left_handed">Left Handed</string>
-    <string name="pref_left_handed_summ">Are you left handed?</string>
+    <string name="pref_left_handed_summ">Mirror the overlay and buttons</string>
+    <string name="pref_permanent_grid">Permanent Grid</string>
+    <string name="pref_permanent_grid_summ">Show a light grid for the buttons at all times</string>
 </resources>
