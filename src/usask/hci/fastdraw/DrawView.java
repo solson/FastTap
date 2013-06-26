@@ -44,6 +44,7 @@ public class DrawView extends View {
     private String mColorName;
     private String mThicknessName;
     private Bitmap mUndo;
+    private Bitmap mNextUndo;
     private boolean mLeftHanded;
     private final float mThreshold = 10; // pixel distance before tool registers
     private SparseArray<PointF> mOrigins;
@@ -51,6 +52,7 @@ public class DrawView extends View {
     private Rect mTextBounds;
     private int mFlashedSelection;
     private long mFlashedTime;
+    private boolean mChanged;
     private final int mChordDelay = 1000 * 1000 * 200; // 200ms in ns
 	private final int mFlashDelay = 1000 * 1000 * 400; // 400ms in ns
 	private final int mCMButtonIndex = 16;
@@ -91,6 +93,7 @@ public class DrawView extends View {
         mOrigins = new SparseArray<PointF>();
         mTextBounds = new Rect();
         mFlashedSelection = -1;
+        mChanged = false;
         
         mSelections = new Selection[] {
         	new Selection(new PaintTool(this), "Paintbrush", SelectionType.TOOL),
@@ -350,6 +353,11 @@ public class DrawView extends View {
                     
                     if (origin == null) {
                     	mTool.touchMove(fingerId, x2, y2);
+                    	
+                        if (!mChanged) {
+                        	mChanged = true;
+                        	mNextUndo = mBitmap.copy(mBitmap.getConfig(), true);
+                        }
                     }
             	}
             	
@@ -357,7 +365,6 @@ public class DrawView extends View {
                 
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_POINTER_UP:
-            	PointF origin = mOrigins.get(id);
             	mOrigins.delete(id);
             	
         		boolean draw = true;
@@ -383,11 +390,14 @@ public class DrawView extends View {
             			mShowCM = false;
             		}
             	} else if (draw) {
-                    if (origin == null)
-                    	mUndo = mBitmap.copy(mBitmap.getConfig(), true);
+                    if (event.getPointerCount() == 1 && mChanged)
+                    	mUndo = mNextUndo;
                     
             		mTool.touchStop(id, x, y, new Canvas(mBitmap));
             	}
+
+            	if (event.getPointerCount() == 1)
+            		mChanged = false;
         		
                 break;
         }
