@@ -174,11 +174,14 @@ public class DrawView extends View {
         canvas.drawBitmap(mBitmap, 0, 0, mBitmapPaint);
         mTool.draw(canvas);
         
+        if (mShowCM)
+        	canvas.drawARGB(0xAA, 0xFF, 0xFF, 0xFF);
+        
     	mCMPaint.setColor(0x88FFFF00);
     	canvas.drawRect(bounds, mCMPaint);
     	
         if (mShowCM || mPermanentGrid) {
-        	mCMPaint.setColor(0x44888888);
+        	mCMPaint.setColor(0x44666666);
 
         	for (int i = 0; i < mRows; i++) {
         		float top = i * mRowHeight;    		
@@ -191,7 +194,7 @@ public class DrawView extends View {
         }
         
         if (mShowCM) {
-    		mCMPaint.setColor(0xFF888888);
+    		mCMPaint.setColor(0xFF666666);
         	for (int y = 0; y < mRows; y++) {
         		for (int x = 0; x < mCols; x++) {
         			int realX = x;
@@ -207,7 +210,7 @@ public class DrawView extends View {
         		}
         	}
         } else if (!mPermanentGrid) {
-    		mCMPaint.setColor(0x44888888);
+    		mCMPaint.setColor(0x44666666);
         	canvas.drawLine(bounds.left, bounds.top, bounds.right, bounds.top, mCMPaint);
         	
         	if (mLeftHanded)
@@ -216,7 +219,7 @@ public class DrawView extends View {
         		canvas.drawLine(bounds.right, bounds.top, bounds.right, bounds.bottom, mCMPaint);
         }
 
-		mCMPaint.setColor(0x88888888);
+		mCMPaint.setColor(0xFF666666);
         canvas.drawText(mThicknessName, bounds.left + mColWidth / 2,
         		bounds.top + mRowHeight / 2 + getTextHeight(mThicknessName, mCMPaint) / 2 - 30, mCMPaint);
         canvas.drawText(mColorName, bounds.left + mColWidth / 2,
