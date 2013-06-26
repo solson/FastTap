@@ -6,6 +6,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -375,4 +376,9 @@ public class DrawView extends View {
     			break;
     	}
     }
+
+	public void loadPreferences(SharedPreferences sharedPreferences) {
+		mLeftHanded = sharedPreferences.getBoolean("pref_left_handed", false);
+		invalidate();
+	}
 }
