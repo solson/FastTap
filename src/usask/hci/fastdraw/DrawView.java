@@ -5,6 +5,7 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
@@ -21,6 +22,7 @@ import android.view.MotionEvent;
 import android.view.View;
 
 public class DrawView extends View {
+	private Activity mMainActivity;
 	private Bitmap mBitmap;
     private Paint mBitmapPaint;
 	private final int mCols = 4;
@@ -80,6 +82,7 @@ public class DrawView extends View {
     public DrawView(Context c) {
         super(c);
 
+        mMainActivity = (Activity) c;
         mBitmapPaint = new Paint(Paint.DITHER_FLAG);
         mCMPaint = new Paint();
         mCMPaint.setTextSize(26);
@@ -465,6 +468,8 @@ public class DrawView extends View {
     		default:
     			break;
     	}
+    	
+		mMainActivity.setTitle(mThicknessName + " " + mColorName + " " + mToolName);
     }
 
 	public void loadPreferences(SharedPreferences sharedPreferences) {
