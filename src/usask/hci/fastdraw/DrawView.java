@@ -244,23 +244,26 @@ public class DrawView extends View {
         		canvas.drawLine(bounds.right, bounds.top, bounds.right, bounds.bottom, mCMPaint);
         }
         
-        if (mFlashedSelection != -1 && mSelections[mFlashedSelection] != null) {
-        	RectF buttonBounds = getButtonBounds(mFlashedSelection);
-        	
-        	mCMPaint.setColor(0xAAFFFFFF);
-        	canvas.drawRect(buttonBounds, mCMPaint);
-        	
-        	mCMPaint.setColor(0x44666666);
-        	mCMPaint.setStyle(Style.STROKE);
-        	canvas.drawRect(buttonBounds, mCMPaint);
-        	mCMPaint.setStyle(Style.FILL);
-        	
-    		mCMPaint.setColor(0xFF666666);
-			String name = mSelections[mFlashedSelection].name;
-			int heightAdj = getTextHeight(name, mCMPaint) / 2;
-			canvas.drawText(name, buttonBounds.left + 0.5f * mColWidth, buttonBounds.top + 0.5f * mRowHeight + heightAdj, mCMPaint);
+        if (mFlashedSelection != -1) {
+	        Selection selection = mSelections[mFlashedSelection];
+	        if (mFlashedSelection != -1 && selection != null) {
+	        	RectF buttonBounds = getButtonBounds(mFlashedSelection);
+	        	
+	        	mCMPaint.setColor(0xAAFFFFFF);
+	        	canvas.drawRect(buttonBounds, mCMPaint);
+	        	
+	        	mCMPaint.setColor(0x44666666);
+	        	mCMPaint.setStyle(Style.STROKE);
+	        	canvas.drawRect(buttonBounds, mCMPaint);
+	        	mCMPaint.setStyle(Style.FILL);
+	        	
+	    		mCMPaint.setColor(0xFF666666);
+				String name = selection.name;
+				int heightAdj = getTextHeight(name, mCMPaint) / 2;
+				canvas.drawText(name, buttonBounds.left + 0.5f * mColWidth, buttonBounds.top + 0.5f * mRowHeight + heightAdj, mCMPaint);
+	        }
         }
-
+        
 		mCMPaint.setColor(0xFF666666);
         canvas.drawText(mThicknessName, bounds.left + mColWidth / 2,
         		bounds.top + mRowHeight / 2 + getTextHeight(mThicknessName, mCMPaint) / 2 - 30, mCMPaint);
