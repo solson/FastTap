@@ -12,6 +12,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Paint.Align;
+import android.graphics.Paint.Style;
 import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.RectF;
@@ -44,11 +45,15 @@ public class DrawView extends View {
     private String mThicknessName;
     private Bitmap mUndo;
     private boolean mLeftHanded;
-    private final int mChordDelay = 1000 * 1000 * 200; // 200ms in ns
     private final float mThreshold = 10; // pixel distance before tool registers
     private SparseArray<PointF> mOrigins;
     private boolean mPermanentGrid;
     private Rect mTextBounds;
+    private int mFlashedSelection;
+    private long mFlashedTime;
+    private final int mChordDelay = 1000 * 1000 * 200; // 200ms in ns
+	private final int mFlashDelay = 1000 * 1000 * 400; // 400ms in ns
+	private final int mCMButtonIndex = 16;
     
     private enum Action {
     	CLEAR, UNDO
@@ -85,6 +90,7 @@ public class DrawView extends View {
         mPermanentGrid = false;
         mOrigins = new SparseArray<PointF>();
         mTextBounds = new Rect();
+        mFlashedSelection = -1;
         
         mSelections = new Selection[] {
         	new Selection(new PaintTool(this), "Paintbrush", SelectionType.TOOL),
@@ -122,11 +128,18 @@ public class DrawView extends View {
         timer.schedule(new TimerTask() {
         	@Override
         	public void run() {
-        		if (!mCheckToolSwitch)
-        			return;
-        		
         		long now = System.nanoTime();
         		
+        		// Check if the flashed selection should be hidden
+        		if (now - mFlashedTime > mFlashDelay) {
+        			mFlashedSelection = -1;
+        			postInvalidate();
+        		}
+        		
+        		if (!mCheckToolSwitch)
+        			return;
+
+        		// Check for tool selection
         		if (now - mPressedOutsideTime < mChordDelay && now - mPressedInsideTime < mChordDelay) {
         			mSwitchTools = true;
         			mCheckToolSwitch = false;
@@ -157,14 +170,23 @@ public class DrawView extends View {
         mRowHeight = (float)h / mRows;
 	}
 	
-	private RectF getCMButtonBounds() {
-		float top = mRowHeight * (mRows - 1);
-		float bottom = mRowHeight * mRows;
+	private RectF getButtonBounds(int index) {
+		int y = index / mCols;
+		int x = index % mCols;
 		
 		if (mLeftHanded)
-			return new RectF(mColWidth * (mCols - 1), top, mColWidth * mCols, bottom);
-		else
-			return new RectF(0, top, mColWidth, bottom);
+			x = mCols - x - 1;
+		
+		float top = mRowHeight * y;
+		float bottom = top + mRowHeight;
+		float left = mColWidth * x;
+		float right = left + mColWidth;
+		
+		return new RectF(left, top, right, bottom);
+	}
+	
+	private RectF getCMButtonBounds() {
+		return getButtonBounds(mCMButtonIndex);
 	}
 
     @Override
@@ -217,6 +239,23 @@ public class DrawView extends View {
         		canvas.drawLine(bounds.left, bounds.top, bounds.left, bounds.bottom, mCMPaint);
         	else
         		canvas.drawLine(bounds.right, bounds.top, bounds.right, bounds.bottom, mCMPaint);
+        }
+        
+        if (mFlashedSelection != -1 && mSelections[mFlashedSelection] != null) {
+        	RectF buttonBounds = getButtonBounds(mFlashedSelection);
+        	
+        	mCMPaint.setColor(0xAAFFFFFF);
+        	canvas.drawRect(buttonBounds, mCMPaint);
+        	
+        	mCMPaint.setColor(0x44666666);
+        	mCMPaint.setStyle(Style.STROKE);
+        	canvas.drawRect(buttonBounds, mCMPaint);
+        	mCMPaint.setStyle(Style.FILL);
+        	
+    		mCMPaint.setColor(0xFF666666);
+			String name = mSelections[mFlashedSelection].name;
+			int heightAdj = getTextHeight(name, mCMPaint) / 2;
+			canvas.drawText(name, buttonBounds.left + 0.5f * mColWidth, buttonBounds.top + 0.5f * mRowHeight + heightAdj, mCMPaint);
         }
 
 		mCMPaint.setColor(0xFF666666);
@@ -357,6 +396,10 @@ public class DrawView extends View {
     private void changeSelection(int selected) {
 		if (mTool != null)
 			mTool.clearFingers();
+		
+		mFlashedSelection = selected;
+		mFlashedTime = System.nanoTime();
+		invalidate();
 		
     	Selection selection = mSelections[selected];
     	
