@@ -13,6 +13,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Paint.Align;
 import android.graphics.PointF;
+import android.graphics.Rect;
 import android.graphics.RectF;
 import android.util.SparseArray;
 import android.view.MotionEvent;
@@ -47,6 +48,7 @@ public class DrawView extends View {
     private final float mThreshold = 10; // pixel distance before tool registers
     private SparseArray<PointF> mOrigins;
     private boolean mPermanentGrid;
+    private Rect mTextBounds;
     
     private enum Action {
     	CLEAR, UNDO
@@ -82,6 +84,7 @@ public class DrawView extends View {
         mLeftHanded = false;
         mPermanentGrid = false;
         mOrigins = new SparseArray<PointF>();
+        mTextBounds = new Rect();
         
         mSelections = new Selection[] {
         	new Selection(new PaintTool(this), "Paintbrush", SelectionType.TOOL),
@@ -196,8 +199,11 @@ public class DrawView extends View {
         				realX = mCols - x - 1;
         			
         			int i = y * mCols + realX;
-        			if (mSelections[i] != null)
-        				canvas.drawText(mSelections[i].name, (x + 0.5f) * mColWidth, (y + 0.5f) * mRowHeight, mCMPaint);
+        			if (mSelections[i] != null) {
+        				String name = mSelections[i].name;
+        				int heightAdj = getTextHeight(name, mCMPaint) / 2;
+        				canvas.drawText(name, (x + 0.5f) * mColWidth, (y + 0.5f) * mRowHeight + heightAdj, mCMPaint);
+        			}
         		}
         	}
         } else if (!mPermanentGrid) {
@@ -211,9 +217,17 @@ public class DrawView extends View {
         }
 
 		mCMPaint.setColor(0x88888888);
-        canvas.drawText(mThicknessName, bounds.left + mColWidth / 2, bounds.top + mRowHeight / 2 - 30, mCMPaint);
-        canvas.drawText(mColorName, bounds.left + mColWidth / 2, bounds.top + mRowHeight / 2, mCMPaint);
-        canvas.drawText(mToolName, bounds.left + mColWidth / 2, bounds.top + mRowHeight / 2 + 30, mCMPaint);
+        canvas.drawText(mThicknessName, bounds.left + mColWidth / 2,
+        		bounds.top + mRowHeight / 2 + getTextHeight(mThicknessName, mCMPaint) / 2 - 30, mCMPaint);
+        canvas.drawText(mColorName, bounds.left + mColWidth / 2,
+        		bounds.top + mRowHeight / 2 + getTextHeight(mColorName, mCMPaint) / 2, mCMPaint);
+        canvas.drawText(mToolName, bounds.left + mColWidth / 2,
+        		bounds.top + mRowHeight / 2 + getTextHeight(mToolName, mCMPaint) / 2 + 30, mCMPaint);
+    }
+    
+    private int getTextHeight(String text, Paint paint) {
+		mCMPaint.getTextBounds(text, 0, text.length(), mTextBounds);
+		return mTextBounds.height();
     }
     
     @Override
