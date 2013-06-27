@@ -6,6 +6,7 @@ import java.util.LinkedList;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import android.app.Activity;
 import android.content.Context;
@@ -53,7 +54,7 @@ public class DrawView extends View {
     private SparseArray<PointF> mOrigins;
     private boolean mPermanentGrid;
     private Rect mTextBounds;
-    private LinkedList<Flash> mFlashed;
+    private ConcurrentLinkedQueue<Flash> mFlashed;
     private LinkedList<Touch> mRecentTouches;
     private boolean mChanged;
     private final int mChordDelay = 1000 * 1000 * 200; // 200ms in ns
@@ -117,7 +118,7 @@ public class DrawView extends View {
         mPermanentGrid = false;
         mOrigins = new SparseArray<PointF>();
         mTextBounds = new Rect();
-        mFlashed = new LinkedList<Flash>();
+        mFlashed = new ConcurrentLinkedQueue<Flash>();
         mRecentTouches = new LinkedList<Touch>();
         mChanged = false;
         
