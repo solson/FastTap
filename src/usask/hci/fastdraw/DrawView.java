@@ -351,7 +351,7 @@ public class DrawView extends View {
             			changeSelection(mSelected);
             			mCheckToolSwitch = false;
             			mShowCM = false;
-            			mFingerInside = -1;
+            			mPressedInsideTime = System.nanoTime();
             			
             			for (int i = 0; i < 2; i++)
             				mIgnoredFingers.add(event.getPointerId(i));
