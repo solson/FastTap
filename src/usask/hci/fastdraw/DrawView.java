@@ -34,7 +34,6 @@ public class DrawView extends View {
 	private boolean mShowCM;
 	private Paint mCMPaint;
 	private int mSelected;
-	private long mPressedOutsideTime;
 	private long mPressedInsideTime;
 	private int mFingerInside;
     private boolean mCheckToolSwitch;
@@ -55,6 +54,7 @@ public class DrawView extends View {
     private boolean mPermanentGrid;
     private Rect mTextBounds;
     private LinkedList<Flash> mFlashed;
+    private LinkedList<Touch> mRecentTouches;
     private boolean mChanged;
     private final int mChordDelay = 1000 * 1000 * 200; // 200ms in ns
 	private final int mFlashDelay = 1000 * 1000 * 400; // 400ms in ns
@@ -89,6 +89,16 @@ public class DrawView extends View {
 			this.time = time;
 		}
 	}
+	
+	private class Touch {
+		public int selection;
+		public long time;
+		
+		public Touch(int selection, long time) {
+			this.selection = selection;
+			this.time = time;
+		}
+	}
 
     public DrawView(Context c) {
         super(c);
@@ -108,6 +118,7 @@ public class DrawView extends View {
         mOrigins = new SparseArray<PointF>();
         mTextBounds = new Rect();
         mFlashed = new LinkedList<Flash>();
+        mRecentTouches = new LinkedList<Touch>();
         mChanged = false;
         
         mSelections = new Selection[] {
@@ -306,6 +317,7 @@ public class DrawView extends View {
             		mCheckToolSwitch = true;
             	
             	long now = System.nanoTime();
+            	
             	if (getCMButtonBounds().contains(x, y)) {
             		mFingerInside = id;
             		mPressedInsideTime = now;
@@ -318,15 +330,21 @@ public class DrawView extends View {
             			col = mCols - col - 1;
             		
             		mSelected = row * mCols + col;
-            		
-            		mPressedOutsideTime = now;
+                	mRecentTouches.add(new Touch(mSelected, now));
             	}
+            	
+            	Iterator<Touch> it = mRecentTouches.iterator();
+            	while (it.hasNext()) {
+            		Touch touch = it.next();
 
-        		if (now - mPressedOutsideTime < mChordDelay && now - mPressedInsideTime < mChordDelay && mSelected != -1) {
-        			changeSelection(mSelected);
-        			mCheckToolSwitch = false;
-        			mSelected = -1;
-        		}
+            		if (now - touch.time < mChordDelay && now - mPressedInsideTime < mChordDelay) {
+            			changeSelection(touch.selection);
+            			mCheckToolSwitch = false;
+            			it.remove();
+            		} else if (now - touch.time > mChordDelay) {
+            			it.remove();
+            		}
+            	}
             	
             	if (mShowCM) {
             		if (event.getPointerCount() == 2) {
