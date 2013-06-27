@@ -6,7 +6,6 @@ import java.util.LinkedList;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 import android.app.Activity;
 import android.content.Context;
@@ -54,7 +53,7 @@ public class DrawView extends View {
     private SparseArray<PointF> mOrigins;
     private boolean mPermanentGrid;
     private Rect mTextBounds;
-    private ConcurrentLinkedQueue<Flash> mFlashed;
+    private SparseArray<Long> mFlashTimes;
     private LinkedList<Touch> mRecentTouches;
     private boolean mChanged;
     private final int mChordDelay = 1000 * 1000 * 200; // 200ms in ns
@@ -78,16 +77,6 @@ public class DrawView extends View {
 			this.object = object;
 			this.name = name;
 			this.type = type;
-		}
-	}
-	
-	private class Flash {
-		public int selection;
-		public long time;
-		
-		public Flash(int selection, long time) {
-			this.selection = selection;
-			this.time = time;
 		}
 	}
 	
@@ -118,7 +107,7 @@ public class DrawView extends View {
         mPermanentGrid = false;
         mOrigins = new SparseArray<PointF>();
         mTextBounds = new Rect();
-        mFlashed = new ConcurrentLinkedQueue<Flash>();
+        mFlashTimes = new SparseArray<Long>();
         mRecentTouches = new LinkedList<Touch>();
         mChanged = false;
         
@@ -160,13 +149,13 @@ public class DrawView extends View {
         	public void run() {
         		long now = System.nanoTime();
         		
-        		Iterator<Flash> it = mFlashed.iterator();
-        		while (it.hasNext()) {
-        			Flash flashed = it.next();
-        			
-	        		if (now - flashed.time > mFlashDelay) {
-	        			it.remove();
-	        			postInvalidate();
+        		synchronized (mFlashTimes) {
+	        		for (int i = 0; i < mFlashTimes.size(); i++) {
+	        			long time = mFlashTimes.valueAt(i);
+		        		if (now - time > mFlashDelay) {
+		        			mFlashTimes.removeAt(i);
+		        			postInvalidate();
+		        		}
 	        		}
         		}
         		
@@ -268,25 +257,28 @@ public class DrawView extends View {
         		canvas.drawLine(bounds.right, bounds.top, bounds.right, bounds.bottom, mCMPaint);
         }
         
-        for (Flash flashed : mFlashed) {
-	        Selection selection = mSelections[flashed.selection];
-	        if (selection != null) {
-	        	RectF buttonBounds = getButtonBounds(flashed.selection);
-	        	
-	        	mCMPaint.setColor(0xAAFFFFFF);
-	        	canvas.drawRect(buttonBounds, mCMPaint);
-	        	
-	        	mCMPaint.setColor(0x44666666);
-	        	mCMPaint.setStyle(Style.STROKE);
-	        	canvas.drawRect(buttonBounds, mCMPaint);
-	        	mCMPaint.setStyle(Style.FILL);
-	        	
-	    		mCMPaint.setColor(0xFF666666);
-				String name = selection.name;
-				int heightAdj = getTextHeight(name, mCMPaint) / 2;
-				canvas.drawText(name, buttonBounds.left + 0.5f * mColWidth, buttonBounds.top + 0.5f * mRowHeight + heightAdj, mCMPaint);
-	        }
-        }
+        synchronized (mFlashTimes) {
+        	for (int i = 0; i < mFlashTimes.size(); i++) {
+        		int selectionNum = mFlashTimes.keyAt(i);
+    	        Selection selection = mSelections[selectionNum];
+    	        if (selection != null) {
+    	        	RectF buttonBounds = getButtonBounds(selectionNum);
+    	        	
+    	        	mCMPaint.setColor(0xAAFFFFFF);
+    	        	canvas.drawRect(buttonBounds, mCMPaint);
+    	        	
+    	        	mCMPaint.setColor(0x44666666);
+    	        	mCMPaint.setStyle(Style.STROKE);
+    	        	canvas.drawRect(buttonBounds, mCMPaint);
+    	        	mCMPaint.setStyle(Style.FILL);
+    	        	
+    	    		mCMPaint.setColor(0xFF666666);
+    				String name = selection.name;
+    				int heightAdj = getTextHeight(name, mCMPaint) / 2;
+    				canvas.drawText(name, buttonBounds.left + 0.5f * mColWidth, buttonBounds.top + 0.5f * mRowHeight + heightAdj, mCMPaint);
+    	        }
+            }
+		}
         
 		mCMPaint.setColor(0xFF666666);
         canvas.drawText(mThicknessName, bounds.left + mColWidth / 2,
@@ -460,7 +452,10 @@ public class DrawView extends View {
     		return;
 		
 		if (flash) {
-			mFlashed.add(new Flash(selected, System.nanoTime()));
+			synchronized (mFlashTimes) {
+				mFlashTimes.put(selected, System.nanoTime());
+			}
+			
 			invalidate();
 		}
     	
