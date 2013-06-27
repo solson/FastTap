@@ -1,6 +1,8 @@
 package usask.hci.fastdraw;
 
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -34,9 +36,9 @@ public class DrawView extends View {
 	private int mSelected;
 	private long mPressedOutsideTime;
 	private long mPressedInsideTime;
-	private boolean mSwitchTools;
 	private int mFingerInside;
     private boolean mCheckToolSwitch;
+    private Set<Integer> mFingers;
     private Set<Integer> mIgnoredFingers;
     private Selection[] mSelections;
 	private Tool mTool;
@@ -52,8 +54,7 @@ public class DrawView extends View {
     private SparseArray<PointF> mOrigins;
     private boolean mPermanentGrid;
     private Rect mTextBounds;
-    private int mFlashedSelection;
-    private long mFlashedTime;
+    private LinkedList<Flash> mFlashed;
     private boolean mChanged;
     private final int mChordDelay = 1000 * 1000 * 200; // 200ms in ns
 	private final int mFlashDelay = 1000 * 1000 * 400; // 400ms in ns
@@ -78,6 +79,16 @@ public class DrawView extends View {
 			this.type = type;
 		}
 	}
+	
+	private class Flash {
+		public int selection;
+		public long time;
+		
+		public Flash(int selection, long time) {
+			this.selection = selection;
+			this.time = time;
+		}
+	}
 
     public DrawView(Context c) {
         super(c);
@@ -90,12 +101,13 @@ public class DrawView extends View {
         mSelected = -1;
         mFingerInside = -1;
         mCheckToolSwitch = true;
+        mFingers = new HashSet<Integer>();
         mIgnoredFingers = new HashSet<Integer>();
         mLeftHanded = false;
         mPermanentGrid = false;
         mOrigins = new SparseArray<PointF>();
         mTextBounds = new Rect();
-        mFlashedSelection = -1;
+        mFlashed = new LinkedList<Flash>();
         mChanged = false;
         
         mSelections = new Selection[] {
@@ -136,20 +148,17 @@ public class DrawView extends View {
         	public void run() {
         		long now = System.nanoTime();
         		
-        		// Check if the flashed selection should be hidden
-        		if (now - mFlashedTime > mFlashDelay) {
-        			mFlashedSelection = -1;
-        			postInvalidate();
+        		Iterator<Flash> it = mFlashed.iterator();
+        		while (it.hasNext()) {
+        			Flash flashed = it.next();
+        			
+	        		if (now - flashed.time > mFlashDelay) {
+	        			it.remove();
+	        			postInvalidate();
+	        		}
         		}
         		
-        		if (!mCheckToolSwitch)
-        			return;
-
-        		// Check for tool selection
-        		if (now - mPressedOutsideTime < mChordDelay && now - mPressedInsideTime < mChordDelay) {
-        			mSwitchTools = true;
-        			mCheckToolSwitch = false;
-        		} else if (mFingerInside != -1 && now - mPressedInsideTime > mChordDelay) {
+        		if (mFingerInside != -1 && now - mPressedInsideTime > mChordDelay && mCheckToolSwitch) {
         			mShowCM = true;
         			mTool.clearFingers();
         			postInvalidate();
@@ -247,10 +256,10 @@ public class DrawView extends View {
         		canvas.drawLine(bounds.right, bounds.top, bounds.right, bounds.bottom, mCMPaint);
         }
         
-        if (mFlashedSelection != -1) {
-	        Selection selection = mSelections[mFlashedSelection];
-	        if (mFlashedSelection != -1 && selection != null) {
-	        	RectF buttonBounds = getButtonBounds(mFlashedSelection);
+        for (Flash flashed : mFlashed) {
+	        Selection selection = mSelections[flashed.selection];
+	        if (selection != null) {
+	        	RectF buttonBounds = getButtonBounds(flashed.selection);
 	        	
 	        	mCMPaint.setColor(0xAAFFFFFF);
 	        	canvas.drawRect(buttonBounds, mCMPaint);
@@ -291,6 +300,8 @@ public class DrawView extends View {
         switch (event.getActionMasked()) {
             case MotionEvent.ACTION_DOWN:
             case MotionEvent.ACTION_POINTER_DOWN:
+            	mFingers.add(id);
+            	
             	if (event.getPointerCount() == 1)
             		mCheckToolSwitch = true;
             	
@@ -310,11 +321,16 @@ public class DrawView extends View {
             		
             		mPressedOutsideTime = now;
             	}
+
+        		if (now - mPressedOutsideTime < mChordDelay && now - mPressedInsideTime < mChordDelay && mSelected != -1) {
+        			changeSelection(mSelected);
+        			mCheckToolSwitch = false;
+        			mSelected = -1;
+        		}
             	
             	if (mShowCM) {
             		if (event.getPointerCount() == 2) {
             			changeSelection(mSelected);
-            			mSwitchTools = false;
             			mCheckToolSwitch = false;
             			mShowCM = false;
             			mFingerInside = -1;
@@ -372,19 +388,12 @@ public class DrawView extends View {
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_POINTER_UP:
             	mOrigins.delete(id);
-            	
-        		boolean draw = true;
+                mFingers.remove(id);
         		
             	if (id == mFingerInside)
             		mFingerInside = -1;
-
-        		if (event.getPointerCount() == 1) {
-        	    	if (mSwitchTools) {
-        				changeSelection(mSelected);
-        				mSwitchTools = false;
-        				draw = false;
-        	    	}
-        		}
+            	
+        		boolean draw = true;
         		
             	if (mIgnoredFingers.contains(id)) {
             		mIgnoredFingers.remove(id);
@@ -420,16 +429,21 @@ public class DrawView extends View {
 		if (mTool != null)
 			mTool.clearFingers();
 		
-		if (flash) {
-			mFlashedSelection = selected;
-			mFlashedTime = System.nanoTime();
-			invalidate();
+		for (int id : mFingers) {
+			mIgnoredFingers.add(id);
 		}
+		
+		mOrigins.clear();
 		
     	Selection selection = mSelections[selected];
     	
     	if (selection == null)
     		return;
+		
+		if (flash) {
+			mFlashed.add(new Flash(selected, System.nanoTime()));
+			invalidate();
+		}
     	
     	switch (selection.type) {
     		case TOOL:
