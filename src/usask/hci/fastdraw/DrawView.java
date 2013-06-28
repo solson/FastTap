@@ -1,8 +1,6 @@
 package usask.hci.fastdraw;
 
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -54,7 +52,7 @@ public class DrawView extends View {
     private boolean mPermanentGrid;
     private Rect mTextBounds;
     private SparseArray<Long> mFlashTimes;
-    private LinkedList<Touch> mRecentTouches;
+    private SparseArray<Long> mRecentTouches;
     private boolean mChanged;
     private final int mChordDelay = 1000 * 1000 * 200; // 200ms in ns
 	private final int mFlashDelay = 1000 * 1000 * 400; // 400ms in ns
@@ -79,16 +77,6 @@ public class DrawView extends View {
 			this.type = type;
 		}
 	}
-	
-	private class Touch {
-		public int selection;
-		public long time;
-		
-		public Touch(int selection, long time) {
-			this.selection = selection;
-			this.time = time;
-		}
-	}
 
     public DrawView(Context c) {
         super(c);
@@ -108,7 +96,7 @@ public class DrawView extends View {
         mOrigins = new SparseArray<PointF>();
         mTextBounds = new Rect();
         mFlashTimes = new SparseArray<Long>();
-        mRecentTouches = new LinkedList<Touch>();
+        mRecentTouches = new SparseArray<Long>();
         mChanged = false;
         
         mSelections = new Selection[] {
@@ -323,19 +311,21 @@ public class DrawView extends View {
             			col = mCols - col - 1;
             		
             		mSelected = row * mCols + col;
-                	mRecentTouches.add(new Touch(mSelected, now));
+                	mRecentTouches.put(mSelected, now);
             	}
             	
-            	Iterator<Touch> it = mRecentTouches.iterator();
-            	while (it.hasNext()) {
-            		Touch touch = it.next();
-
-            		if (now - touch.time < mChordDelay && now - mPressedInsideTime < mChordDelay) {
-            			changeSelection(touch.selection);
+            	for (int i = 0; i < mRecentTouches.size(); i++) {
+            		int selection = mRecentTouches.keyAt(i);
+            		long time = mRecentTouches.valueAt(i);
+            		
+            		if (now - time < mChordDelay && now - mPressedInsideTime < mChordDelay) {
+            			changeSelection(selection);
             			mCheckToolSwitch = false;
-            			it.remove();
-            		} else if (now - touch.time > mChordDelay) {
-            			it.remove();
+            			mRecentTouches.removeAt(i);
+            			i--;
+            		} else if (now - time > mChordDelay) {
+            			mRecentTouches.removeAt(i);
+            			i--;
             		}
             	}
             	
