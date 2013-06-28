@@ -17,12 +17,14 @@ import android.graphics.Paint.Style;
 import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.RectF;
+import android.util.Log;
 import android.util.SparseArray;
 import android.view.MotionEvent;
 import android.view.View;
 
 public class DrawView extends View {
 	private Activity mMainActivity;
+	private StudyLogger mLog;
 	private Bitmap mBitmap;
     private Paint mBitmapPaint;
 	private final int mCols = 4;
@@ -82,6 +84,7 @@ public class DrawView extends View {
         super(c);
 
         mMainActivity = (Activity) c;
+        mLog = new StudyLogger(c);
         mBitmapPaint = new Paint(Paint.DITHER_FLAG);
         mCMPaint = new Paint();
         mCMPaint.setTextSize(26);
@@ -451,21 +454,26 @@ public class DrawView extends View {
     	
     	switch (selection.type) {
     		case TOOL:
+    			log("Tool selected: " + selection.name);
     			mTool = (Tool) selection.object;
     			mToolName = selection.name;
     			break;
     			
     		case COLOR:
+    			log("Color selected: " + selection.name);
     			mColor = (Integer) selection.object;
     			mColorName = selection.name;
     			break;
     			
     		case THICKNESS:
+    			log("Thickness selected: " + selection.name);
     			mThickness = (Integer) selection.object;
     			mThicknessName = selection.name;
     			break;
     			
     		case ACTION:
+    			log("Action selected: " + selection.name);
+    			
     			switch ((Action) selection.object) {
 					case SAVE:
 						break;
@@ -495,4 +503,9 @@ public class DrawView extends View {
 		mPermanentGrid = sharedPreferences.getBoolean("pref_permanent_grid", false);
 		invalidate();
 	}
+    
+    private void log(String message) {
+    	Log.i("logger", message);
+    	//mLog.log(message);
+    }
 }
