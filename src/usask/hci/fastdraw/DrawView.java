@@ -5,6 +5,7 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -79,10 +80,15 @@ public class DrawView extends View {
 		}
 	}
 
-    public DrawView(MainActivity mainActivity) {
+    public DrawView(Context mainActivity) {
         super(mainActivity);
+        
+        if (!(mainActivity instanceof MainActivity)) {
+        	Log.e("DrawView", "DrawView was not given the MainActivity");
+        	return;
+        }
 
-        mMainActivity = mainActivity;
+        mMainActivity = (MainActivity) mainActivity;
         //mLog = new StudyLogger(c);
         mBitmapPaint = new Paint(Paint.DITHER_FLAG);
         mCMPaint = new Paint();
