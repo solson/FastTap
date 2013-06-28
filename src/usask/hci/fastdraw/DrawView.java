@@ -5,8 +5,6 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import android.app.Activity;
-import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -23,7 +21,7 @@ import android.view.MotionEvent;
 import android.view.View;
 
 public class DrawView extends View {
-	private Activity mMainActivity;
+	private MainActivity mMainActivity;
 	private StudyLogger mLog;
 	private Bitmap mBitmap;
     private Paint mBitmapPaint;
@@ -80,11 +78,11 @@ public class DrawView extends View {
 		}
 	}
 
-    public DrawView(Context c) {
-        super(c);
+    public DrawView(MainActivity mainActivity) {
+        super(mainActivity);
 
-        mMainActivity = (Activity) c;
-        mLog = new StudyLogger(c);
+        mMainActivity = mainActivity;
+        //mLog = new StudyLogger(c);
         mBitmapPaint = new Paint(Paint.DITHER_FLAG);
         mCMPaint = new Paint();
         mCMPaint.setTextSize(26);
@@ -505,7 +503,8 @@ public class DrawView extends View {
 	}
     
     private void log(String message) {
-    	Log.i("logger", message);
+    	long microseconds = System.nanoTime() / 1000;
+    	Log.i("logger", microseconds + " " + message);
     	//mLog.log(message);
     }
 }
