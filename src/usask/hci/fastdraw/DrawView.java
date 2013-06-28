@@ -23,6 +23,7 @@ import android.view.View;
 public class DrawView extends View {
 	private MainActivity mMainActivity;
 	private StudyLogger mLog;
+	private StudyController mStudyCtl;
 	private Bitmap mBitmap;
     private Paint mBitmapPaint;
 	private final int mCols = 4;
@@ -99,6 +100,9 @@ public class DrawView extends View {
         mFlashTimes = new SparseArray<Long>();
         mRecentTouches = new SparseArray<Long>();
         mChanged = false;
+        
+        mStudyCtl = new StudyController();
+        mMainActivity.setTitle(mStudyCtl.getPrompt());
         
         mSelections = new Selection[] {
         	new Selection(new PaintTool(this), "Paintbrush", SelectionType.TOOL),
@@ -427,7 +431,7 @@ public class DrawView extends View {
     	changeSelection(selected, true);
     }
     
-    private void changeSelection(int selected, boolean flash) {
+    private void changeSelection(int selected, boolean fromUser) {
 		if (mTool != null)
 			mTool.clearFingers();
 		
@@ -442,7 +446,10 @@ public class DrawView extends View {
     	if (selection == null)
     		return;
 		
-		if (flash) {
+		if (fromUser) {
+	    	mStudyCtl.handleSelected(selection.name);
+	    	mMainActivity.setTitle(mStudyCtl.getPrompt());
+	    	
 			synchronized (mFlashTimes) {
 				mFlashTimes.put(selected, System.nanoTime());
 			}
@@ -492,8 +499,6 @@ public class DrawView extends View {
     			}
     			break;
     	}
-    	
-		mMainActivity.setTitle(mThicknessName + " " + mColorName + " " + mToolName);
     }
 
 	public void loadPreferences(SharedPreferences sharedPreferences) {
