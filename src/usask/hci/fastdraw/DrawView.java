@@ -59,11 +59,11 @@ public class DrawView extends View {
 	private final int mCMButtonIndex = 16;
     
     private enum Action {
-    	CLEAR, UNDO
+    	SAVE, CLEAR, UNDO
     }
 
     private enum SelectionType {
-    	TOOL, COLOR, THICKNESS, ACTION, NOOP
+    	TOOL, COLOR, THICKNESS, ACTION
     }
     
 	private class Selection {
@@ -121,7 +121,7 @@ public class DrawView extends View {
         	new Selection(50, "Wide", SelectionType.THICKNESS),
         	
         	null, // The position of the command map button
-        	new Selection(null, "Save", SelectionType.NOOP),
+        	new Selection(Action.SAVE, "Save", SelectionType.ACTION),
         	new Selection(Action.CLEAR, "Clear", SelectionType.ACTION),
         	new Selection(Action.UNDO, "Undo", SelectionType.ACTION)
         };
@@ -467,6 +467,9 @@ public class DrawView extends View {
     			
     		case ACTION:
     			switch ((Action) selection.object) {
+					case SAVE:
+						break;
+				
     				case CLEAR:
     					mUndo = mBitmap.copy(mBitmap.getConfig(), true);
     			        Canvas canvas = new Canvas(mBitmap);
@@ -481,9 +484,6 @@ public class DrawView extends View {
         				}
     					break;
     			}
-    			break;
-    			
-    		default:
     			break;
     	}
     	
