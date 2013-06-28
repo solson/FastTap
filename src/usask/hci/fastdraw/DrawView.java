@@ -478,7 +478,7 @@ public class DrawView extends View {
     					
     				case UNDO:
     					if (mUndo != null) {
-        					Bitmap temp = mBitmap.copy(mBitmap.getConfig(), true);
+        					Bitmap temp = mBitmap;
         					mBitmap = mUndo;
         					mUndo = temp;
         				}
