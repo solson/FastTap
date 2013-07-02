@@ -33,7 +33,8 @@ public class StudyController {
 	}
 	
 	public String getPrompt() {
-    	StringBuilder title = new StringBuilder("Please select: ");
+		String progress = "(" + (mCurrTaskIdx + 1) + "/" + mTasks.length + ")";
+    	StringBuilder title = new StringBuilder(progress + " Please select: ");
     	
     	for (String toSelect : mCurrTask) {
     		title.append(toSelect);

@@ -453,9 +453,6 @@ public class DrawView extends View {
     		return;
 		
 		if (fromUser) {
-	    	mStudyCtl.handleSelected(selection.name);
-	    	mMainActivity.setTitle(mStudyCtl.getPrompt());
-	    	
 			synchronized (mFlashTimes) {
 				mFlashTimes.put(selected, System.nanoTime());
 			}
@@ -504,6 +501,11 @@ public class DrawView extends View {
     					break;
     			}
     			break;
+    	}
+    	
+    	if (fromUser) {
+	    	mStudyCtl.handleSelected(selection.name);
+	    	mMainActivity.setTitle(mStudyCtl.getPrompt());
     	}
     }
 
