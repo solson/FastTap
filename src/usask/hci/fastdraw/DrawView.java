@@ -93,7 +93,7 @@ public class DrawView extends View {
 
         mMainActivity = (MainActivity) mainActivity;
         mStudyMode = false;
-        mLog = new StudyLogger(mainActivity);
+        mLog = new StudyLogger();
         mBitmapPaint = new Paint(Paint.DITHER_FLAG);
         mCMPaint = new Paint();
         mCMPaint.setTextSize(26);

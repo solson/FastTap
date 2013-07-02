@@ -7,18 +7,13 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 
-import android.content.Context;
-import android.media.MediaScannerConnection;
 import android.os.Environment;
 import android.util.Log;
 
 public class StudyLogger {
 	private File mFile;
-	private Context mContext;
 	
-	public StudyLogger(Context c) {
-		mContext = c;
-		
+	public StudyLogger() {
 		File dir = new File(Environment.getExternalStorageDirectory() + "/Fast Draw");
 		dir.mkdirs();
 		
