@@ -5,7 +5,9 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -25,6 +27,7 @@ public class DrawView extends View {
 	private MainActivity mMainActivity;
 	private StudyLogger mLog;
 	private StudyController mStudyCtl;
+	private boolean mStudyMode;
 	private Bitmap mBitmap;
     private Paint mBitmapPaint;
 	private final int mCols = 4;
@@ -89,7 +92,8 @@ public class DrawView extends View {
         }
 
         mMainActivity = (MainActivity) mainActivity;
-        //mLog = new StudyLogger(c);
+        mStudyMode = false;
+        mLog = new StudyLogger(mainActivity);
         mBitmapPaint = new Paint(Paint.DITHER_FLAG);
         mCMPaint = new Paint();
         mCMPaint.setTextSize(26);
@@ -106,9 +110,6 @@ public class DrawView extends View {
         mFlashTimes = new SparseArray<Long>();
         mRecentTouches = new SparseArray<Long>();
         mChanged = false;
-        
-        mStudyCtl = new StudyController();
-        mMainActivity.setTitle(mStudyCtl.getPrompt());
         
         mSelections = new Selection[] {
         	new Selection(new PaintTool(this), "Paintbrush", SelectionType.TOOL),
@@ -165,6 +166,19 @@ public class DrawView extends View {
         		}
         	}
         }, 25, 25);
+
+        new AlertDialog.Builder(mainActivity)
+        	.setMessage(R.string.dialog_study_mode)
+        	.setCancelable(false)
+        	.setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
+        		public void onClick(DialogInterface dialog, int which) {
+        			mStudyMode = true;
+        			mStudyCtl = new StudyController(mLog);
+        			mMainActivity.setTitle(mStudyCtl.getPrompt());
+        		}
+        	})
+        	.setNegativeButton(R.string.no, null)
+        	.show();
     }
     
     public int getColor() {
@@ -462,25 +476,25 @@ public class DrawView extends View {
     	
     	switch (selection.type) {
     		case TOOL:
-    			log("Tool selected: " + selection.name);
+    			mLog.log("Tool selected: " + selection.name);
     			mTool = (Tool) selection.object;
     			mToolName = selection.name;
     			break;
     			
     		case COLOR:
-    			log("Color selected: " + selection.name);
+    			mLog.log("Color selected: " + selection.name);
     			mColor = (Integer) selection.object;
     			mColorName = selection.name;
     			break;
     			
     		case THICKNESS:
-    			log("Thickness selected: " + selection.name);
+    			mLog.log("Thickness selected: " + selection.name);
     			mThickness = (Integer) selection.object;
     			mThicknessName = selection.name;
     			break;
     			
     		case ACTION:
-    			log("Action selected: " + selection.name);
+    			mLog.log("Action selected: " + selection.name);
     			
     			switch ((Action) selection.object) {
 					case SAVE:
@@ -503,7 +517,7 @@ public class DrawView extends View {
     			break;
     	}
     	
-    	if (fromUser) {
+    	if (fromUser && mStudyMode) {
 	    	mStudyCtl.handleSelected(selection.name);
 	    	mMainActivity.setTitle(mStudyCtl.getPrompt());
     	}
@@ -514,10 +528,4 @@ public class DrawView extends View {
 		mPermanentGrid = sharedPreferences.getBoolean("pref_permanent_grid", false);
 		invalidate();
 	}
-    
-    private void log(String message) {
-    	long microseconds = System.nanoTime() / 1000;
-    	Log.i("logger", microseconds + " " + message);
-    	//mLog.log(message);
-    }
 }

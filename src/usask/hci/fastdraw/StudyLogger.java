@@ -10,6 +10,7 @@ import java.io.Writer;
 import android.content.Context;
 import android.media.MediaScannerConnection;
 import android.os.Environment;
+import android.util.Log;
 
 public class StudyLogger {
 	private File mFile;
@@ -29,13 +30,12 @@ public class StudyLogger {
 			e.printStackTrace();
 			return;
 		}
-		
-		// Workaround for an Android bug to force the file to be rescanned
-		// so it shows up on a computer.
-		MediaScannerConnection.scanFile(mContext, new String[] { mFile.getAbsolutePath() }, null, null);
 	}
 	
 	public void log(String message) {
+    	long milliseconds = System.nanoTime() / 1000 / 1000;
+    	Log.i("FastDraw", milliseconds + ": " + message);
+    	
 		Writer s;
 		
 		try {

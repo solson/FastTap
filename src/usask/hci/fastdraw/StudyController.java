@@ -4,14 +4,15 @@ import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import android.util.Log;
-
 public class StudyController {
 	private final String[][] mTasks;
 	private int mCurrTaskIdx;
 	private Set<String> mCurrTask;
+	private StudyLogger mLog;
 
-	public StudyController() {
+	public StudyController(StudyLogger logger) {
+		mLog = logger;
+
 		mTasks = new String[][] {
 			{"Normal", "Red", "Line"},
 			{"Thin", "Yellow"},
@@ -23,12 +24,15 @@ public class StudyController {
 	}
 	
 	public void handleSelected(String selection) {
-		mCurrTask.remove(selection);
-		
-		if (mCurrTask.isEmpty()) {
-			Log.i("logger", "finished " + mCurrTaskIdx);
-			mCurrTaskIdx = (mCurrTaskIdx + 1) % mTasks.length;
-			mCurrTask = new LinkedHashSet<String>(Arrays.asList(mTasks[mCurrTaskIdx]));
+		if (mCurrTask.contains(selection)) {
+			mCurrTask.remove(selection);
+
+			if (mCurrTask.isEmpty()) {
+				mCurrTaskIdx = (mCurrTaskIdx + 1) % mTasks.length;
+				mCurrTask = new LinkedHashSet<String>(Arrays.asList(mTasks[mCurrTaskIdx]));
+			}
+		} else {
+			mLog.log("Selection error: " + selection);
 		}
 	}
 	
