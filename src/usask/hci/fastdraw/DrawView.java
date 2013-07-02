@@ -170,14 +170,14 @@ public class DrawView extends View {
         new AlertDialog.Builder(mainActivity)
         	.setMessage(R.string.dialog_study_mode)
         	.setCancelable(false)
-        	.setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
+        	.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
         		public void onClick(DialogInterface dialog, int which) {
         			mStudyMode = true;
         			mStudyCtl = new StudyController(mLog);
         			mMainActivity.setTitle(mStudyCtl.getPrompt());
         		}
         	})
-        	.setNegativeButton(R.string.no, null)
+        	.setNegativeButton(android.R.string.no, null)
         	.show();
     }
     

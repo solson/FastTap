@@ -7,6 +7,4 @@
     <string name="pref_permanent_grid">Permanent Grid</string>
     <string name="pref_permanent_grid_summ">Show a light grid for the buttons at all times</string>
     <string name="dialog_study_mode">Run the study mode?</string>
-    <string name="yes">Yes</string>
-    <string name="no">No</string>
 </resources>
