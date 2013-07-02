@@ -5,26 +5,25 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.io.Writer;
 
+import android.app.AlertDialog;
+import android.content.Context;
 import android.os.Environment;
 import android.util.Log;
 
 public class StudyLogger {
 	private File mFile;
+	private Context mContext;
 	
-	public StudyLogger() {
+	public StudyLogger(Context c) {
+		mContext = c;
+		
 		File dir = new File(Environment.getExternalStorageDirectory() + "/Fast Draw");
 		dir.mkdirs();
-		
 		mFile = new File(dir, "study.txt");
-		
-		try {
-			mFile.createNewFile();
-		} catch (IOException e) {
-			e.printStackTrace();
-			return;
-		}
 	}
 	
 	public void log(String message) {
@@ -36,16 +35,28 @@ public class StudyLogger {
 		try {
 			s = new OutputStreamWriter(new FileOutputStream(mFile, true));
 		} catch (FileNotFoundException e) {
-			e.printStackTrace();
+			notifyError(e);
 			return;
 		}
 
 		try {
 			s.write(message + "\r\n");
+			s.flush();
 		} catch (IOException e) {
-			e.printStackTrace();
+			notifyError(e);
 		} finally {
 			try { s.close(); } catch (IOException e) {}
 		}
+	}
+	
+	private void notifyError(Exception e) {
+		StringWriter sw = new StringWriter();
+		e.printStackTrace(new PrintWriter(sw));
+		
+        new AlertDialog.Builder(mContext)
+        	.setTitle(R.string.dialog_logging_error)
+        	.setMessage(sw.toString())
+        	.setPositiveButton(android.R.string.ok, null)
+        	.show();
 	}
 }
