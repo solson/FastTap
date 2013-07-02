@@ -26,9 +26,16 @@ public class StudyLogger {
 		mFile = new File(dir, "study.txt");
 	}
 	
+	public void touch(int pid, long start, long end, long duration) {
+		log("Touch", pid + "," + start + "," + end + "," + duration);
+	}
+	
 	public void log(String message) {
-    	long milliseconds = System.nanoTime() / 1000 / 1000;
-    	Log.i("FastDraw", milliseconds + ": " + message);
+		log("", message);
+	}
+
+	public void log(String type, String message) {
+    	Log.i("FastDraw" + type, message);
     	
 		Writer s;
 		

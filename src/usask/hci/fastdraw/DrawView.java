@@ -58,6 +58,7 @@ public class DrawView extends View {
     private Rect mTextBounds;
     private SparseArray<Long> mFlashTimes;
     private SparseArray<Long> mRecentTouches;
+    private SparseArray<Long> mAllTouches;
     private boolean mChanged;
     private final int mChordDelay = 1000 * 1000 * 200; // 200ms in ns
 	private final int mFlashDelay = 1000 * 1000 * 400; // 400ms in ns
@@ -109,6 +110,7 @@ public class DrawView extends View {
         mTextBounds = new Rect();
         mFlashTimes = new SparseArray<Long>();
         mRecentTouches = new SparseArray<Long>();
+        mAllTouches = new SparseArray<Long>();
         mChanged = false;
         
         mSelections = new Selection[] {
@@ -313,16 +315,16 @@ public class DrawView extends View {
         float x = event.getX(index);
         float y = event.getY(index);
         int id = event.getPointerId(index);
+    	long now = System.nanoTime();
 
         switch (event.getActionMasked()) {
             case MotionEvent.ACTION_DOWN:
             case MotionEvent.ACTION_POINTER_DOWN:
             	mFingers.add(id);
+            	mAllTouches.put(id, now);
             	
             	if (event.getPointerCount() == 1)
             		mCheckToolSwitch = true;
-            	
-            	long now = System.nanoTime();
             	
             	if (getCMButtonBounds().contains(x, y)) {
             		mFingerInside = id;
@@ -415,6 +417,10 @@ public class DrawView extends View {
             case MotionEvent.ACTION_POINTER_UP:
             	mOrigins.delete(id);
                 mFingers.remove(id);
+                
+                long start = mAllTouches.get(id);
+                mAllTouches.remove(id);
+            	mLog.touch(1, start, now, now - start);
         		
             	if (id == mFingerInside)
             		mFingerInside = -1;
