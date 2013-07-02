@@ -26,8 +26,11 @@ public class StudyLogger {
 		mFile = new File(dir, "study.txt");
 	}
 	
-	public void touch(int pid, long start, long end, long duration) {
-		log("Touch", pid + "," + start + "," + end + "," + duration);
+	public void touch(int pid, long startNs, long endNs) {
+		long startMs = startNs / 1000000;
+		long endMs = endNs / 1000000;
+		long duration = endMs - startMs;
+		log("Touch", pid + "," + startMs + "," + endMs + "," + duration);
 	}
 	
 	public void log(String message) {

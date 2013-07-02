@@ -420,7 +420,7 @@ public class DrawView extends View {
                 
                 long start = mAllTouches.get(id);
                 mAllTouches.remove(id);
-            	mLog.touch(1, start, now, now - start);
+            	mLog.touch(1, start, now);
         		
             	if (id == mFingerInside)
             		mFingerInside = -1;
