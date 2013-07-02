@@ -476,25 +476,32 @@ public class DrawView extends View {
     	
     	switch (selection.type) {
     		case TOOL:
-    			mLog.log("Tool selected: " + selection.name);
+    			if (fromUser)
+    				mLog.log("Tool selected: " + selection.name);
+    			
     			mTool = (Tool) selection.object;
     			mToolName = selection.name;
     			break;
     			
     		case COLOR:
-    			mLog.log("Color selected: " + selection.name);
+    			if (fromUser)
+    				mLog.log("Color selected: " + selection.name);
+    			
     			mColor = (Integer) selection.object;
     			mColorName = selection.name;
     			break;
     			
     		case THICKNESS:
-    			mLog.log("Thickness selected: " + selection.name);
+    			if (fromUser)
+    				mLog.log("Thickness selected: " + selection.name);
+    			
     			mThickness = (Integer) selection.object;
     			mThicknessName = selection.name;
     			break;
     			
     		case ACTION:
-    			mLog.log("Action selected: " + selection.name);
+    			if (fromUser)
+    				mLog.log("Action selected: " + selection.name);
     			
     			switch ((Action) selection.object) {
 					case SAVE:
