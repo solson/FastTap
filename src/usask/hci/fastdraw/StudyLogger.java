@@ -8,6 +8,9 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 import android.app.AlertDialog;
 import android.content.Context;
@@ -15,17 +18,18 @@ import android.os.Environment;
 import android.util.Log;
 
 public class StudyLogger {
-	private File mFile;
+	private File mLogDir;
 	private Context mContext;
 	private int mSubjectId;
+	private Date mStart;
 	
 	public StudyLogger(Context c) {
 		mContext = c;
+		mStart = new Date();
 		mSubjectId = -1;
 		
-		File dir = new File(Environment.getExternalStorageDirectory() + "/Fast Draw");
-		dir.mkdirs();
-		mFile = new File(dir, "study.txt");
+		mLogDir = new File(Environment.getExternalStorageDirectory() + "/Fast Draw");
+		mLogDir.mkdirs();
 	}
 	
 	public void touch(long startNs, long endNs, boolean multiTouch, boolean markedCanvas) {
@@ -41,7 +45,7 @@ public class StudyLogger {
 	}
 	
 	public void log(String message) {
-		log("", message);
+		log("Event", message);
 	}
 
 	public void log(String type, String message) {
@@ -49,11 +53,17 @@ public class StudyLogger {
 			return;
 		
     	Log.i("FastDraw" + type, message);
-    	
-		Writer s;
 		
+		SimpleDateFormat formatter = new SimpleDateFormat("yyyy.MM.dd", Locale.US);
+		File dir = new File(mLogDir, mSubjectId + " - " + formatter.format(mStart));
+		dir.mkdir();
+		
+		formatter = new SimpleDateFormat("yyyy.MM.dd HH.mm.ss", Locale.US);
+		File file = new File(dir, mSubjectId + " - " + type + " - " + formatter.format(mStart) + ".txt");
+
+		Writer s;
 		try {
-			s = new OutputStreamWriter(new FileOutputStream(mFile, true));
+			s = new OutputStreamWriter(new FileOutputStream(file, true));
 		} catch (FileNotFoundException e) {
 			notifyError(e);
 			return;
