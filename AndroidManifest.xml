@@ -27,12 +27,7 @@
         
         <activity
             android:name="usask.hci.fastdraw.Preferences"
-            android:label="@string/action_settings" >
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.PREFERENCE" />
-            </intent-filter>
-        </activity>
+            android:label="@string/action_settings" />
     </application>
 
 </manifest>
