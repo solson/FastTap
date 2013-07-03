@@ -54,7 +54,7 @@ public class StudyLogger {
 		
     	Log.i("FastDraw" + type, message);
 		
-		SimpleDateFormat formatter = new SimpleDateFormat("yyyy.MM.dd", Locale.US);
+		SimpleDateFormat formatter = new SimpleDateFormat("yyyy.MM.dd HH.mm.ss", Locale.US);
 		File dir = new File(mLogDir, mSubjectId + " - " + formatter.format(mStart));
 		dir.mkdir();
 		
