@@ -23,6 +23,7 @@ import android.util.Pair;
 import android.util.SparseArray;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.NumberPicker;
 
 public class DrawView extends View {
 	private MainActivity mMainActivity;
@@ -173,6 +174,14 @@ public class DrawView extends View {
         	}
         }, 25, 25);
 
+        final NumberPicker subjectIdPicker = new NumberPicker(mainActivity);
+        subjectIdPicker.setMinValue(0);
+        subjectIdPicker.setMaxValue(999);
+        subjectIdPicker.setWrapSelectorWheel(false);
+        
+        // Prevent the keyboard from popping up.
+        subjectIdPicker.setDescendantFocusability(NumberPicker.FOCUS_BLOCK_DESCENDANTS);
+        
         new AlertDialog.Builder(mainActivity)
         	.setMessage(R.string.dialog_study_mode)
         	.setCancelable(false)
@@ -181,9 +190,11 @@ public class DrawView extends View {
         			mStudyMode = true;
         			mStudyCtl = new StudyController(mLog);
         			mMainActivity.setTitle(mStudyCtl.getPrompt());
+        			mLog.setSubjectId(subjectIdPicker.getValue());
         		}
         	})
         	.setNegativeButton(android.R.string.no, null)
+        	.setView(subjectIdPicker)
         	.show();
     }
     

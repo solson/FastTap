@@ -6,6 +6,6 @@
     <string name="pref_left_handed_summ">Mirror the overlay and buttons</string>
     <string name="pref_permanent_grid">Permanent Grid</string>
     <string name="pref_permanent_grid_summ">Show a light grid for the buttons at all times</string>
-    <string name="dialog_study_mode">Run the study mode?</string>
+    <string name="dialog_study_mode">Study Setup</string>
     <string name="dialog_logging_error">An error occurred in the logging code.</string>
 </resources>

@@ -17,9 +17,11 @@ import android.util.Log;
 public class StudyLogger {
 	private File mFile;
 	private Context mContext;
+	private int mSubjectId;
 	
 	public StudyLogger(Context c) {
 		mContext = c;
+		mSubjectId = -1;
 		
 		File dir = new File(Environment.getExternalStorageDirectory() + "/Fast Draw");
 		dir.mkdirs();
@@ -30,12 +32,12 @@ public class StudyLogger {
 		long startMs = startNs / 1000000;
 		long endMs = endNs / 1000000;
 		long duration = endMs - startMs;
-		log("Touch", startMs + "," + endMs + "," + duration + "," + (multiTouch ? 1 : 0) + "," + (markedCanvas ? 1 : 0));
+		log("Touch", mSubjectId + "," + startMs + "," + endMs + "," + duration + "," + (multiTouch ? 1 : 0) + "," + (markedCanvas ? 1 : 0));
 	}
 	
 	public void task(int taskNum, int numTargets, String targets, int numErrors, String errors, int timesCMShown, long durationNs) {
 		long durationMs = durationNs / 1000000;
-		log("Task", taskNum + "," + numTargets + "," + targets + "," + numErrors + "," + errors + "," + timesCMShown + "," + durationMs);
+		log("Task", mSubjectId + "," + taskNum + "," + numTargets + "," + targets + "," + numErrors + "," + errors + "," + timesCMShown + "," + durationMs);
 	}
 	
 	public void log(String message) {
@@ -43,6 +45,9 @@ public class StudyLogger {
 	}
 
 	public void log(String type, String message) {
+		if (mSubjectId == -1)
+			return;
+		
     	Log.i("FastDraw" + type, message);
     	
 		Writer s;
@@ -73,5 +78,9 @@ public class StudyLogger {
         	.setMessage(sw.toString())
         	.setPositiveButton(android.R.string.ok, null)
         	.show();
+	}
+
+	public void setSubjectId(int subjectId) {
+		mSubjectId = subjectId;
 	}
 }
