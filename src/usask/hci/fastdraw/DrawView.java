@@ -19,6 +19,7 @@ import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.util.Log;
+import android.util.Pair;
 import android.util.SparseArray;
 import android.view.MotionEvent;
 import android.view.View;
@@ -58,7 +59,7 @@ public class DrawView extends View {
     private Rect mTextBounds;
     private SparseArray<Long> mFlashTimes;
     private SparseArray<Long> mRecentTouches;
-    private SparseArray<Long> mAllTouches;
+    private SparseArray<Pair<Long, Long>> mAllTouches;
     private boolean mChanged;
     private final int mChordDelay = 1000 * 1000 * 200; // 200ms in ns
 	private final int mFlashDelay = 1000 * 1000 * 400; // 400ms in ns
@@ -110,7 +111,7 @@ public class DrawView extends View {
         mTextBounds = new Rect();
         mFlashTimes = new SparseArray<Long>();
         mRecentTouches = new SparseArray<Long>();
-        mAllTouches = new SparseArray<Long>();
+        mAllTouches = new SparseArray<Pair<Long,Long>>();
         mChanged = false;
         
         mSelections = new Selection[] {
@@ -321,7 +322,7 @@ public class DrawView extends View {
             case MotionEvent.ACTION_DOWN:
             case MotionEvent.ACTION_POINTER_DOWN:
             	mFingers.add(id);
-            	mAllTouches.put(id, now);
+            	mAllTouches.put(id, new Pair<Long, Long>(now, -1L));
             	
             	if (event.getPointerCount() == 1)
             		mCheckToolSwitch = true;
@@ -417,13 +418,12 @@ public class DrawView extends View {
             case MotionEvent.ACTION_POINTER_UP:
             	mOrigins.delete(id);
                 mFingers.remove(id);
-                
-                long start = mAllTouches.get(id);
-                mAllTouches.remove(id);
-            	mLog.touch(1, start, now);
         		
             	if (id == mFingerInside)
             		mFingerInside = -1;
+            	
+            	Pair<Long, Long> finishedTouch = mAllTouches.get(id);
+            	mAllTouches.put(id, new Pair<Long, Long>(finishedTouch.first, now));
             	
         		boolean draw = true;
         		
@@ -443,8 +443,16 @@ public class DrawView extends View {
             		mTool.touchStop(id, x, y, new Canvas(mBitmap));
             	}
 
-            	if (event.getPointerCount() == 1)
+            	if (event.getPointerCount() == 1) {
+            		int size = mAllTouches.size();
+            		for (int i = 0; i < size; i++) {
+	                    Pair<Long, Long> touch = mAllTouches.valueAt(i);
+	                	mLog.touch(touch.first, touch.second, size > 1, mChanged);
+            		}
+            		mAllTouches.clear();
+                	
             		mChanged = false;
+            	}
         		
                 break;
         }

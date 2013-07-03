@@ -9,6 +9,7 @@ public class StudyController {
 	private int mCurrTaskIdx;
 	private Set<String> mCurrTask;
 	private StudyLogger mLog;
+	private long mTaskStart;
 
 	public StudyController(StudyLogger logger) {
 		mLog = logger;
@@ -19,8 +20,7 @@ public class StudyController {
 			{"Circle", "Save"}
 		};
 
-		mCurrTaskIdx = 0;
-		mCurrTask = new LinkedHashSet<String>(Arrays.asList(mTasks[mCurrTaskIdx]));
+		selectTask(0);
 	}
 	
 	public void handleSelected(String selection) {
@@ -28,8 +28,18 @@ public class StudyController {
 			mCurrTask.remove(selection);
 
 			if (mCurrTask.isEmpty()) {
-				mCurrTaskIdx = (mCurrTaskIdx + 1) % mTasks.length;
-				mCurrTask = new LinkedHashSet<String>(Arrays.asList(mTasks[mCurrTaskIdx]));
+				int numTargets = mTasks[mCurrTaskIdx].length;
+				StringBuilder targetString = new StringBuilder();
+				for (int i = 0; i < numTargets; i++) {
+					if (i != 0)
+						targetString.append(" ");
+					targetString.append(mTasks[mCurrTaskIdx][i]);
+				}
+				
+				long now = System.nanoTime();
+				mLog.task(mCurrTaskIdx + 1, mTasks[mCurrTaskIdx].length, targetString.toString(), now - mTaskStart);
+				
+				selectTask((mCurrTaskIdx + 1) % mTasks.length);
 			}
 		} else {
 			mLog.log("Selection error: " + selection);
@@ -46,5 +56,11 @@ public class StudyController {
     	}
     	
     	return title.substring(0, title.length() - 2);
+	}
+	
+	private void selectTask(int taskIndex) {
+		mTaskStart = System.nanoTime();
+		mCurrTaskIdx = taskIndex;
+		mCurrTask = new LinkedHashSet<String>(Arrays.asList(mTasks[mCurrTaskIdx]));
 	}
 }
