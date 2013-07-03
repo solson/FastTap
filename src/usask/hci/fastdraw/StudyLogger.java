@@ -34,13 +34,6 @@ public class StudyLogger {
 		mSubjectId = subjectId;
 	}
 	
-	public void touch(long startNs, long endNs, boolean multiTouch, boolean markedCanvas) {
-		long startMs = startNs / 1000000;
-		long endMs = endNs / 1000000;
-		long duration = endMs - startMs;
-		log("Touch", mSubjectId + "," + startMs + "," + endMs + "," + duration + "," + (multiTouch ? 1 : 0) + "," + (markedCanvas ? 1 : 0));
-	}
-	
 	public void task(int taskNum, int numTargets, String targets, int numErrors, String errors, int timesCMShown, long durationNs) {
 		long durationMs = durationNs / 1000000;
 		log("Task", mSubjectId + "," + taskNum + "," + numTargets + "," + targets + "," + numErrors + "," + errors + "," + timesCMShown + "," + durationMs);
