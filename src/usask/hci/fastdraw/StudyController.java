@@ -20,7 +20,9 @@ public class StudyController {
 		mTasks = new String[][] {
 			{"Normal", "Red", "Line"},
 			{"Thin", "Yellow"},
-			{"Circle", "Save"}
+			{"Circle", "White"},
+			{"Wide", "Magenta", "Line"},
+			{"Thin", "Black", "Paintbrush"}
 		};
 
 		selectTask(0);
