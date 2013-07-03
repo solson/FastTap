@@ -162,7 +162,7 @@ public class DrawView extends View {
 	        		}
         		}
         		
-        		if (mFingerInside != -1 && now - mPressedInsideTime > mChordDelay && mCheckToolSwitch) {
+        		if (mFingerInside != -1 && now - mPressedInsideTime > mChordDelay && mCheckToolSwitch && !mShowCM) {
         			mShowCM = true;
         			mTool.clearFingers();
         			postInvalidate();
