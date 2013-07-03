@@ -166,7 +166,9 @@ public class DrawView extends View {
         			mShowCM = true;
         			mTool.clearFingers();
         			postInvalidate();
-        			mStudyCtl.handleCMShown();
+        			
+        			if (mStudyMode)
+        				mStudyCtl.handleCMShown();
         		}
         	}
         }, 25, 25);
