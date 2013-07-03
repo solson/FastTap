@@ -27,9 +27,7 @@ public class StudyLogger {
 		mContext = c;
 		mStart = new Date();
 		mSubjectId = -1;
-		
 		mLogDir = new File(Environment.getExternalStorageDirectory() + "/Fast Draw");
-		mLogDir.mkdirs();
 	}
 
 	public void setSubjectId(int subjectId) {
@@ -61,7 +59,7 @@ public class StudyLogger {
 		
 		SimpleDateFormat formatter = new SimpleDateFormat("yyyy.MM.dd HH.mm.ss", Locale.US);
 		File dir = new File(mLogDir, mSubjectId + " - " + formatter.format(mStart));
-		dir.mkdir();
+		dir.mkdirs();
 		
 		formatter = new SimpleDateFormat("yyyy.MM.dd HH.mm.ss", Locale.US);
 		File file = new File(dir, mSubjectId + " - " + type + " - " + formatter.format(mStart) + ".txt");
