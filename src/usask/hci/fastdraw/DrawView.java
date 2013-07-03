@@ -162,6 +162,7 @@ public class DrawView extends View {
         		
         		if (mFingerInside != -1 && now - mPressedInsideTime > mChordDelay && mCheckToolSwitch && !mShowCM) {
         			mShowCM = true;
+        			mLog.event("Overlay shown");
         			mTool.clearFingers();
         			postInvalidate();
         			
@@ -354,6 +355,22 @@ public class DrawView extends View {
                 	mRecentTouches.put(mSelected, now);
             	}
             	
+            	boolean useTool = true;
+            	
+            	if (mShowCM) {
+            		if (event.getPointerCount() == 2) {
+            			mCheckToolSwitch = false;
+            			mShowCM = false;
+            			mLog.event("Overlay hidden");
+            			mPressedInsideTime = System.nanoTime();
+            			
+            			for (int i = 0; i < 2; i++)
+            				mIgnoredFingers.add(event.getPointerId(i));
+            		}
+            		
+            		useTool = false;
+            	}
+            	
             	for (int i = 0; i < mRecentTouches.size(); i++) {
             		int selection = mRecentTouches.keyAt(i);
             		long time = mRecentTouches.valueAt(i);
@@ -369,22 +386,10 @@ public class DrawView extends View {
             		}
             	}
             	
-            	if (mShowCM) {
-            		if (event.getPointerCount() == 2) {
-            			changeSelection(mSelected);
-            			mCheckToolSwitch = false;
-            			mShowCM = false;
-            			mPressedInsideTime = System.nanoTime();
-            			
-            			for (int i = 0; i < 2; i++)
-            				mIgnoredFingers.add(event.getPointerId(i));
-            		}
-            		
-            		break;
+            	if (useTool) {
+	            	mOrigins.put(id, new PointF(x, y));
+	            	mTool.touchStart(id, x, y);
             	}
-
-            	mOrigins.put(id, new PointF(x, y));
-            	mTool.touchStart(id, x, y);
                 break;
                 
             case MotionEvent.ACTION_MOVE:
@@ -446,6 +451,7 @@ public class DrawView extends View {
             	if (mShowCM) {
             		if (event.getPointerCount() == 1) {
             			mShowCM = false;
+            			mLog.event("Overlay hidden");
             		}
             	} else if (draw) {
                     if (event.getPointerCount() == 1 && mChanged)
