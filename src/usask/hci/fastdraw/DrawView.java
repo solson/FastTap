@@ -19,7 +19,6 @@ import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.util.Log;
-import android.util.Pair;
 import android.util.SparseArray;
 import android.view.MotionEvent;
 import android.view.View;
@@ -60,7 +59,6 @@ public class DrawView extends View {
     private Rect mTextBounds;
     private SparseArray<Long> mFlashTimes;
     private SparseArray<Long> mRecentTouches;
-    private SparseArray<Pair<Long, Long>> mAllTouches;
     private boolean mChanged;
     private final int mChordDelay = 1000 * 1000 * 200; // 200ms in ns
 	private final int mFlashDelay = 1000 * 1000 * 400; // 400ms in ns
@@ -112,7 +110,6 @@ public class DrawView extends View {
         mTextBounds = new Rect();
         mFlashTimes = new SparseArray<Long>();
         mRecentTouches = new SparseArray<Long>();
-        mAllTouches = new SparseArray<Pair<Long,Long>>();
         mChanged = false;
         
         mSelections = new Selection[] {
@@ -335,8 +332,9 @@ public class DrawView extends View {
         switch (event.getActionMasked()) {
             case MotionEvent.ACTION_DOWN:
             case MotionEvent.ACTION_POINTER_DOWN:
+            	mLog.event("Touch down: " + id);
+            	
             	mFingers.add(id);
-            	mAllTouches.put(id, new Pair<Long, Long>(now, -1L));
             	
             	if (event.getPointerCount() == 1)
             		mCheckToolSwitch = true;
@@ -430,14 +428,13 @@ public class DrawView extends View {
                 
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_POINTER_UP:
+            	mLog.event("Touch up: " + id);
+
             	mOrigins.delete(id);
                 mFingers.remove(id);
-        		
+
             	if (id == mFingerInside)
             		mFingerInside = -1;
-            	
-            	Pair<Long, Long> finishedTouch = mAllTouches.get(id);
-            	mAllTouches.put(id, new Pair<Long, Long>(finishedTouch.first, now));
             	
         		boolean draw = true;
         		
@@ -457,16 +454,8 @@ public class DrawView extends View {
             		mTool.touchStop(id, x, y, new Canvas(mBitmap));
             	}
 
-            	if (event.getPointerCount() == 1) {
-            		int size = mAllTouches.size();
-            		for (int i = 0; i < size; i++) {
-	                    Pair<Long, Long> touch = mAllTouches.valueAt(i);
-	                	mLog.touch(touch.first, touch.second, size > 1, mChanged);
-            		}
-            		mAllTouches.clear();
-                	
+            	if (event.getPointerCount() == 1)
             		mChanged = false;
-            	}
         		
                 break;
         }
@@ -505,7 +494,7 @@ public class DrawView extends View {
     	switch (selection.type) {
     		case TOOL:
     			if (fromUser)
-    				mLog.log("Tool selected: " + selection.name);
+    				mLog.event("Tool selected: " + selection.name);
     			
     			mTool = (Tool) selection.object;
     			mToolName = selection.name;
@@ -513,7 +502,7 @@ public class DrawView extends View {
     			
     		case COLOR:
     			if (fromUser)
-    				mLog.log("Color selected: " + selection.name);
+    				mLog.event("Color selected: " + selection.name);
     			
     			mColor = (Integer) selection.object;
     			mColorName = selection.name;
@@ -521,7 +510,7 @@ public class DrawView extends View {
     			
     		case THICKNESS:
     			if (fromUser)
-    				mLog.log("Thickness selected: " + selection.name);
+    				mLog.event("Thickness selected: " + selection.name);
     			
     			mThickness = (Integer) selection.object;
     			mThicknessName = selection.name;
@@ -529,7 +518,7 @@ public class DrawView extends View {
     			
     		case ACTION:
     			if (fromUser)
-    				mLog.log("Action selected: " + selection.name);
+    				mLog.event("Action selected: " + selection.name);
     			
     			switch ((Action) selection.object) {
 					case SAVE:

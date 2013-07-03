@@ -31,6 +31,10 @@ public class StudyLogger {
 		mLogDir = new File(Environment.getExternalStorageDirectory() + "/Fast Draw");
 		mLogDir.mkdirs();
 	}
+
+	public void setSubjectId(int subjectId) {
+		mSubjectId = subjectId;
+	}
 	
 	public void touch(long startNs, long endNs, boolean multiTouch, boolean markedCanvas) {
 		long startMs = startNs / 1000000;
@@ -44,11 +48,12 @@ public class StudyLogger {
 		log("Task", mSubjectId + "," + taskNum + "," + numTargets + "," + targets + "," + numErrors + "," + errors + "," + timesCMShown + "," + durationMs);
 	}
 	
-	public void log(String message) {
-		log("Event", message);
+	public void event(String message) {
+		long timeMs = System.nanoTime() / 1000000;
+		log("Event", mSubjectId + "," + timeMs + "," + message);
 	}
 
-	public void log(String type, String message) {
+	private void log(String type, String message) {
 		if (mSubjectId == -1)
 			return;
 		
@@ -88,9 +93,5 @@ public class StudyLogger {
         	.setMessage(sw.toString())
         	.setPositiveButton(android.R.string.ok, null)
         	.show();
-	}
-
-	public void setSubjectId(int subjectId) {
-		mSubjectId = subjectId;
 	}
 }
