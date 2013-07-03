@@ -12,6 +12,7 @@ public class StudyController {
 	private long mTaskStart;
 	private int mNumErrors;
 	private StringBuilder mErrors;
+	private int mTimesCMShown;
 
 	public StudyController(StudyLogger logger) {
 		mLog = logger;
@@ -40,7 +41,7 @@ public class StudyController {
 					targetString.append(mTasks[mCurrTaskIdx][i]);
 				}
 
-				mLog.task(mCurrTaskIdx + 1, mTasks[mCurrTaskIdx].length, targetString.toString(), mNumErrors, mErrors.toString(), now - mTaskStart);
+				mLog.task(mCurrTaskIdx + 1, mTasks[mCurrTaskIdx].length, targetString.toString(), mNumErrors, mErrors.toString(), mTimesCMShown, now - mTaskStart);
 
 				selectTask((mCurrTaskIdx + 1) % mTasks.length);
 			}
@@ -51,6 +52,10 @@ public class StudyController {
 			mErrors.append(selection);
 			mNumErrors++;
 		}
+	}
+	
+	public void handleCMShown() {
+		mTimesCMShown++;
 	}
 	
 	public String getPrompt() {
@@ -67,6 +72,7 @@ public class StudyController {
 	
 	private void selectTask(int taskIndex) {
 		mTaskStart = System.nanoTime();
+		mTimesCMShown = 0;
 		mNumErrors = 0;
 		mErrors = new StringBuilder();
 		mCurrTaskIdx = taskIndex;
