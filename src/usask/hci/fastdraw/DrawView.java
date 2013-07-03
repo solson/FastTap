@@ -35,12 +35,12 @@ public class DrawView extends View {
 	private final int mRows = 5;
 	private float mColWidth;
 	private float mRowHeight;
-	private boolean mShowCM;
-	private Paint mCMPaint;
+	private boolean mShowOverlay;
+	private Paint mOverlayPaint;
 	private int mSelected;
 	private long mPressedInsideTime;
 	private int mFingerInside;
-    private boolean mCheckToolSwitch;
+    private boolean mCheckOverlay;
     private Set<Integer> mFingers;
     private Set<Integer> mIgnoredFingers;
     private Selection[] mSelections;
@@ -96,12 +96,12 @@ public class DrawView extends View {
         mStudyMode = false;
         mLog = new StudyLogger(mainActivity);
         mBitmapPaint = new Paint(Paint.DITHER_FLAG);
-        mCMPaint = new Paint();
-        mCMPaint.setTextSize(26);
-        mCMPaint.setTextAlign(Align.CENTER);
+        mOverlayPaint = new Paint();
+        mOverlayPaint.setTextSize(26);
+        mOverlayPaint.setTextAlign(Align.CENTER);
         mSelected = -1;
         mFingerInside = -1;
-        mCheckToolSwitch = true;
+        mCheckOverlay = true;
         mFingers = new HashSet<Integer>();
         mIgnoredFingers = new HashSet<Integer>();
         mLeftHanded = false;
@@ -160,8 +160,8 @@ public class DrawView extends View {
 	        		}
         		}
         		
-        		if (mFingerInside != -1 && now - mPressedInsideTime > mChordDelay && mCheckToolSwitch && !mShowCM) {
-        			mShowCM = true;
+        		if (mFingerInside != -1 && now - mPressedInsideTime > mChordDelay && mCheckOverlay && !mShowOverlay) {
+        			mShowOverlay = true;
         			mLog.event("Overlay shown");
         			mTool.clearFingers();
         			postInvalidate();
@@ -240,27 +240,27 @@ public class DrawView extends View {
         canvas.drawBitmap(mBitmap, 0, 0, mBitmapPaint);
         mTool.draw(canvas);
         
-        if (mShowCM)
+        if (mShowOverlay)
         	canvas.drawARGB(0xAA, 0xFF, 0xFF, 0xFF);
         
-    	mCMPaint.setColor(0x88FFFF00);
-    	canvas.drawRect(bounds, mCMPaint);
+    	mOverlayPaint.setColor(0x88FFFF00);
+    	canvas.drawRect(bounds, mOverlayPaint);
     	
-        if (mShowCM || mPermanentGrid) {
-        	mCMPaint.setColor(0x44666666);
+        if (mShowOverlay || mPermanentGrid) {
+        	mOverlayPaint.setColor(0x44666666);
 
         	for (int i = 0; i < mRows; i++) {
         		float top = i * mRowHeight;    		
-        		canvas.drawLine(0, top, mColWidth * mCols, top, mCMPaint);
+        		canvas.drawLine(0, top, mColWidth * mCols, top, mOverlayPaint);
         	}
         	for (int i = 0; i < mCols; i++) {
         		float left = i * mColWidth;    		
-        		canvas.drawLine(left, 0, left, mRowHeight * mRows, mCMPaint);
+        		canvas.drawLine(left, 0, left, mRowHeight * mRows, mOverlayPaint);
         	}
         }
         
-        if (mShowCM) {
-    		mCMPaint.setColor(0xFF666666);
+        if (mShowOverlay) {
+    		mOverlayPaint.setColor(0xFF666666);
         	for (int y = 0; y < mRows; y++) {
         		for (int x = 0; x < mCols; x++) {
         			int realX = x;
@@ -270,19 +270,19 @@ public class DrawView extends View {
         			int i = y * mCols + realX;
         			if (mSelections[i] != null) {
         				String name = mSelections[i].name;
-        				int heightAdj = getTextHeight(name, mCMPaint) / 2;
-        				canvas.drawText(name, (x + 0.5f) * mColWidth, (y + 0.5f) * mRowHeight + heightAdj, mCMPaint);
+        				int heightAdj = getTextHeight(name, mOverlayPaint) / 2;
+        				canvas.drawText(name, (x + 0.5f) * mColWidth, (y + 0.5f) * mRowHeight + heightAdj, mOverlayPaint);
         			}
         		}
         	}
         } else if (!mPermanentGrid) {
-    		mCMPaint.setColor(0x44666666);
-        	canvas.drawLine(bounds.left, bounds.top, bounds.right, bounds.top, mCMPaint);
+    		mOverlayPaint.setColor(0x44666666);
+        	canvas.drawLine(bounds.left, bounds.top, bounds.right, bounds.top, mOverlayPaint);
         	
         	if (mLeftHanded)
-        		canvas.drawLine(bounds.left, bounds.top, bounds.left, bounds.bottom, mCMPaint);
+        		canvas.drawLine(bounds.left, bounds.top, bounds.left, bounds.bottom, mOverlayPaint);
         	else
-        		canvas.drawLine(bounds.right, bounds.top, bounds.right, bounds.bottom, mCMPaint);
+        		canvas.drawLine(bounds.right, bounds.top, bounds.right, bounds.bottom, mOverlayPaint);
         }
         
         synchronized (mFlashTimes) {
@@ -292,33 +292,33 @@ public class DrawView extends View {
     	        if (selection != null) {
     	        	RectF buttonBounds = getButtonBounds(selectionNum);
     	        	
-    	        	mCMPaint.setColor(0xAAFFFFFF);
-    	        	canvas.drawRect(buttonBounds, mCMPaint);
+    	        	mOverlayPaint.setColor(0xAAFFFFFF);
+    	        	canvas.drawRect(buttonBounds, mOverlayPaint);
     	        	
-    	        	mCMPaint.setColor(0x44666666);
-    	        	mCMPaint.setStyle(Style.STROKE);
-    	        	canvas.drawRect(buttonBounds, mCMPaint);
-    	        	mCMPaint.setStyle(Style.FILL);
+    	        	mOverlayPaint.setColor(0x44666666);
+    	        	mOverlayPaint.setStyle(Style.STROKE);
+    	        	canvas.drawRect(buttonBounds, mOverlayPaint);
+    	        	mOverlayPaint.setStyle(Style.FILL);
     	        	
-    	    		mCMPaint.setColor(0xFF666666);
+    	    		mOverlayPaint.setColor(0xFF666666);
     				String name = selection.name;
-    				int heightAdj = getTextHeight(name, mCMPaint) / 2;
-    				canvas.drawText(name, buttonBounds.left + 0.5f * mColWidth, buttonBounds.top + 0.5f * mRowHeight + heightAdj, mCMPaint);
+    				int heightAdj = getTextHeight(name, mOverlayPaint) / 2;
+    				canvas.drawText(name, buttonBounds.left + 0.5f * mColWidth, buttonBounds.top + 0.5f * mRowHeight + heightAdj, mOverlayPaint);
     	        }
             }
 		}
         
-		mCMPaint.setColor(0xFF666666);
+		mOverlayPaint.setColor(0xFF666666);
         canvas.drawText(mThicknessName, bounds.left + mColWidth / 2,
-        		bounds.top + mRowHeight / 2 + getTextHeight(mThicknessName, mCMPaint) / 2 - 30, mCMPaint);
+        		bounds.top + mRowHeight / 2 + getTextHeight(mThicknessName, mOverlayPaint) / 2 - 30, mOverlayPaint);
         canvas.drawText(mColorName, bounds.left + mColWidth / 2,
-        		bounds.top + mRowHeight / 2 + getTextHeight(mColorName, mCMPaint) / 2, mCMPaint);
+        		bounds.top + mRowHeight / 2 + getTextHeight(mColorName, mOverlayPaint) / 2, mOverlayPaint);
         canvas.drawText(mToolName, bounds.left + mColWidth / 2,
-        		bounds.top + mRowHeight / 2 + getTextHeight(mToolName, mCMPaint) / 2 + 30, mCMPaint);
+        		bounds.top + mRowHeight / 2 + getTextHeight(mToolName, mOverlayPaint) / 2 + 30, mOverlayPaint);
     }
     
     private int getTextHeight(String text, Paint paint) {
-		mCMPaint.getTextBounds(text, 0, text.length(), mTextBounds);
+		mOverlayPaint.getTextBounds(text, 0, text.length(), mTextBounds);
 		return mTextBounds.height();
     }
     
@@ -338,7 +338,7 @@ public class DrawView extends View {
             	mFingers.add(id);
             	
             	if (event.getPointerCount() == 1)
-            		mCheckToolSwitch = true;
+            		mCheckOverlay = true;
             	
             	if (getCMButtonBounds().contains(x, y)) {
             		mFingerInside = id;
@@ -357,10 +357,10 @@ public class DrawView extends View {
             	
             	boolean useTool = true;
             	
-            	if (mShowCM) {
+            	if (mShowOverlay) {
             		if (event.getPointerCount() == 2) {
-            			mCheckToolSwitch = false;
-            			mShowCM = false;
+            			mCheckOverlay = false;
+            			mShowOverlay = false;
             			mLog.event("Overlay hidden");
             			mPressedInsideTime = System.nanoTime();
             			
@@ -377,7 +377,7 @@ public class DrawView extends View {
             		
             		if (now - time < mChordDelay && now - mPressedInsideTime < mChordDelay) {
             			changeSelection(selection);
-            			mCheckToolSwitch = false;
+            			mCheckOverlay = false;
             			mRecentTouches.removeAt(i);
             			i--;
             		} else if (now - time > mChordDelay) {
@@ -393,7 +393,7 @@ public class DrawView extends View {
                 break;
                 
             case MotionEvent.ACTION_MOVE:
-            	if (mShowCM)
+            	if (mShowOverlay)
             		break;
             	
             	int count = event.getPointerCount();
@@ -448,9 +448,9 @@ public class DrawView extends View {
             		draw = false;
             	}
             	
-            	if (mShowCM) {
+            	if (mShowOverlay) {
             		if (event.getPointerCount() == 1) {
-            			mShowCM = false;
+            			mShowOverlay = false;
             			mLog.event("Overlay hidden");
             		}
             	} else if (draw) {
