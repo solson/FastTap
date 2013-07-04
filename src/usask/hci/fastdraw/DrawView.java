@@ -36,6 +36,7 @@ public class DrawView extends View {
 	private float mColWidth;
 	private float mRowHeight;
 	private boolean mShowOverlay;
+	private long mOverlayStart;
 	private Paint mOverlayPaint;
 	private int mSelected;
 	private long mPressedInsideTime;
@@ -161,6 +162,7 @@ public class DrawView extends View {
         		}
         		
         		if (mFingerInside != -1 && now - mPressedInsideTime > mChordDelay && mCheckOverlay && !mShowOverlay) {
+        			mOverlayStart = now;
         			mShowOverlay = true;
         			mLog.event("Overlay shown");
         			mTool.clearFingers();
@@ -361,7 +363,8 @@ public class DrawView extends View {
             		if (event.getPointerCount() == 2) {
             			mCheckOverlay = false;
             			mShowOverlay = false;
-            			mLog.event("Overlay hidden");
+            			long duration = now - mOverlayStart;
+            			mLog.event("Overlay hidden by selection: " + duration / 1000000 + " ms");
             			mPressedInsideTime = System.nanoTime();
             			
             			for (int i = 0; i < 2; i++)
@@ -451,7 +454,8 @@ public class DrawView extends View {
             	if (mShowOverlay) {
             		if (event.getPointerCount() == 1) {
             			mShowOverlay = false;
-            			mLog.event("Overlay hidden");
+            			long duration = now - mOverlayStart;
+            			mLog.event("Overlay hidden without selection: " + duration / 1000000 + " ms");
             		}
             	} else if (draw) {
                     if (event.getPointerCount() == 1 && mChanged)
