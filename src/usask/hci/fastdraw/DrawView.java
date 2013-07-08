@@ -262,7 +262,7 @@ public class DrawView extends View {
         }
         
         if (mShowOverlay) {
-    		mOverlayPaint.setColor(0xFF666666);
+    		mOverlayPaint.setColor(0xFF000000);
         	for (int y = 0; y < mRows; y++) {
         		for (int x = 0; x < mCols; x++) {
         			int realX = x;
@@ -294,7 +294,7 @@ public class DrawView extends View {
     	        if (selection != null) {
     	        	RectF buttonBounds = getButtonBounds(selectionNum);
     	        	
-    	        	mOverlayPaint.setColor(0xAAFFFFFF);
+    	        	mOverlayPaint.setColor(0xBBF5F5F5);
     	        	canvas.drawRect(buttonBounds, mOverlayPaint);
     	        	
     	        	mOverlayPaint.setColor(0x44666666);
@@ -302,7 +302,7 @@ public class DrawView extends View {
     	        	canvas.drawRect(buttonBounds, mOverlayPaint);
     	        	mOverlayPaint.setStyle(Style.FILL);
     	        	
-    	    		mOverlayPaint.setColor(0xFF666666);
+    	    		mOverlayPaint.setColor(0xFF000000);
     				String name = selection.name;
     				int heightAdj = getTextHeight(name, mOverlayPaint) / 2;
     				canvas.drawText(name, buttonBounds.left + 0.5f * mColWidth, buttonBounds.top + 0.5f * mRowHeight + heightAdj, mOverlayPaint);
