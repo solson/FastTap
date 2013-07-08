@@ -357,28 +357,11 @@ public class DrawView extends View {
                 	mRecentTouches.put(mSelected, now);
             	}
             	
-            	boolean useTool = true;
-            	
-            	if (mShowOverlay) {
-            		if (event.getPointerCount() == 2) {
-            			mCheckOverlay = false;
-            			mShowOverlay = false;
-            			long duration = now - mOverlayStart;
-            			mLog.event("Overlay hidden by selection: " + duration / 1000000 + " ms");
-            			mPressedInsideTime = System.nanoTime();
-            			
-            			for (int i = 0; i < 2; i++)
-            				mIgnoredFingers.add(event.getPointerId(i));
-            		}
-            		
-            		useTool = false;
-            	}
-            	
             	for (int i = 0; i < mRecentTouches.size(); i++) {
             		int selection = mRecentTouches.keyAt(i);
             		long time = mRecentTouches.valueAt(i);
             		
-            		if (now - time < mChordDelay && now - mPressedInsideTime < mChordDelay) {
+            		if ((now - time < mChordDelay && now - mPressedInsideTime < mChordDelay) || mShowOverlay) {
             			changeSelection(selection);
             			mCheckOverlay = false;
             			mRecentTouches.removeAt(i);
@@ -389,7 +372,7 @@ public class DrawView extends View {
             		}
             	}
             	
-            	if (useTool) {
+            	if (!mShowOverlay) {
 	            	mOrigins.put(id, new PointF(x, y));
 	            	mTool.touchStart(id, x, y);
             	}
@@ -455,7 +438,7 @@ public class DrawView extends View {
             		if (event.getPointerCount() == 1) {
             			mShowOverlay = false;
             			long duration = now - mOverlayStart;
-            			mLog.event("Overlay hidden without selection: " + duration / 1000000 + " ms");
+            			mLog.event("Overlay hidden after " + duration / 1000000 + " ms");
             		}
             	} else if (draw) {
                     if (event.getPointerCount() == 1 && mChanged)
