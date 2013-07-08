@@ -63,7 +63,7 @@ public class DrawView extends View {
     private boolean mChanged;
     private final int mChordDelay = 1000 * 1000 * 200; // 200ms in ns
 	private final int mFlashDelay = 1000 * 1000 * 400; // 400ms in ns
-	private final int mCMButtonIndex = 16;
+	private final int mOverlayButtonIndex = 16;
     
     private enum Action {
     	SAVE, CLEAR, UNDO
@@ -231,13 +231,13 @@ public class DrawView extends View {
 		return new RectF(left, top, right, bottom);
 	}
 	
-	private RectF getCMButtonBounds() {
-		return getButtonBounds(mCMButtonIndex);
+	private RectF getOverlayButtonBounds() {
+		return getButtonBounds(mOverlayButtonIndex);
 	}
 
     @Override
     protected void onDraw(Canvas canvas) {
-    	RectF bounds = getCMButtonBounds();
+    	RectF bounds = getOverlayButtonBounds();
     	
         canvas.drawBitmap(mBitmap, 0, 0, mBitmapPaint);
         mTool.draw(canvas);
@@ -342,7 +342,7 @@ public class DrawView extends View {
             	if (event.getPointerCount() == 1)
             		mCheckOverlay = true;
             	
-            	if (getCMButtonBounds().contains(x, y)) {
+            	if (getOverlayButtonBounds().contains(x, y)) {
             		mFingerInside = id;
             		mPressedInsideTime = now;
             		mIgnoredFingers.add(mFingerInside);
