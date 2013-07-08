@@ -5,19 +5,19 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 public class StudyController {
-	private final String[][] mTasks;
-	private int mCurrTaskIdx;
-	private Set<String> mCurrTask;
+	private final String[][] mTrials;
+	private int mCurrTrial;
+	private Set<String> mToSelect;
 	private StudyLogger mLog;
-	private long mTaskStart;
+	private long mTrialStart;
 	private int mNumErrors;
 	private StringBuilder mErrors;
-	private int mTimesCMShown;
+	private int mTimesOverlayShown;
 
 	public StudyController(StudyLogger logger) {
 		mLog = logger;
 
-		mTasks = new String[][] {
+		mTrials = new String[][] {
 			{"Normal", "Red", "Line"},
 			{"Thin", "Yellow", "Rectangle"},
 			{"Fine", "White", "Circle"},
@@ -34,23 +34,23 @@ public class StudyController {
 	}
 	
 	public void handleSelected(String selection) {
-		if (mCurrTask.contains(selection)) {
-			mCurrTask.remove(selection);
+		if (mToSelect.contains(selection)) {
+			mToSelect.remove(selection);
 
-			if (mCurrTask.isEmpty()) {
+			if (mToSelect.isEmpty()) {
 				long now = System.nanoTime();
 				
-				int numTargets = mTasks[mCurrTaskIdx].length;
+				int numTargets = mTrials[mCurrTrial].length;
 				StringBuilder targetString = new StringBuilder();
 				for (int i = 0; i < numTargets; i++) {
 					if (i != 0)
 						targetString.append(" ");
-					targetString.append(mTasks[mCurrTaskIdx][i]);
+					targetString.append(mTrials[mCurrTrial][i]);
 				}
 
-				mLog.task(mCurrTaskIdx + 1, mTasks[mCurrTaskIdx].length, targetString.toString(), mNumErrors, mErrors.toString(), mTimesCMShown, now - mTaskStart);
+				mLog.task(mCurrTrial + 1, mTrials[mCurrTrial].length, targetString.toString(), mNumErrors, mErrors.toString(), mTimesOverlayShown, now - mTrialStart);
 
-				selectTask((mCurrTaskIdx + 1) % mTasks.length);
+				selectTask((mCurrTrial + 1) % mTrials.length);
 			}
 		} else {
 			if (mNumErrors != 0)
@@ -61,15 +61,15 @@ public class StudyController {
 		}
 	}
 	
-	public void handleCMShown() {
-		mTimesCMShown++;
+	public void handleOverlayShown() {
+		mTimesOverlayShown++;
 	}
 	
 	public String getPrompt() {
-		String progress = "(" + (mCurrTaskIdx + 1) + "/" + mTasks.length + ")";
+		String progress = "(" + (mCurrTrial + 1) + "/" + mTrials.length + ")";
     	StringBuilder title = new StringBuilder(progress + " Please select: ");
     	
-    	for (String toSelect : mCurrTask) {
+    	for (String toSelect : mToSelect) {
     		title.append(toSelect);
     		title.append(", ");
     	}
@@ -78,11 +78,11 @@ public class StudyController {
 	}
 	
 	private void selectTask(int taskIndex) {
-		mTaskStart = System.nanoTime();
-		mTimesCMShown = 0;
+		mTrialStart = System.nanoTime();
+		mTimesOverlayShown = 0;
 		mNumErrors = 0;
 		mErrors = new StringBuilder();
-		mCurrTaskIdx = taskIndex;
-		mCurrTask = new LinkedHashSet<String>(Arrays.asList(mTasks[mCurrTaskIdx]));
+		mCurrTrial = taskIndex;
+		mToSelect = new LinkedHashSet<String>(Arrays.asList(mTrials[mCurrTrial]));
 	}
 }

@@ -169,7 +169,7 @@ public class DrawView extends View {
         			postInvalidate();
         			
         			if (mStudyMode)
-        				mStudyCtl.handleCMShown();
+        				mStudyCtl.handleOverlayShown();
         		}
         	}
         }, 25, 25);
