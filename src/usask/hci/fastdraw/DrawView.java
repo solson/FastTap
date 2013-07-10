@@ -24,6 +24,8 @@ import android.util.Log;
 import android.util.SparseArray;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.CheckBox;
+import android.widget.LinearLayout;
 import android.widget.NumberPicker;
 
 public class DrawView extends View {
@@ -110,7 +112,7 @@ public class DrawView extends View {
         	return;
         }
 
-        mUI = UI.GESTURE;
+        mUI = UI.CHORD;
         mMainActivity = (MainActivity) mainActivity;
         mStudyMode = false;
         mLog = new StudyLogger(mainActivity);
@@ -229,6 +231,13 @@ public class DrawView extends View {
         	}
         }, 25, 25);
 
+        final CheckBox studyCheckBox = new CheckBox(mainActivity);
+        studyCheckBox.setText("Run in study mode");
+        studyCheckBox.setChecked(true);
+
+        final CheckBox gestureCheckBox = new CheckBox(mainActivity);
+        gestureCheckBox.setText("Use the gesture interface");
+        
         final NumberPicker subjectIdPicker = new NumberPicker(mainActivity);
         subjectIdPicker.setMinValue(0);
         subjectIdPicker.setMaxValue(999);
@@ -237,19 +246,29 @@ public class DrawView extends View {
         // Prevent the keyboard from popping up.
         subjectIdPicker.setDescendantFocusability(NumberPicker.FOCUS_BLOCK_DESCENDANTS);
         
+        LinearLayout studySetupView = new LinearLayout(mainActivity);
+        studySetupView.setOrientation(LinearLayout.VERTICAL);
+        studySetupView.addView(studyCheckBox);
+        studySetupView.addView(gestureCheckBox);
+        studySetupView.addView(subjectIdPicker);
+        
         new AlertDialog.Builder(mainActivity)
         	.setMessage(R.string.dialog_study_mode)
         	.setCancelable(false)
         	.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
         		public void onClick(DialogInterface dialog, int which) {
-        			mStudyMode = true;
-        			mStudyCtl = new StudyController(mLog);
-        			mMainActivity.setTitle(mStudyCtl.getPrompt());
+        			mStudyMode = studyCheckBox.isChecked();
+        			
+        			if (mStudyMode) {
+        				mStudyCtl = new StudyController(mLog);
+        				mMainActivity.setTitle(mStudyCtl.getPrompt());
+        			}
+        			
         			mLog.setSubjectId(subjectIdPicker.getValue());
+        			mUI = gestureCheckBox.isChecked() ? UI.GESTURE : UI.CHORD;
         		}
         	})
-        	.setNegativeButton(android.R.string.no, null)
-        	.setView(subjectIdPicker)
+        	.setView(studySetupView)
         	.show();
     }
     
