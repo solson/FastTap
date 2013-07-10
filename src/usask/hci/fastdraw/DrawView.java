@@ -1,10 +1,12 @@
 package usask.hci.fastdraw;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import usask.hci.fastdraw.GestureDetector.Gesture;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -37,7 +39,7 @@ public class DrawView extends View {
 	private float mRowHeight;
 	private boolean mShowOverlay;
 	private long mOverlayStart;
-	private Paint mOverlayPaint;
+	private Paint mPaint;
 	private int mSelected;
 	private long mPressedInsideTime;
 	private int mFingerInside;
@@ -45,6 +47,7 @@ public class DrawView extends View {
     private Set<Integer> mFingers;
     private Set<Integer> mIgnoredFingers;
     private Selection[] mSelections;
+    private HashMap<Gesture, Integer> mGestureSelections;
 	private Tool mTool;
     private int mColor;
     private int mThickness;
@@ -61,9 +64,18 @@ public class DrawView extends View {
     private SparseArray<Long> mFlashTimes;
     private SparseArray<Long> mRecentTouches;
     private boolean mChanged;
+	private GestureDetector mGestureDetector;
+	private Gesture mGesture;
+	private int mGestureFinger;
+	private UI mUI;
     private final int mChordDelay = 1000 * 1000 * 200; // 200ms in ns
 	private final int mFlashDelay = 1000 * 1000 * 400; // 400ms in ns
+    private final int mGestureDelay = 1000 * 1000 * 1000; // 1 second in ns
 	private final int mOverlayButtonIndex = 16;
+	
+	private enum UI {
+		CHORD, GESTURE
+	}
     
     private enum Action {
     	SAVE, CLEAR, UNDO
@@ -93,13 +105,14 @@ public class DrawView extends View {
         	return;
         }
 
+        mUI = UI.GESTURE;
         mMainActivity = (MainActivity) mainActivity;
         mStudyMode = false;
         mLog = new StudyLogger(mainActivity);
         mBitmapPaint = new Paint(Paint.DITHER_FLAG);
-        mOverlayPaint = new Paint();
-        mOverlayPaint.setTextSize(26);
-        mOverlayPaint.setTextAlign(Align.CENTER);
+        mPaint = new Paint();
+        mPaint.setTextSize(26);
+        mPaint.setTextAlign(Align.CENTER);
         mSelected = -1;
         mFingerInside = -1;
         mCheckOverlay = true;
@@ -112,6 +125,9 @@ public class DrawView extends View {
         mFlashTimes = new SparseArray<Long>();
         mRecentTouches = new SparseArray<Long>();
         mChanged = false;
+        mGestureDetector = new GestureDetector();
+        mGesture = Gesture.UNKNOWN;
+        mGestureFinger = -1;
         
         mSelections = new Selection[] {
         	new Selection(new PaintTool(this), "Paintbrush", SelectionType.TOOL),
@@ -140,6 +156,28 @@ public class DrawView extends View {
         	new Selection(Action.UNDO, "Undo", SelectionType.ACTION)
         };
         
+        mGestureSelections = new HashMap<Gesture, Integer>();
+        
+        mGestureSelections.put(Gesture.UP, 0);          // Paintbrush
+        mGestureSelections.put(Gesture.UP_RIGHT, 1);    // Line
+        mGestureSelections.put(Gesture.UP_DOWN, 2);     // Circle
+        mGestureSelections.put(Gesture.UP_LEFT, 3);     // Rectangle
+
+        mGestureSelections.put(Gesture.LEFT, 4);        // Black
+        mGestureSelections.put(Gesture.LEFT_UP, 5);     // Red
+        mGestureSelections.put(Gesture.LEFT_RIGHT, 6);  // Green
+        mGestureSelections.put(Gesture.LEFT_DOWN, 7);   // Blue
+        
+        mGestureSelections.put(Gesture.RIGHT, 8);       // White
+        mGestureSelections.put(Gesture.RIGHT_DOWN, 9);  // Yellow
+        mGestureSelections.put(Gesture.RIGHT_LEFT, 10); // Cyan
+        mGestureSelections.put(Gesture.RIGHT_UP, 11);   // Magenta
+        
+        mGestureSelections.put(Gesture.DOWN_LEFT, 12);  // Fine
+        mGestureSelections.put(Gesture.DOWN_UP, 13);    // Thin
+        mGestureSelections.put(Gesture.DOWN, 14);       // Normal
+        mGestureSelections.put(Gesture.DOWN_RIGHT, 15); // Wide
+        
         // Default to thin black paintbrush
         changeSelection(0, false);
         changeSelection(4, false);
@@ -151,25 +189,29 @@ public class DrawView extends View {
         	public void run() {
         		long now = System.nanoTime();
         		
-        		synchronized (mFlashTimes) {
-	        		for (int i = 0; i < mFlashTimes.size(); i++) {
-	        			long time = mFlashTimes.valueAt(i);
-		        		if (now - time > mFlashDelay) {
-		        			mFlashTimes.removeAt(i);
-		        			postInvalidate();
+        		if (mUI == UI.CHORD) {
+	        		synchronized (mFlashTimes) {
+		        		for (int i = 0; i < mFlashTimes.size(); i++) {
+		        			long time = mFlashTimes.valueAt(i);
+			        		if (now - time > mFlashDelay) {
+			        			mFlashTimes.removeAt(i);
+			        			postInvalidate();
+			        		}
 		        		}
 	        		}
-        		}
-        		
-        		if (mFingerInside != -1 && now - mPressedInsideTime > mChordDelay && mCheckOverlay && !mShowOverlay) {
-        			mOverlayStart = now;
-        			mShowOverlay = true;
-        			mLog.event("Overlay shown");
-        			mTool.clearFingers();
-        			postInvalidate();
-        			
-        			if (mStudyMode)
-        				mStudyCtl.handleOverlayShown();
+	        		
+	        		if (mFingerInside != -1 && now - mPressedInsideTime > mChordDelay && mCheckOverlay && !mShowOverlay) {
+	        			mOverlayStart = now;
+	        			mShowOverlay = true;
+	        			mLog.event("Overlay shown");
+	        			mTool.clearFingers();
+	        			postInvalidate();
+	        			
+	        			if (mStudyMode)
+	        				mStudyCtl.handleOverlayShown();
+	        		}
+        		} else if (mUI == UI.GESTURE) {
+        			// TODO
         		}
         	}
         }, 25, 25);
@@ -245,24 +287,24 @@ public class DrawView extends View {
         if (mShowOverlay)
         	canvas.drawARGB(0xAA, 0xFF, 0xFF, 0xFF);
         
-    	mOverlayPaint.setColor(0x88FFFF00);
-    	canvas.drawRect(bounds, mOverlayPaint);
+    	mPaint.setColor(0x88FFFF00);
+    	canvas.drawRect(bounds, mPaint);
     	
-        if (mShowOverlay || mPermanentGrid) {
-        	mOverlayPaint.setColor(0x44666666);
+        if (mShowOverlay || (mPermanentGrid && mUI == UI.CHORD)) {
+        	mPaint.setColor(0x44666666);
 
         	for (int i = 0; i < mRows; i++) {
         		float top = i * mRowHeight;    		
-        		canvas.drawLine(0, top, mColWidth * mCols, top, mOverlayPaint);
+        		canvas.drawLine(0, top, mColWidth * mCols, top, mPaint);
         	}
         	for (int i = 0; i < mCols; i++) {
         		float left = i * mColWidth;    		
-        		canvas.drawLine(left, 0, left, mRowHeight * mRows, mOverlayPaint);
+        		canvas.drawLine(left, 0, left, mRowHeight * mRows, mPaint);
         	}
         }
         
         if (mShowOverlay) {
-    		mOverlayPaint.setColor(0xFF000000);
+    		mPaint.setColor(0xFF000000);
         	for (int y = 0; y < mRows; y++) {
         		for (int x = 0; x < mCols; x++) {
         			int realX = x;
@@ -272,55 +314,57 @@ public class DrawView extends View {
         			int i = y * mCols + realX;
         			if (mSelections[i] != null) {
         				String name = mSelections[i].name;
-        				int heightAdj = getTextHeight(name, mOverlayPaint) / 2;
-        				canvas.drawText(name, (x + 0.5f) * mColWidth, (y + 0.5f) * mRowHeight + heightAdj, mOverlayPaint);
+        				int heightAdj = getTextHeight(name, mPaint) / 2;
+        				canvas.drawText(name, (x + 0.5f) * mColWidth, (y + 0.5f) * mRowHeight + heightAdj, mPaint);
         			}
         		}
         	}
-        } else if (!mPermanentGrid) {
-    		mOverlayPaint.setColor(0x44666666);
-        	canvas.drawLine(bounds.left, bounds.top, bounds.right, bounds.top, mOverlayPaint);
+        } else if (!mPermanentGrid || mUI != UI.CHORD) {
+    		mPaint.setColor(0x44666666);
+        	canvas.drawLine(bounds.left, bounds.top, bounds.right, bounds.top, mPaint);
         	
         	if (mLeftHanded)
-        		canvas.drawLine(bounds.left, bounds.top, bounds.left, bounds.bottom, mOverlayPaint);
+        		canvas.drawLine(bounds.left, bounds.top, bounds.left, bounds.bottom, mPaint);
         	else
-        		canvas.drawLine(bounds.right, bounds.top, bounds.right, bounds.bottom, mOverlayPaint);
+        		canvas.drawLine(bounds.right, bounds.top, bounds.right, bounds.bottom, mPaint);
         }
         
-        synchronized (mFlashTimes) {
-        	for (int i = 0; i < mFlashTimes.size(); i++) {
-        		int selectionNum = mFlashTimes.keyAt(i);
-    	        Selection selection = mSelections[selectionNum];
-    	        if (selection != null) {
-    	        	RectF buttonBounds = getButtonBounds(selectionNum);
-    	        	
-    	        	mOverlayPaint.setColor(0xBBF5F5F5);
-    	        	canvas.drawRect(buttonBounds, mOverlayPaint);
-    	        	
-    	        	mOverlayPaint.setColor(0x44666666);
-    	        	mOverlayPaint.setStyle(Style.STROKE);
-    	        	canvas.drawRect(buttonBounds, mOverlayPaint);
-    	        	mOverlayPaint.setStyle(Style.FILL);
-    	        	
-    	    		mOverlayPaint.setColor(0xFF000000);
-    				String name = selection.name;
-    				int heightAdj = getTextHeight(name, mOverlayPaint) / 2;
-    				canvas.drawText(name, buttonBounds.left + 0.5f * mColWidth, buttonBounds.top + 0.5f * mRowHeight + heightAdj, mOverlayPaint);
-    	        }
-            }
-		}
+        if (mUI == UI.CHORD) { 
+	        synchronized (mFlashTimes) {
+	        	for (int i = 0; i < mFlashTimes.size(); i++) {
+	        		int selectionNum = mFlashTimes.keyAt(i);
+	    	        Selection selection = mSelections[selectionNum];
+	    	        if (selection != null) {
+	    	        	RectF buttonBounds = getButtonBounds(selectionNum);
+	    	        	
+	    	        	mPaint.setColor(0xBBF5F5F5);
+	    	        	canvas.drawRect(buttonBounds, mPaint);
+	    	        	
+	    	        	mPaint.setColor(0x44666666);
+	    	        	mPaint.setStyle(Style.STROKE);
+	    	        	canvas.drawRect(buttonBounds, mPaint);
+	    	        	mPaint.setStyle(Style.FILL);
+	    	        	
+	    	    		mPaint.setColor(0xFF000000);
+	    				String name = selection.name;
+	    				int heightAdj = getTextHeight(name, mPaint) / 2;
+	    				canvas.drawText(name, buttonBounds.left + 0.5f * mColWidth, buttonBounds.top + 0.5f * mRowHeight + heightAdj, mPaint);
+	    	        }
+	            }
+			}
+        }
         
-		mOverlayPaint.setColor(0xFF666666);
+		mPaint.setColor(0xFF666666);
         canvas.drawText(mThicknessName, bounds.left + mColWidth / 2,
-        		bounds.top + mRowHeight / 2 + getTextHeight(mThicknessName, mOverlayPaint) / 2 - 30, mOverlayPaint);
+        		bounds.top + mRowHeight / 2 + getTextHeight(mThicknessName, mPaint) / 2 - 30, mPaint);
         canvas.drawText(mColorName, bounds.left + mColWidth / 2,
-        		bounds.top + mRowHeight / 2 + getTextHeight(mColorName, mOverlayPaint) / 2, mOverlayPaint);
+        		bounds.top + mRowHeight / 2 + getTextHeight(mColorName, mPaint) / 2, mPaint);
         canvas.drawText(mToolName, bounds.left + mColWidth / 2,
-        		bounds.top + mRowHeight / 2 + getTextHeight(mToolName, mOverlayPaint) / 2 + 30, mOverlayPaint);
+        		bounds.top + mRowHeight / 2 + getTextHeight(mToolName, mPaint) / 2 + 30, mPaint);
     }
     
     private int getTextHeight(String text, Paint paint) {
-		mOverlayPaint.getTextBounds(text, 0, text.length(), mTextBounds);
+		mPaint.getTextBounds(text, 0, text.length(), mTextBounds);
 		return mTextBounds.height();
     }
     
@@ -339,36 +383,50 @@ public class DrawView extends View {
             	
             	mFingers.add(id);
             	
-            	if (event.getPointerCount() == 1)
-            		mCheckOverlay = true;
-            	
-            	if (getOverlayButtonBounds().contains(x, y)) {
-            		mFingerInside = id;
-            		mPressedInsideTime = now;
-            		mIgnoredFingers.add(mFingerInside);
-            	} else {
-            		int col = (int) (x / mColWidth);
-            		int row = (int) (y / mRowHeight);
-            		
-            		if (mLeftHanded)
-            			col = mCols - col - 1;
-            		
-            		mSelected = row * mCols + col;
-                	mRecentTouches.put(mSelected, now);
-            	}
-            	
-            	for (int i = 0; i < mRecentTouches.size(); i++) {
-            		int selection = mRecentTouches.keyAt(i);
-            		long time = mRecentTouches.valueAt(i);
-            		
-            		if ((now - time < mChordDelay && now - mPressedInsideTime < mChordDelay) || mShowOverlay) {
-            			changeSelection(selection);
-            			mCheckOverlay = false;
-            			mRecentTouches.removeAt(i);
-            			i--;
-            		} else if (now - time > mChordDelay) {
-            			mRecentTouches.removeAt(i);
-            			i--;
+            	if (mUI == UI.CHORD) { 
+	            	if (event.getPointerCount() == 1)
+	            		mCheckOverlay = true;
+	            	
+	            	if (getOverlayButtonBounds().contains(x, y)) {
+	            		mFingerInside = id;
+	            		mPressedInsideTime = now;
+	            		mIgnoredFingers.add(mFingerInside);
+	            	} else {
+	            		int col = (int) (x / mColWidth);
+	            		int row = (int) (y / mRowHeight);
+	            		
+	            		if (mLeftHanded)
+	            			col = mCols - col - 1;
+	            		
+	            		mSelected = row * mCols + col;
+	                	mRecentTouches.put(mSelected, now);
+	            	}
+	            	
+	            	for (int i = 0; i < mRecentTouches.size(); i++) {
+	            		int selection = mRecentTouches.keyAt(i);
+	            		long time = mRecentTouches.valueAt(i);
+	            		
+	            		if ((now - time < mChordDelay && now - mPressedInsideTime < mChordDelay) || mShowOverlay) {
+	            			changeSelection(selection);
+	            			mCheckOverlay = false;
+	            			mRecentTouches.removeAt(i);
+	            			i--;
+	            		} else if (now - time > mChordDelay) {
+	            			mRecentTouches.removeAt(i);
+	            			i--;
+	            		}
+	            	}
+            	} else if (mUI == UI.GESTURE) {
+            		if (getOverlayButtonBounds().contains(x, y)) {
+	            		mFingerInside = id;
+	            		mPressedInsideTime = now;
+	            		mIgnoredFingers.add(mFingerInside);
+            		} else if (mGestureFinger == -1 && now - mPressedInsideTime < mGestureDelay) {
+                    	mGestureDetector.clear();
+	            		mGestureFinger = id;
+	            		
+	            		for (int finger : mFingers)
+	            			mIgnoredFingers.add(finger);
             		}
             	}
             	
@@ -386,6 +444,9 @@ public class DrawView extends View {
             	
             	for (int i = 0; i < count; i++) {
             		int fingerId = event.getPointerId(i);
+            		
+            		if (fingerId == mGestureFinger)
+                    	mGestureDetector.addPoint(x, y);
             		
             		if(mIgnoredFingers.contains(fingerId))
             			continue;
@@ -426,8 +487,19 @@ public class DrawView extends View {
 
             	if (id == mFingerInside)
             		mFingerInside = -1;
-            	
+
         		boolean draw = true;
+        		
+            	if (id == mGestureFinger) {
+            		mGestureFinger = -1;
+            		mPressedInsideTime = 0;
+            		mGesture = mGestureDetector.recognize();
+
+            		if (mGestureSelections.containsKey(mGesture))
+            			changeSelection(mGestureSelections.get(mGesture));
+            		
+            		draw = false;
+            	}
         		
             	if (mIgnoredFingers.contains(id)) {
             		mIgnoredFingers.remove(id);
