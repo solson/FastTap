@@ -75,7 +75,7 @@ public class DrawView extends View {
 	private UI mUI;
     private final int mChordDelay = 1000 * 1000 * 200; // 200ms in ns
 	private final int mFlashDelay = 1000 * 1000 * 400; // 400ms in ns
-    private final int mGestureDelay = 1000 * 1000 * 300; // 300ms in ns
+    private final int mGestureDelay = 1000 * 1000 * 200; // 200ms in ns
 	private final int mOverlayButtonIndex = 16;
 	private final int mGestureButtonDist = 150;
 	private final int mGestureButtonSize = 75;
