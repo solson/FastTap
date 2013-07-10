@@ -66,12 +66,17 @@ public class DrawView extends View {
     private boolean mChanged;
 	private GestureDetector mGestureDetector;
 	private Gesture mGesture;
+	private int mPossibleGestureFinger;
+	private long mPossibleGestureFingerTime;
 	private int mGestureFinger;
+	private boolean mShowGestureMenu;
 	private UI mUI;
     private final int mChordDelay = 1000 * 1000 * 200; // 200ms in ns
 	private final int mFlashDelay = 1000 * 1000 * 400; // 400ms in ns
-    private final int mGestureDelay = 1000 * 1000 * 1000; // 1 second in ns
+    private final int mGestureDelay = 1000 * 1000 * 300; // 300ms in ns
 	private final int mOverlayButtonIndex = 16;
+	private final int mGestureButtonDist = 150;
+	private final int mGestureButtonSize = 75;
 	
 	private enum UI {
 		CHORD, GESTURE
@@ -128,6 +133,8 @@ public class DrawView extends View {
         mGestureDetector = new GestureDetector();
         mGesture = Gesture.UNKNOWN;
         mGestureFinger = -1;
+        mPossibleGestureFinger = -1;
+        mShowGestureMenu = false;
         
         mSelections = new Selection[] {
         	new Selection(new PaintTool(this), "Paintbrush", SelectionType.TOOL),
@@ -211,7 +218,13 @@ public class DrawView extends View {
 	        				mStudyCtl.handleOverlayShown();
 	        		}
         		} else if (mUI == UI.GESTURE) {
-        			// TODO
+        			if (mPossibleGestureFinger != -1 && now - mPossibleGestureFingerTime > mGestureDelay && !mChanged) {
+        				mGestureFinger = mPossibleGestureFinger;
+        				mIgnoredFingers.add(mGestureFinger);
+        				mPossibleGestureFinger = -1;
+        				mShowGestureMenu = true;
+        				postInvalidate();
+        			}
         		}
         	}
         }, 25, 25);
@@ -361,6 +374,29 @@ public class DrawView extends View {
         		bounds.top + mRowHeight / 2 + getTextHeight(mColorName, mPaint) / 2, mPaint);
         canvas.drawText(mToolName, bounds.left + mColWidth / 2,
         		bounds.top + mRowHeight / 2 + getTextHeight(mToolName, mPaint) / 2 + 30, mPaint);
+        
+        if (mShowGestureMenu) {
+        	PointF origin = mOrigins.get(mGestureFinger);
+
+        	mPaint.setTextSize(22);
+        	drawTextBubble(canvas, "Tools", origin.x, origin.y - mGestureButtonDist, mPaint);
+        	drawTextBubble(canvas, "Colors", origin.x - mGestureButtonDist, origin.y, mPaint);
+        	drawTextBubble(canvas, "Colors", origin.x + mGestureButtonDist, origin.y, mPaint);
+        	drawTextBubble(canvas, "Widths", origin.x, origin.y + mGestureButtonDist, mPaint);
+        	mPaint.setTextSize(26);
+        }
+    }
+    
+    private void drawTextBubble(Canvas canvas, String text, float x, float y, Paint paint) {
+		paint.getTextBounds(text, 0, text.length(), mTextBounds);
+		
+		mPaint.setColor(0xBBEEEEEE);
+		canvas.drawCircle(x, y, mGestureButtonSize, paint);
+
+		mPaint.setColor(0xEE000000);
+		mPaint.setShadowLayer(2, 1, 1, 0x33000000);
+    	canvas.drawText(text, x, y + mTextBounds.height() / 2, mPaint);
+    	mPaint.setShadowLayer(0, 0, 0, 0);
     }
     
     private int getTextHeight(String text, Paint paint) {
@@ -417,16 +453,14 @@ public class DrawView extends View {
 	            		}
 	            	}
             	} else if (mUI == UI.GESTURE) {
-            		if (getOverlayButtonBounds().contains(x, y)) {
-	            		mFingerInside = id;
-	            		mPressedInsideTime = now;
-	            		mIgnoredFingers.add(mFingerInside);
-            		} else if (mGestureFinger == -1 && now - mPressedInsideTime < mGestureDelay) {
+            		if (event.getPointerCount() == 1) {
                     	mGestureDetector.clear();
-	            		mGestureFinger = id;
-	            		
-	            		for (int finger : mFingers)
-	            			mIgnoredFingers.add(finger);
+                    	mPossibleGestureFinger = id;
+                    	mPossibleGestureFingerTime = now;
+            		} else {
+            			mPossibleGestureFinger = -1;
+            			mGestureFinger = -1;
+            			mShowGestureMenu = false;
             		}
             	}
             	
@@ -487,12 +521,15 @@ public class DrawView extends View {
 
             	if (id == mFingerInside)
             		mFingerInside = -1;
+            	
+            	if (id == mPossibleGestureFinger)
+            		mPossibleGestureFinger = -1;
 
         		boolean draw = true;
         		
             	if (id == mGestureFinger) {
             		mGestureFinger = -1;
-            		mPressedInsideTime = 0;
+            		mShowGestureMenu = false;
             		mGesture = mGestureDetector.recognize();
 
             		if (mGestureSelections.containsKey(mGesture))
