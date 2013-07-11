@@ -75,11 +75,11 @@ public class DrawView extends View {
 	private boolean mShowGestureMenu;
 	private Gesture mActiveCategory;
 	private PointF mActiveCategoryOrigin;
-	Gesture mSubSelection;
+	private Gesture mSubSelection;
 	private UI mUI;
     private final int mChordDelay = 1000 * 1000 * 200; // 200ms in ns
 	private final int mFlashDelay = 1000 * 1000 * 400; // 400ms in ns
-    private final int mGestureDelay = 1000 * 1000 * 200; // 200ms in ns
+    private final int mGestureMenuDelay = 1000 * 1000 * 200; // 200ms in ns
 	private final int mOverlayButtonIndex = 16;
 	private final int mGestureButtonDist = 150;
 	private final int mGestureButtonSize = 75;
@@ -227,7 +227,7 @@ public class DrawView extends View {
 	        				mStudyCtl.handleOverlayShown();
 	        		}
         		} else if (mUI == UI.GESTURE) {
-        			if (mPossibleGestureFinger != -1 && now - mPossibleGestureFingerTime > mGestureDelay && !mChanged) {
+        			if (mPossibleGestureFinger != -1 && now - mPossibleGestureFingerTime > mGestureMenuDelay && !mChanged) {
         				mGestureFinger = mPossibleGestureFinger;
         				mIgnoredFingers.add(mGestureFinger);
         				mPossibleGestureFinger = -1;
@@ -670,7 +670,6 @@ public class DrawView extends View {
             	if (id == mGestureFinger) {
             		mGestureFinger = -1;
             		mShowGestureMenu = false;
-            		//mGesture = mGestureDetector.recognize();
             		
             		if (mActiveCategory != Gesture.UNKNOWN && mSubSelection != Gesture.UNKNOWN) {
             			switch (mActiveCategory) {
@@ -717,10 +716,12 @@ public class DrawView extends View {
             				default:
             					break;
             			}
-
-                		if (mGestureSelections.containsKey(mGesture))
-                			changeSelection(mGestureSelections.get(mGesture));
+            		} else {
+                		mGesture = mGestureDetector.recognize();
             		}
+
+            		if (mGestureSelections.containsKey(mGesture))
+            			changeSelection(mGestureSelections.get(mGesture));
 
         			mActiveCategory = Gesture.UNKNOWN;
             		draw = false;
