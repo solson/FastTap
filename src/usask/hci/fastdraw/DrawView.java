@@ -599,6 +599,7 @@ public class DrawView extends View {
             			mPossibleGestureFinger = -1;
             			mGestureFinger = -1;
             			mShowGestureMenu = false;
+            			mActiveCategory = Gesture.UNKNOWN;
             		}
             	}
             	
