@@ -73,6 +73,9 @@ public class DrawView extends View {
 	private int mGestureFinger;
 	private PointF mGestureFingerPos;
 	private boolean mShowGestureMenu;
+	private Gesture mActiveCategory;
+	private PointF mActiveCategoryOrigin;
+	Gesture mSubSelection;
 	private UI mUI;
     private final int mChordDelay = 1000 * 1000 * 200; // 200ms in ns
 	private final int mFlashDelay = 1000 * 1000 * 400; // 400ms in ns
@@ -138,6 +141,9 @@ public class DrawView extends View {
         mGestureFinger = -1;
         mPossibleGestureFinger = -1;
         mShowGestureMenu = false;
+        mActiveCategory = Gesture.UNKNOWN;
+        mActiveCategoryOrigin = new PointF();
+		mSubSelection = Gesture.UNKNOWN;
         
         mSelections = new Selection[] {
         	new Selection(new PaintTool(this), "Paintbrush", SelectionType.TOOL),
@@ -410,22 +416,86 @@ public class DrawView extends View {
         
         if (mShowGestureMenu) {
         	PointF origin = mOrigins.get(mGestureFinger);
-        	Gesture position = null;
 
-        	if (isInCircle(mGestureFingerPos, origin.x, origin.y - mGestureButtonDist, mGestureButtonSize))
-        		position = Gesture.UP;
-        	else if (isInCircle(mGestureFingerPos, origin.x - mGestureButtonDist, origin.y, mGestureButtonSize))
-        		position = Gesture.LEFT;
-        	else if (isInCircle(mGestureFingerPos, origin.x + mGestureButtonDist, origin.y, mGestureButtonSize))
-        		position = Gesture.RIGHT;
-        	else if (isInCircle(mGestureFingerPos, origin.x, origin.y + mGestureButtonDist, mGestureButtonSize))
-        		position = Gesture.DOWN;
+        	if (isInCircle(mGestureFingerPos, origin.x, origin.y - mGestureButtonDist, mGestureButtonSize)) {
+        		mActiveCategoryOrigin.x = origin.x;
+        		mActiveCategoryOrigin.y = origin.y - mGestureButtonDist;
+        		mActiveCategory = Gesture.UP;
+        	} else if (isInCircle(mGestureFingerPos, origin.x - mGestureButtonDist, origin.y, mGestureButtonSize)) {
+        		mActiveCategoryOrigin.x = origin.x - mGestureButtonDist;
+        		mActiveCategoryOrigin.y = origin.y;
+        		mActiveCategory = Gesture.LEFT;
+        	} else if (isInCircle(mGestureFingerPos, origin.x + mGestureButtonDist, origin.y, mGestureButtonSize)) {
+        		mActiveCategoryOrigin.x = origin.x + mGestureButtonDist;
+        		mActiveCategoryOrigin.y = origin.y;
+        		mActiveCategory = Gesture.RIGHT;
+        	} else if (isInCircle(mGestureFingerPos, origin.x, origin.y + mGestureButtonDist, mGestureButtonSize)) {
+        		mActiveCategoryOrigin.x = origin.x;
+        		mActiveCategoryOrigin.y = origin.y + mGestureButtonDist;
+        		mActiveCategory = Gesture.DOWN;
+        	}
+        	
+        	boolean greyout = mActiveCategory != Gesture.UNKNOWN;
         	
         	mPaint.setTextSize(22);
-        	drawTextBubble(canvas, "Tools", origin.x, origin.y - mGestureButtonDist, mPaint, position == Gesture.UP);
-        	drawTextBubble(canvas, "Colors", origin.x - mGestureButtonDist, origin.y, mPaint, position == Gesture.LEFT);
-        	drawTextBubble(canvas, "Colors", origin.x + mGestureButtonDist, origin.y, mPaint, position == Gesture.RIGHT);
-        	drawTextBubble(canvas, "Widths", origin.x, origin.y + mGestureButtonDist, mPaint, position == Gesture.DOWN);
+        	int size = mGestureButtonSize;
+        	
+        	drawGestureButton(canvas, "Tools", origin.x, origin.y - mGestureButtonDist, size, mPaint, mActiveCategory == Gesture.UP, greyout);
+        	drawGestureButton(canvas, "Colors", origin.x - mGestureButtonDist, origin.y, size, mPaint, mActiveCategory == Gesture.LEFT, greyout);
+        	drawGestureButton(canvas, "Colors", origin.x + mGestureButtonDist, origin.y, size, mPaint, mActiveCategory == Gesture.RIGHT, greyout);
+        	drawGestureButton(canvas, "Widths", origin.x, origin.y + mGestureButtonDist, size, mPaint, mActiveCategory == Gesture.DOWN, greyout);
+        	
+        	mPaint.setTextSize(18);
+        	int subSize = (int)(size * 0.70);
+        	int subDist = size + subSize;
+        	float subOriginX = mActiveCategoryOrigin.x;
+        	float subOriginY = mActiveCategoryOrigin.y;
+
+        	if (isInCircle(mGestureFingerPos, subOriginX, subOriginY - subDist, subSize)) {
+        		mSubSelection = Gesture.UP;
+        	} else if (isInCircle(mGestureFingerPos, subOriginX - subDist, subOriginY, subSize)) {
+        		mSubSelection = Gesture.LEFT;
+        	} else if (isInCircle(mGestureFingerPos, subOriginX + subDist, subOriginY, subSize)) {
+        		mSubSelection = Gesture.RIGHT;
+        	} else if (isInCircle(mGestureFingerPos, subOriginX, subOriginY + subDist, subSize)) {
+        		mSubSelection = Gesture.DOWN;
+        	} else {
+        		mSubSelection = Gesture.UNKNOWN;
+        	}
+        	
+        	switch (mActiveCategory) {
+	        	case UP:
+	            	drawGestureButton(canvas, "Paintbrush", subOriginX, subOriginY - subDist, subSize, mPaint, mSubSelection == Gesture.UP, false);
+	            	drawGestureButton(canvas, "Rectangle", subOriginX - subDist, subOriginY, subSize, mPaint, mSubSelection == Gesture.LEFT, false);
+	            	drawGestureButton(canvas, "Line", subOriginX + subDist, subOriginY, subSize, mPaint, mSubSelection == Gesture.RIGHT, false);
+	            	drawGestureButton(canvas, "Circle", subOriginX, subOriginY + subDist, subSize, mPaint, mSubSelection == Gesture.DOWN, false);
+	        		break;
+	        		
+	        	case LEFT:
+	            	drawGestureButton(canvas, "Red", subOriginX, subOriginY - subDist, subSize, mPaint, mSubSelection == Gesture.UP, false);
+	            	drawGestureButton(canvas, "Black", subOriginX - subDist, subOriginY, subSize, mPaint, mSubSelection == Gesture.LEFT, false);
+	            	drawGestureButton(canvas, "Green", subOriginX + subDist, subOriginY, subSize, mPaint, mSubSelection == Gesture.RIGHT, false);
+	            	drawGestureButton(canvas, "Blue", subOriginX, subOriginY + subDist, subSize, mPaint, mSubSelection == Gesture.DOWN, false);
+	        		break;
+	        		
+	        	case RIGHT:
+	            	drawGestureButton(canvas, "Magenta", subOriginX, subOriginY - subDist, subSize, mPaint, mSubSelection == Gesture.UP, false);
+	            	drawGestureButton(canvas, "Cyan", subOriginX - subDist, subOriginY, subSize, mPaint, mSubSelection == Gesture.LEFT, false);
+	            	drawGestureButton(canvas, "White", subOriginX + subDist, subOriginY, subSize, mPaint, mSubSelection == Gesture.RIGHT, false);
+	            	drawGestureButton(canvas, "Yellow", subOriginX, subOriginY + subDist, subSize, mPaint, mSubSelection == Gesture.DOWN, false);
+	        		break;
+	        		
+	        	case DOWN:
+	            	drawGestureButton(canvas, "Thin", subOriginX, subOriginY - subDist, subSize, mPaint, mSubSelection == Gesture.UP, false);
+	            	drawGestureButton(canvas, "Fine", subOriginX - subDist, subOriginY, subSize, mPaint, mSubSelection == Gesture.LEFT, false);
+	            	drawGestureButton(canvas, "Wide", subOriginX + subDist, subOriginY, subSize, mPaint, mSubSelection == Gesture.RIGHT, false);
+	            	drawGestureButton(canvas, "Normal", subOriginX, subOriginY + subDist, subSize, mPaint, mSubSelection == Gesture.DOWN, false);
+	        		break;
+	        		
+				default:
+					break;
+        	}
+        	
         	mPaint.setTextSize(26);
         }
     }
@@ -438,18 +508,25 @@ public class DrawView extends View {
     	return distance < radius;
     }
     
-    private void drawTextBubble(Canvas canvas, String text, float x, float y, Paint paint, boolean highlight) {
+    private void drawGestureButton(Canvas canvas, String text, float x, float y, int size, Paint paint, boolean highlight, boolean greyout) {
 		paint.getTextBounds(text, 0, text.length(), mTextBounds);
 		
 		if (highlight)
 			mPaint.setColor(0xFFAAAAAA);
+		else if (greyout)
+			mPaint.setColor(0xFFDDDDDD);
 		else
 			mPaint.setColor(0xFFCCCCCC);
 		
-		canvas.drawCircle(x, y, mGestureButtonSize, paint);
+		canvas.drawCircle(x, y, size, paint);
 
-		mPaint.setColor(0xEE000000);
-		mPaint.setShadowLayer(2, 1, 1, 0x33000000);
+		if (greyout && !highlight) {
+			mPaint.setColor(0xEE777777);
+		} else {
+			mPaint.setColor(0xEE000000);
+			mPaint.setShadowLayer(2, 1, 1, 0x33000000);
+		}
+			
     	canvas.drawText(text, x, y + mTextBounds.height() / 2, mPaint);
     	mPaint.setShadowLayer(0, 0, 0, 0);
     }
@@ -593,11 +670,59 @@ public class DrawView extends View {
             	if (id == mGestureFinger) {
             		mGestureFinger = -1;
             		mShowGestureMenu = false;
-            		mGesture = mGestureDetector.recognize();
-
-            		if (mGestureSelections.containsKey(mGesture))
-            			changeSelection(mGestureSelections.get(mGesture));
+            		//mGesture = mGestureDetector.recognize();
             		
+            		if (mActiveCategory != Gesture.UNKNOWN && mSubSelection != Gesture.UNKNOWN) {
+            			switch (mActiveCategory) {
+            				case UP:
+            					switch (mSubSelection) {
+            						case UP: mGesture = Gesture.UP; break;
+            						case LEFT: mGesture = Gesture.UP_LEFT; break;
+            						case RIGHT: mGesture = Gesture.UP_RIGHT; break;
+            						case DOWN: mGesture = Gesture.UP_DOWN; break;
+            						default: break;
+            					}
+            					break;
+            					
+            				case LEFT:
+            					switch (mSubSelection) {
+            						case UP: mGesture = Gesture.LEFT_UP; break;
+            						case LEFT: mGesture = Gesture.LEFT; break;
+            						case RIGHT: mGesture = Gesture.LEFT_RIGHT; break;
+            						case DOWN: mGesture = Gesture.LEFT_DOWN; break;
+            						default: break;
+            					}
+            					break;
+
+            				case RIGHT:
+            					switch (mSubSelection) {
+            						case UP: mGesture = Gesture.RIGHT_UP; break;
+            						case LEFT: mGesture = Gesture.RIGHT_LEFT; break;
+            						case RIGHT: mGesture = Gesture.RIGHT; break;
+            						case DOWN: mGesture = Gesture.RIGHT_DOWN; break;
+            						default: break;
+            					}
+            					break;
+
+            				case DOWN:
+            					switch (mSubSelection) {
+            						case UP: mGesture = Gesture.DOWN_UP; break;
+            						case LEFT: mGesture = Gesture.DOWN_LEFT; break;
+            						case RIGHT: mGesture = Gesture.DOWN_RIGHT; break;
+            						case DOWN: mGesture = Gesture.DOWN; break;
+            						default: break;
+            					}
+            					break;
+            					
+            				default:
+            					break;
+            			}
+
+                		if (mGestureSelections.containsKey(mGesture))
+                			changeSelection(mGestureSelections.get(mGesture));
+            		}
+
+        			mActiveCategory = Gesture.UNKNOWN;
             		draw = false;
             	}
         		
