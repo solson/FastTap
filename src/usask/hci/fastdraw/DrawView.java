@@ -71,6 +71,7 @@ public class DrawView extends View {
 	private int mPossibleGestureFinger;
 	private long mPossibleGestureFingerTime;
 	private int mGestureFinger;
+	private PointF mGestureFingerPos;
 	private boolean mShowGestureMenu;
 	private UI mUI;
     private final int mChordDelay = 1000 * 1000 * 200; // 200ms in ns
@@ -266,6 +267,7 @@ public class DrawView extends View {
         			
         			mLog.setSubjectId(subjectIdPicker.getValue());
         			mUI = gestureCheckBox.isChecked() ? UI.GESTURE : UI.CHORD;
+        			DrawView.this.invalidate();
         		}
         	})
         	.setView(studySetupView)
@@ -319,9 +321,11 @@ public class DrawView extends View {
         if (mShowOverlay)
         	canvas.drawARGB(0xAA, 0xFF, 0xFF, 0xFF);
         
-    	mPaint.setColor(0x88FFFF00);
-    	canvas.drawRect(bounds, mPaint);
-    	
+        if (mUI == UI.CHORD) {
+	    	mPaint.setColor(0x88FFFF00);
+	    	canvas.drawRect(bounds, mPaint);
+        }
+        
         if (mShowOverlay || (mPermanentGrid && mUI == UI.CHORD)) {
         	mPaint.setColor(0x44666666);
 
@@ -351,7 +355,7 @@ public class DrawView extends View {
         			}
         		}
         	}
-        } else if (!mPermanentGrid || mUI != UI.CHORD) {
+        } else if (!mPermanentGrid && mUI == UI.CHORD) {
     		mPaint.setColor(0x44666666);
         	canvas.drawLine(bounds.left, bounds.top, bounds.right, bounds.top, mPaint);
         	
@@ -387,29 +391,61 @@ public class DrawView extends View {
         }
         
 		mPaint.setColor(0xFF666666);
-        canvas.drawText(mThicknessName, bounds.left + mColWidth / 2,
-        		bounds.top + mRowHeight / 2 + getTextHeight(mThicknessName, mPaint) / 2 - 30, mPaint);
-        canvas.drawText(mColorName, bounds.left + mColWidth / 2,
-        		bounds.top + mRowHeight / 2 + getTextHeight(mColorName, mPaint) / 2, mPaint);
-        canvas.drawText(mToolName, bounds.left + mColWidth / 2,
-        		bounds.top + mRowHeight / 2 + getTextHeight(mToolName, mPaint) / 2 + 30, mPaint);
+		
+		if (mUI == UI.CHORD) {
+	        canvas.drawText(mThicknessName, bounds.left + mColWidth / 2,
+	        		bounds.top + mRowHeight / 2 + getTextHeight(mThicknessName, mPaint) / 2 - 30, mPaint);
+	        canvas.drawText(mColorName, bounds.left + mColWidth / 2,
+	        		bounds.top + mRowHeight / 2 + getTextHeight(mColorName, mPaint) / 2, mPaint);
+	        canvas.drawText(mToolName, bounds.left + mColWidth / 2,
+	        		bounds.top + mRowHeight / 2 + getTextHeight(mToolName, mPaint) / 2 + 30, mPaint);
+		} else if (mUI == UI.GESTURE) {
+			String tools = mThicknessName + " " + mColorName + " " + mToolName;
+			int padding = 10;
+			mPaint.setColor(0xBBAAAAAA);
+			canvas.drawRect(0, getHeight() - getTextHeight(tools, mPaint) - padding * 2, getTextWidth(tools, mPaint) + padding * 2, getHeight(), mPaint);
+			mPaint.setColor(0xFF444444);
+	        canvas.drawText(tools, getTextWidth(tools, mPaint) / 2 + padding, getHeight() - padding, mPaint);
+		}
         
         if (mShowGestureMenu) {
         	PointF origin = mOrigins.get(mGestureFinger);
+        	Gesture position = null;
 
+        	if (isInCircle(mGestureFingerPos, origin.x, origin.y - mGestureButtonDist, mGestureButtonSize))
+        		position = Gesture.UP;
+        	else if (isInCircle(mGestureFingerPos, origin.x - mGestureButtonDist, origin.y, mGestureButtonSize))
+        		position = Gesture.LEFT;
+        	else if (isInCircle(mGestureFingerPos, origin.x + mGestureButtonDist, origin.y, mGestureButtonSize))
+        		position = Gesture.RIGHT;
+        	else if (isInCircle(mGestureFingerPos, origin.x, origin.y + mGestureButtonDist, mGestureButtonSize))
+        		position = Gesture.DOWN;
+        	
         	mPaint.setTextSize(22);
-        	drawTextBubble(canvas, "Tools", origin.x, origin.y - mGestureButtonDist, mPaint);
-        	drawTextBubble(canvas, "Colors", origin.x - mGestureButtonDist, origin.y, mPaint);
-        	drawTextBubble(canvas, "Colors", origin.x + mGestureButtonDist, origin.y, mPaint);
-        	drawTextBubble(canvas, "Widths", origin.x, origin.y + mGestureButtonDist, mPaint);
+        	drawTextBubble(canvas, "Tools", origin.x, origin.y - mGestureButtonDist, mPaint, position == Gesture.UP);
+        	drawTextBubble(canvas, "Colors", origin.x - mGestureButtonDist, origin.y, mPaint, position == Gesture.LEFT);
+        	drawTextBubble(canvas, "Colors", origin.x + mGestureButtonDist, origin.y, mPaint, position == Gesture.RIGHT);
+        	drawTextBubble(canvas, "Widths", origin.x, origin.y + mGestureButtonDist, mPaint, position == Gesture.DOWN);
         	mPaint.setTextSize(26);
         }
     }
     
-    private void drawTextBubble(Canvas canvas, String text, float x, float y, Paint paint) {
+    private boolean isInCircle(PointF point, float cx, float cy, float radius) {
+    	float dx = point.x - cx;
+    	float dy = point.y - cy;
+    	double distance = Math.sqrt(dx*dx + dy*dy);
+    	
+    	return distance < radius;
+    }
+    
+    private void drawTextBubble(Canvas canvas, String text, float x, float y, Paint paint, boolean highlight) {
 		paint.getTextBounds(text, 0, text.length(), mTextBounds);
 		
-		mPaint.setColor(0xBBEEEEEE);
+		if (highlight)
+			mPaint.setColor(0xFFAAAAAA);
+		else
+			mPaint.setColor(0xFFCCCCCC);
+		
 		canvas.drawCircle(x, y, mGestureButtonSize, paint);
 
 		mPaint.setColor(0xEE000000);
@@ -421,6 +457,11 @@ public class DrawView extends View {
     private int getTextHeight(String text, Paint paint) {
 		mPaint.getTextBounds(text, 0, text.length(), mTextBounds);
 		return mTextBounds.height();
+    }
+    
+    private int getTextWidth(String text, Paint paint) {
+		mPaint.getTextBounds(text, 0, text.length(), mTextBounds);
+		return mTextBounds.width();
     }
     
     @Override
@@ -475,6 +516,7 @@ public class DrawView extends View {
             		if (event.getPointerCount() == 1) {
                     	mGestureDetector.clear();
                     	mPossibleGestureFinger = id;
+                    	mGestureFingerPos = new PointF(x, y);
                     	mPossibleGestureFingerTime = now;
             		} else {
             			mPossibleGestureFinger = -1;
@@ -498,8 +540,10 @@ public class DrawView extends View {
             	for (int i = 0; i < count; i++) {
             		int fingerId = event.getPointerId(i);
             		
-            		if (fingerId == mGestureFinger)
+            		if (fingerId == mGestureFinger) {
+            			mGestureFingerPos = new PointF(x, y);
                     	mGestureDetector.addPoint(x, y);
+            		}
             		
             		if(mIgnoredFingers.contains(fingerId))
             			continue;
