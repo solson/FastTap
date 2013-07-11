@@ -36,7 +36,7 @@ public class StudyLogger {
 	
 	public void trial(int blockNum, int taskNum, int numTargets, String targets, int numErrors, String errors, int timesOverlayShown, long durationNs) {
 		long durationMs = durationNs / 1000000;
-		log("Task", mSubjectId + "," + blockNum + "," + taskNum + "," + numTargets + "," + targets + "," + numErrors + "," + errors + "," + timesOverlayShown + "," + durationMs);
+		log("Trial", mSubjectId + "," + blockNum + "," + taskNum + "," + numTargets + "," + targets + "," + numErrors + "," + errors + "," + timesOverlayShown + "," + durationMs);
 	}
 	
 	public void event(String message) {
