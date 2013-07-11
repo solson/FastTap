@@ -25,7 +25,6 @@ import android.util.SparseArray;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.CheckBox;
-import android.widget.LinearLayout;
 import android.widget.NumberPicker;
 
 public class DrawView extends View {
@@ -237,27 +236,18 @@ public class DrawView extends View {
         		}
         	}
         }, 25, 25);
-
-        final CheckBox studyCheckBox = new CheckBox(mainActivity);
-        studyCheckBox.setText("Run in study mode");
-        studyCheckBox.setChecked(true);
-
-        final CheckBox gestureCheckBox = new CheckBox(mainActivity);
-        gestureCheckBox.setText("Use the gesture interface");
         
-        final NumberPicker subjectIdPicker = new NumberPicker(mainActivity);
+        View studySetupLayout = mMainActivity.getLayoutInflater().inflate(R.layout.study_setup, null);
+		final CheckBox studyCheckBox = (CheckBox) studySetupLayout.findViewById(R.id.study_mode_checkbox);
+		final CheckBox gestureCheckBox = (CheckBox) studySetupLayout.findViewById(R.id.gesture_mode_checkbox);
+        
+        final NumberPicker subjectIdPicker = (NumberPicker) studySetupLayout.findViewById(R.id.subject_id_picker);
         subjectIdPicker.setMinValue(0);
-        subjectIdPicker.setMaxValue(999);
+        subjectIdPicker.setMaxValue(99);
         subjectIdPicker.setWrapSelectorWheel(false);
         
         // Prevent the keyboard from popping up.
         subjectIdPicker.setDescendantFocusability(NumberPicker.FOCUS_BLOCK_DESCENDANTS);
-        
-        LinearLayout studySetupView = new LinearLayout(mainActivity);
-        studySetupView.setOrientation(LinearLayout.VERTICAL);
-        studySetupView.addView(studyCheckBox);
-        studySetupView.addView(gestureCheckBox);
-        studySetupView.addView(subjectIdPicker);
         
         new AlertDialog.Builder(mainActivity)
         	.setMessage(R.string.dialog_study_mode)
@@ -276,7 +266,7 @@ public class DrawView extends View {
         			DrawView.this.invalidate();
         		}
         	})
-        	.setView(studySetupView)
+        	.setView(studySetupLayout)
         	.show();
     }
     
