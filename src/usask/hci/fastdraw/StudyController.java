@@ -6,23 +6,41 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 public class StudyController {
-	private final String[][] mTrials;
+	private final String[][][] mTrials;
 	private final StudyLogger mLog;
 	private int mTrialNum;
 	private int mTrialIndex;
 	private int mBlockNum;
+	private int mSetIndex;
 	private Set<String> mToSelect;
 	private Integer[] mTrialOrder;
 	private long mTrialStart;
 	private int mNumErrors;
 	private StringBuilder mErrors;
 	private int mTimesOverlayShown;
+	private int[] mBlocksPerSet;
 
 	public StudyController(StudyLogger logger) {
 		mLog = logger;
 
-		mTrials = new String[][] {
-			{"Normal", "Red", "Line"},
+		mTrials = new String[][][] {
+			{{"Paintbrush"}, {"Line"}, {"Circle"}, {"Rectangle"},
+			{"Black"}, {"Red"}, {"Green"}, {"Blue"},
+			{"White"}, {"Yellow"}, {"Cyan"}, {"Magenta"},
+			{"Fine"}, {"Thin"}, {"Normal"}, {"Wide"}},
+			
+			{{"Normal", "Circle"},
+			{"Blue", "Rectangle"},
+			{"Fine", "White"},
+			{"Wide", "Line"},
+			{"Cyan", "Paintbrush"},
+			{"Fine", "Green"},
+			{"Yellow", "Paintbrush"},
+			{"Magenta", "Circle"},
+			{"Normal", "Red"},
+			{"Thin", "Black"}},
+			
+			{{"Normal", "Red", "Line"},
 			{"Thin", "Yellow", "Rectangle"},
 			{"Fine", "White", "Circle"},
 			{"Wide", "Magenta", "Line"},
@@ -31,14 +49,13 @@ public class StudyController {
 			{"Wide", "White", "Paintbrush"},
 			{"Normal", "Blue", "Circle"},
 			{"Wide", "Yellow", "Line"},
-			{"Thin", "Black", "Paintbrush"}
+			{"Thin", "Black", "Paintbrush"}}
 		};
-
-		mBlockNum = 0;
 		
-		mTrialOrder = new Integer[mTrials.length];
-		for (int i = 0; i < mTrialOrder.length; i++)
-			mTrialOrder[i] = i;
+		mBlocksPerSet = new int[] { 5, 5, 5 };
+
+		mSetIndex = 0;
+		mBlockNum = 0;
 		
 		nextBlock();
 	}
@@ -50,20 +67,19 @@ public class StudyController {
 			if (mToSelect.isEmpty()) {
 				long now = System.nanoTime();
 				
-				int numTargets = mTrials[mTrialIndex].length;
+				int numTargets = mTrials[mSetIndex][mTrialIndex].length;
 				StringBuilder targetString = new StringBuilder();
 				for (int i = 0; i < numTargets; i++) {
 					if (i != 0)
 						targetString.append(" ");
-					targetString.append(mTrials[mTrialIndex][i]);
+					targetString.append(mTrials[mSetIndex][mTrialIndex][i]);
 				}
 
-				mLog.trial(mBlockNum, mTrialNum, mTrials[mTrialIndex].length, targetString.toString(), mNumErrors, mErrors.toString(), mTimesOverlayShown, now - mTrialStart);
+				mLog.trial(mBlockNum, mTrialNum, mTrials[mSetIndex][mTrialIndex].length,
+						targetString.toString(), mNumErrors, mErrors.toString(),
+						mTimesOverlayShown, now - mTrialStart);
 				
-				if (mTrialNum < mTrials.length)
-					nextTrial();
-				else
-					nextBlock();
+				nextTrial();
 			}
 		} else {
 			if (mNumErrors != 0)
@@ -79,7 +95,7 @@ public class StudyController {
 	}
 	
 	public String getPrompt() {
-		String progress = "(" + mTrialNum + "/" + mTrials.length + ")";
+		String progress = "#" + mBlockNum + " (" + mTrialNum + "/" + mTrials[mSetIndex].length + ")";
     	StringBuilder title = new StringBuilder(progress + " Please select: ");
     	
     	for (String toSelect : mToSelect) {
@@ -90,23 +106,42 @@ public class StudyController {
     	return title.substring(0, title.length() - 2);
 	}
 	
+	private void nextSet() {
+		mSetIndex = (mSetIndex + 1) % mTrials.length;
+		mBlockNum = 0;
+		nextBlock();
+	}
+	
 	private void nextBlock() {
+		if (mBlockNum >= mBlocksPerSet[mSetIndex]) {
+			nextSet();
+			return;
+		}
+		
+		mTrialOrder = new Integer[mTrials[mSetIndex].length];
+		for (int i = 0; i < mTrialOrder.length; i++)
+			mTrialOrder[i] = i;
 		Collections.shuffle(Arrays.asList(mTrialOrder));
+		
 		mBlockNum++;
-
 		mTrialNum = 0;
 		nextTrial();
 	}
 	
 	private void nextTrial() {
+		if (mTrialNum >= mTrials[mSetIndex].length) {
+			nextBlock();
+			return;
+		}
+		
 		mTrialStart = System.nanoTime();
 		mTimesOverlayShown = 0;
 		mNumErrors = 0;
 		mErrors = new StringBuilder();
-		
+
 		mTrialIndex = mTrialOrder[mTrialNum];
 		mTrialNum++;
 		
-		mToSelect = new LinkedHashSet<String>(Arrays.asList(mTrials[mTrialIndex]));
+		mToSelect = new LinkedHashSet<String>(Arrays.asList(mTrials[mSetIndex][mTrialIndex]));
 	}
 }
