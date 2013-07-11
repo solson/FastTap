@@ -52,11 +52,29 @@ public class StudyController {
 			{"Thin", "Black", "Paintbrush"}}
 		};
 		
-		mBlocksPerSet = new int[] { 5, 5, 5 };
+		mBlocksPerSet = new int[] { 5, 7, 3 };
 
 		mSetIndex = 0;
 		mBlockNum = 0;
 		
+		nextBlock();
+	}
+	
+	public int getNumSets() {
+		return mTrials.length;
+	}
+	
+	public int getNumBlocks(int set) {
+		return mBlocksPerSet[set - 1];
+	}
+	
+	public void setSetNum(int set) {
+		mSetIndex = set - 2;
+		nextSet();
+	}
+	
+	public void setBlockNum(int block) {
+		mBlockNum = block - 1;
 		nextBlock();
 	}
 	

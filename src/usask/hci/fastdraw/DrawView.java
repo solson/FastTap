@@ -119,6 +119,7 @@ public class DrawView extends View {
         mMainActivity = (MainActivity) mainActivity;
         mStudyMode = false;
         mLog = new StudyLogger(mainActivity);
+		mStudyCtl = new StudyController(mLog);
         mBitmapPaint = new Paint(Paint.DITHER_FLAG);
         mPaint = new Paint();
         mPaint.setTextSize(26);
@@ -244,11 +245,25 @@ public class DrawView extends View {
         final NumberPicker subjectIdPicker = (NumberPicker) studySetupLayout.findViewById(R.id.subject_id_picker);
         subjectIdPicker.setMinValue(0);
         subjectIdPicker.setMaxValue(99);
-        subjectIdPicker.setWrapSelectorWheel(false);
+        subjectIdPicker.setDescendantFocusability(NumberPicker.FOCUS_BLOCK_DESCENDANTS); // Remove the virtual keyboard
         
-        // Prevent the keyboard from popping up.
-        subjectIdPicker.setDescendantFocusability(NumberPicker.FOCUS_BLOCK_DESCENDANTS);
+        final NumberPicker setNumPicker = (NumberPicker) studySetupLayout.findViewById(R.id.set_num_picker);
+        setNumPicker.setMinValue(1);
+        setNumPicker.setMaxValue(mStudyCtl.getNumSets());
+        setNumPicker.setDescendantFocusability(NumberPicker.FOCUS_BLOCK_DESCENDANTS); // Remove the virtual keyboard
         
+        final NumberPicker blockNumPicker = (NumberPicker) studySetupLayout.findViewById(R.id.block_num_picker);
+        blockNumPicker.setMinValue(1);
+        blockNumPicker.setMaxValue(mStudyCtl.getNumBlocks(1));
+        blockNumPicker.setDescendantFocusability(NumberPicker.FOCUS_BLOCK_DESCENDANTS); // Remove the virtual keyboard
+        
+        setNumPicker.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
+			@Override
+			public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
+				blockNumPicker.setMaxValue(mStudyCtl.getNumBlocks(newVal));
+			}
+		});
+
         new AlertDialog.Builder(mainActivity)
         	.setMessage(R.string.dialog_study_mode)
         	.setCancelable(false)
@@ -257,7 +272,8 @@ public class DrawView extends View {
         			mStudyMode = studyCheckBox.isChecked();
         			
         			if (mStudyMode) {
-        				mStudyCtl = new StudyController(mLog);
+        				mStudyCtl.setSetNum(setNumPicker.getValue());
+        				mStudyCtl.setBlockNum(blockNumPicker.getValue());
         				mMainActivity.setTitle(mStudyCtl.getPrompt());
         			}
         			

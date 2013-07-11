@@ -9,6 +9,36 @@
 	    android:layout_height="wrap_content"
 	    android:orientation="vertical" >
 	    
+	    <TableLayout
+		    android:layout_width="wrap_content"
+		    android:layout_height="wrap_content"
+		    android:stretchColumns="*">
+		    <TableRow>
+		        <TextView
+		            android:text="ID"
+		            android:gravity="center_horizontal" />
+		        <TextView
+		            android:text="Set"
+		            android:gravity="center_horizontal" />
+		        <TextView
+		            android:text="Block"
+		            android:gravity="center_horizontal" />
+		    </TableRow>
+		
+		    <TableRow>
+			    <NumberPicker 
+			        android:id="@+id/subject_id_picker"
+				    android:layout_marginLeft="5dp"
+				    android:layout_marginRight="5dp" />
+			    <NumberPicker 
+			        android:id="@+id/set_num_picker"
+				    android:layout_marginRight="5dp" />
+			    <NumberPicker 
+			        android:id="@+id/block_num_picker"
+				    android:layout_marginRight="5dp" />
+		    </TableRow>
+		</TableLayout>
+	    
 	    <CheckBox
 	        android:id="@+id/study_mode_checkbox"
 	        android:text="Run in study mode"
@@ -20,11 +50,6 @@
 	        android:id="@+id/gesture_mode_checkbox"
 	        android:text="Use the gesture interface"
 	        android:checked="false"
-		    android:layout_width="fill_parent"
-		    android:layout_height="wrap_content" />
-	    
-	    <NumberPicker 
-	        android:id="@+id/subject_id_picker"
 		    android:layout_width="fill_parent"
 		    android:layout_height="wrap_content" />
 	</LinearLayout>
