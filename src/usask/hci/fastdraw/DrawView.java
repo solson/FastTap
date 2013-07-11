@@ -601,15 +601,13 @@ public class DrawView extends View {
                     	mPossibleGestureFinger = id;
                     	mGestureFingerPos = new PointF(x, y);
                     	mPossibleGestureFingerTime = now;
-            		} else {
-            			mPossibleGestureFinger = -1;
-            			mGestureFinger = -1;
-            			mShowGestureMenu = false;
-            			mActiveCategory = Gesture.UNKNOWN;
             		}
+            		
+            		if (mShowGestureMenu)
+            			mIgnoredFingers.add(id);
             	}
             	
-            	if (!mShowOverlay) {
+            	if (!mShowOverlay && !mShowGestureMenu) {
 	            	mOrigins.put(id, new PointF(x, y));
 	            	mTool.touchStart(id, x, y);
             	}
@@ -731,7 +729,7 @@ public class DrawView extends View {
             			changeSelection(mGestureSelections.get(mGesture));
 
         			mActiveCategory = Gesture.UNKNOWN;
-            		draw = false;
+        			draw = false;
             	}
         		
             	if (mIgnoredFingers.contains(id)) {
