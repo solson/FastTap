@@ -855,7 +855,8 @@ public class DrawView extends View {
     	}
     	
     	if (fromUser && mStudyMode) {
-	    	mStudyCtl.handleSelected(selection.name);
+    		boolean gesture = mUI == UI.GESTURE;
+	    	mStudyCtl.handleSelected(selection.name, gesture);
 	    	mMainActivity.setTitle(mStudyCtl.getPrompt());
     	}
     }

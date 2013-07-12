@@ -85,7 +85,7 @@ public class StudyController {
 		mTimesPainted++;
 	}
 	
-	public void handleSelected(String selection) {
+	public void handleSelected(String selection, boolean gesture) {
 		if (mFinished)
 			return;
 		
@@ -103,10 +103,16 @@ public class StudyController {
 					targetString.append(mTrials[mSetIndex][mTrialIndex][i]);
 				}
 
-				mLog.trial(mSetIndex + 1, mBlockNum, mTrialNum, mTrials[mSetIndex][mTrialIndex].length,
-						targetString.toString(), mNumErrors, mErrors.toString(),
-						mTimesPainted, mTimesOverlayShown, now - mTrialStart);
-				
+				if (gesture) {
+					mLog.gestureTrial(now, mSetIndex + 1, mBlockNum, mTrialNum, mTrials[mSetIndex][mTrialIndex].length,
+							targetString.toString(), mNumErrors, mErrors.toString(),
+							mTimesPainted, now - mTrialStart);
+				} else {
+					mLog.trial(now, mSetIndex + 1, mBlockNum, mTrialNum, mTrials[mSetIndex][mTrialIndex].length,
+							targetString.toString(), mNumErrors, mErrors.toString(),
+							mTimesPainted, mTimesOverlayShown, now - mTrialStart);
+				}
+
 				nextTrial();
 			}
 		} else {
