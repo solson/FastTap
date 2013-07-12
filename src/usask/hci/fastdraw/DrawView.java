@@ -334,7 +334,7 @@ public class DrawView extends View {
         	canvas.drawARGB(0xAA, 0xFF, 0xFF, 0xFF);
         
         if (mUI == UI.CHORD) {
-	    	mPaint.setColor(0x88FFFF00);
+	    	mPaint.setColor(0xEEFFFFAA);
 	    	canvas.drawRect(bounds, mPaint);
         }
         
