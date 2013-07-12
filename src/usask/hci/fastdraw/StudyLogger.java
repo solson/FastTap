@@ -33,26 +33,32 @@ public class StudyLogger {
 	public void setSubjectId(int subjectId) {
 		mSubjectId = subjectId;
 	}
-	
-	public void chordTrial(long timeNs, int setNum, int blockNum, int taskNum, int numTargets, String targets, int numErrors,
+
+	// Log format:
+	// sid, timestamp, set, block, trial, #targets, targets, #errors, errors, #times painted, #times overlay shown, duration of trial
+	public void chordTrial(long timeNs, int setNum, int blockNum, int trialNum, int numTargets, String targets, int numErrors,
 			String errors, int timesPainted, int timesOverlayShown, long durationNs) {
 		long durationMs = durationNs / 1000000;
 		long timeMs = timeNs / 1000000;
 		
-		log("ChordTrial", mSubjectId + "," + timeMs + "," + setNum + "," + blockNum + "," + taskNum + "," + numTargets + "," +
+		log("ChordTrial", mSubjectId + "," + timeMs + "," + setNum + "," + blockNum + "," + trialNum + "," + numTargets + "," +
 				targets + "," + numErrors + "," + errors + "," + timesPainted + "," +
 				timesOverlayShown + "," + durationMs);
 	}
 	
-	public void gestureTrial(long timeNs, int setNum, int blockNum, int taskNum, int numTargets, String targets, int numErrors,
+	// Log format:
+	// sid, timestamp, set, block, trial, #targets, targets, #errors, errors, #times painted, duration of trial
+	public void gestureTrial(long timeNs, int setNum, int blockNum, int trialNum, int numTargets, String targets, int numErrors,
 			String errors, int timesPainted, long durationNs) {
 		long durationMs = durationNs / 1000000;
 		long timeMs = timeNs / 1000000;
 		
-		log("GestureTrial", mSubjectId + "," + timeMs + "," + setNum + "," + blockNum + "," + taskNum + "," + numTargets + "," +
+		log("GestureTrial", mSubjectId + "," + timeMs + "," + setNum + "," + blockNum + "," + trialNum + "," + numTargets + "," +
 				targets + "," + numErrors + "," + errors + "," + timesPainted + "," + durationMs);
 	}
-	
+
+	// Log format:
+	// sid, timestamp, event message
 	public void event(String message) {
 		long timeMs = System.nanoTime() / 1000000;
 		log("Event", mSubjectId + "," + timeMs + "," + message);
