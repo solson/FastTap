@@ -222,9 +222,6 @@ public class DrawView extends View {
 	        			mLog.event("Overlay shown");
 	        			mTool.clearFingers();
 	        			postInvalidate();
-	        			
-	        			if (mStudyMode)
-	        				mStudyCtl.handleOverlayShown();
 	        		}
         		} else if (mUI == UI.GESTURE) {
         			if (mPossibleGestureFinger != -1 && now - mPossibleGestureFingerTime > mGestureMenuDelay && !mChanged) {
@@ -730,7 +727,10 @@ public class DrawView extends View {
             		}
 
         			long menuOpenNs = now - mPossibleGestureFingerTime - mGestureMenuDelay;
-        			long menuOpenMs = menuOpenNs / 1000 / 1000;
+        			long menuOpenMs = menuOpenNs / 1000000;
+        			
+        			if (mStudyMode)
+        				mStudyCtl.addUITime(menuOpenNs);
         			
             		if (mGestureSelections.containsKey(mGesture)) {
             			if (gestureSelection)
@@ -757,6 +757,9 @@ public class DrawView extends View {
             			mShowOverlay = false;
             			long duration = now - mOverlayStart;
             			mLog.event("Overlay hidden after " + duration / 1000000 + " ms");
+            			
+            			if (mStudyMode)
+            				mStudyCtl.addUITime(duration);
             		}
             	} else if (draw) {
                     if (event.getPointerCount() == 1 && mChanged) {
@@ -856,7 +859,23 @@ public class DrawView extends View {
     	
     	if (fromUser && mStudyMode) {
     		boolean gesture = mUI == UI.GESTURE;
+	    	
+    		long overlayTime = System.nanoTime() - mOverlayStart;
+    		
+    		// Add the overlay time if the overlay is still open at trial completion.
+	    	if (mUI == UI.CHORD && mShowOverlay) {
+	    		mStudyCtl.addUITime(overlayTime);
+	    	}
+	    	
 	    	mStudyCtl.handleSelected(selection.name, gesture);
+	    	
+	    	// Subtract the current overlay time from the next trial so when the
+	    	// overlay is released it will only count the time from the start of
+	    	// this new trial.
+	    	if (mUI == UI.CHORD && mShowOverlay) {
+	    		mStudyCtl.addUITime(-overlayTime);
+	    	}
+	    	
 	    	mMainActivity.setTitle(mStudyCtl.getPrompt());
     	}
     }

@@ -17,10 +17,10 @@ public class StudyController {
 	private long mTrialStart;
 	private int mNumErrors;
 	private StringBuilder mErrors;
-	private int mTimesOverlayShown;
 	private int[] mBlocksPerSet;
 	private int mTimesPainted;
 	private boolean mFinished;
+	private long mUITime;
 
 	public StudyController(StudyLogger logger) {
 		mLog = logger;
@@ -99,33 +99,33 @@ public class StudyController {
 				StringBuilder targetString = new StringBuilder();
 				for (int i = 0; i < numTargets; i++) {
 					if (i != 0)
-						targetString.append(" ");
+						targetString.append(",");
 					targetString.append(mTrials[mSetIndex][mTrialIndex][i]);
 				}
 
 				if (gesture) {
 					mLog.gestureTrial(now, mSetIndex + 1, mBlockNum, mTrialNum, mTrials[mSetIndex][mTrialIndex].length,
 							targetString.toString(), mNumErrors, mErrors.toString(),
-							mTimesPainted, now - mTrialStart);
+							mTimesPainted, mUITime, now - mTrialStart);
 				} else {
 					mLog.chordTrial(now, mSetIndex + 1, mBlockNum, mTrialNum, mTrials[mSetIndex][mTrialIndex].length,
 							targetString.toString(), mNumErrors, mErrors.toString(),
-							mTimesPainted, mTimesOverlayShown, now - mTrialStart);
+							mTimesPainted, mUITime, now - mTrialStart);
 				}
 
 				nextTrial();
 			}
 		} else {
 			if (mNumErrors != 0)
-				mErrors.append(" ");
+				mErrors.append(",");
 			
 			mErrors.append(selection);
 			mNumErrors++;
 		}
 	}
 	
-	public void handleOverlayShown() {
-		mTimesOverlayShown++;
+	public void addUITime(long duration) {
+		mUITime += duration;
 	}
 	
 	public String getPrompt() {
@@ -177,7 +177,7 @@ public class StudyController {
 		}
 		
 		mTrialStart = System.nanoTime();
-		mTimesOverlayShown = 0;
+		mUITime = 0;
 		mNumErrors = 0;
 		mTimesPainted = 0;
 		mErrors = new StringBuilder();

@@ -22,6 +22,7 @@ public class StudyLogger {
 	private Context mContext;
 	private int mSubjectId;
 	private Date mStart;
+	private final char columnSeparator = '\t';
 	
 	public StudyLogger(Context c) {
 		mContext = c;
@@ -35,26 +36,31 @@ public class StudyLogger {
 	}
 
 	// Log format:
-	// sid, timestamp, set, block, trial, #targets, targets, #errors, errors, #times painted, #times overlay shown, duration of trial
+	// sid, timestamp, ui type, set, block, trial, #targets, targets, #errors, errors, #times painted, time ui shown, duration of trial
 	public void chordTrial(long timeNs, int setNum, int blockNum, int trialNum, int numTargets, String targets, int numErrors,
-			String errors, int timesPainted, int timesOverlayShown, long durationNs) {
+			String errors, int timesPainted, long uiTimeNs, long durationNs) {
 		long durationMs = durationNs / 1000000;
 		long timeMs = timeNs / 1000000;
+		long uiTimeMs = uiTimeNs / 1000000;
+		char s = columnSeparator;
 		
-		log("ChordTrial", mSubjectId + "," + timeMs + "," + setNum + "," + blockNum + "," + trialNum + "," + numTargets + "," +
-				targets + "," + numErrors + "," + errors + "," + timesPainted + "," +
-				timesOverlayShown + "," + durationMs);
+		log("ChordTrial", "s" + mSubjectId + s + timeMs + s + "chord" + s + setNum + s +
+				blockNum + s + trialNum + s + numTargets + s + targets + s + numErrors +
+				s + errors + s + timesPainted + s + uiTimeMs + s + durationMs);
 	}
 	
 	// Log format:
-	// sid, timestamp, set, block, trial, #targets, targets, #errors, errors, #times painted, duration of trial
+	// sid, timestamp, ui type, set, block, trial, #targets, targets, #errors, errors, #times painted, time ui shown, duration of trial
 	public void gestureTrial(long timeNs, int setNum, int blockNum, int trialNum, int numTargets, String targets, int numErrors,
-			String errors, int timesPainted, long durationNs) {
+			String errors, int timesPainted, long uiTimeNs, long durationNs) {
 		long durationMs = durationNs / 1000000;
 		long timeMs = timeNs / 1000000;
-		
-		log("GestureTrial", mSubjectId + "," + timeMs + "," + setNum + "," + blockNum + "," + trialNum + "," + numTargets + "," +
-				targets + "," + numErrors + "," + errors + "," + timesPainted + "," + durationMs);
+		long uiTimeMs = uiTimeNs / 1000000;
+		char s = columnSeparator;
+
+		log("GestureTrial", "s" + mSubjectId + s + timeMs + s + "gesture" + s + setNum + s +
+				blockNum + s + trialNum + s + numTargets + s + targets + s + numErrors + s +
+				errors + s + timesPainted + s + uiTimeMs + s + durationMs);
 	}
 
 	// Log format:
