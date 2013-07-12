@@ -34,12 +34,12 @@ public class StudyLogger {
 		mSubjectId = subjectId;
 	}
 	
-	public void trial(long timeNs, int setNum, int blockNum, int taskNum, int numTargets, String targets, int numErrors,
+	public void chordTrial(long timeNs, int setNum, int blockNum, int taskNum, int numTargets, String targets, int numErrors,
 			String errors, int timesPainted, int timesOverlayShown, long durationNs) {
 		long durationMs = durationNs / 1000000;
 		long timeMs = timeNs / 1000000;
 		
-		log("Trial", mSubjectId + "," + timeMs + "," + setNum + "," + blockNum + "," + taskNum + "," + numTargets + "," +
+		log("ChordTrial", mSubjectId + "," + timeMs + "," + setNum + "," + blockNum + "," + taskNum + "," + numTargets + "," +
 				targets + "," + numErrors + "," + errors + "," + timesPainted + "," +
 				timesOverlayShown + "," + durationMs);
 	}

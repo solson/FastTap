@@ -108,7 +108,7 @@ public class StudyController {
 							targetString.toString(), mNumErrors, mErrors.toString(),
 							mTimesPainted, now - mTrialStart);
 				} else {
-					mLog.trial(now, mSetIndex + 1, mBlockNum, mTrialNum, mTrials[mSetIndex][mTrialIndex].length,
+					mLog.chordTrial(now, mSetIndex + 1, mBlockNum, mTrialNum, mTrials[mSetIndex][mTrialIndex].length,
 							targetString.toString(), mNumErrors, mErrors.toString(),
 							mTimesPainted, mTimesOverlayShown, now - mTrialStart);
 				}
