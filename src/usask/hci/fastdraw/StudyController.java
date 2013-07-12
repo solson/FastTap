@@ -19,6 +19,8 @@ public class StudyController {
 	private StringBuilder mErrors;
 	private int mTimesOverlayShown;
 	private int[] mBlocksPerSet;
+	private int mTimesPainted;
+	private boolean mFinished;
 
 	public StudyController(StudyLogger logger) {
 		mLog = logger;
@@ -52,10 +54,11 @@ public class StudyController {
 			{"Thin", "Black", "Paintbrush"}}
 		};
 		
-		mBlocksPerSet = new int[] { 5, 7, 3 };
+		mBlocksPerSet = new int[] { 5, 5, 5 };
 
 		mSetIndex = 0;
 		mBlockNum = 0;
+		mFinished = false;
 		
 		nextBlock();
 	}
@@ -78,7 +81,14 @@ public class StudyController {
 		nextBlock();
 	}
 	
+	public void incrementTimesPainted() {
+		mTimesPainted++;
+	}
+	
 	public void handleSelected(String selection) {
+		if (mFinished)
+			return;
+		
 		if (mToSelect.contains(selection)) {
 			mToSelect.remove(selection);
 
@@ -93,9 +103,9 @@ public class StudyController {
 					targetString.append(mTrials[mSetIndex][mTrialIndex][i]);
 				}
 
-				mLog.trial(mBlockNum, mTrialNum, mTrials[mSetIndex][mTrialIndex].length,
+				mLog.trial(mSetIndex + 1, mBlockNum, mTrialNum, mTrials[mSetIndex][mTrialIndex].length,
 						targetString.toString(), mNumErrors, mErrors.toString(),
-						mTimesOverlayShown, now - mTrialStart);
+						mTimesPainted, mTimesOverlayShown, now - mTrialStart);
 				
 				nextTrial();
 			}
@@ -113,6 +123,9 @@ public class StudyController {
 	}
 	
 	public String getPrompt() {
+		if (mFinished)
+			return "You are finished!";
+		
 		String progress = "#" + mBlockNum + " (" + mTrialNum + "/" + mTrials[mSetIndex].length + ")";
     	StringBuilder title = new StringBuilder(progress + " Please select: ");
     	
@@ -125,7 +138,12 @@ public class StudyController {
 	}
 	
 	private void nextSet() {
-		mSetIndex = (mSetIndex + 1) % mTrials.length;
+		if (mSetIndex == mTrials.length - 1) {
+			mFinished = true;
+			return;
+		}
+		
+		mSetIndex++;
 		mBlockNum = 0;
 		nextBlock();
 	}
@@ -155,6 +173,7 @@ public class StudyController {
 		mTrialStart = System.nanoTime();
 		mTimesOverlayShown = 0;
 		mNumErrors = 0;
+		mTimesPainted = 0;
 		mErrors = new StringBuilder();
 
 		mTrialIndex = mTrialOrder[mTrialNum];

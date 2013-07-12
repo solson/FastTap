@@ -759,8 +759,10 @@ public class DrawView extends View {
             			mLog.event("Overlay hidden after " + duration / 1000000 + " ms");
             		}
             	} else if (draw) {
-                    if (event.getPointerCount() == 1 && mChanged)
+                    if (event.getPointerCount() == 1 && mChanged) {
+                    	mStudyCtl.incrementTimesPainted();
                     	mUndo = mNextUndo;
+                    }
                     
             		mTool.touchStop(id, x, y, new Canvas(mBitmap));
             	}
