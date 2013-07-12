@@ -675,8 +675,11 @@ public class DrawView extends View {
             	if (id == mGestureFinger) {
             		mGestureFinger = -1;
             		mShowGestureMenu = false;
+            		boolean gestureSelection;
             		
             		if (mActiveCategory != Gesture.UNKNOWN && mSubSelection != Gesture.UNKNOWN) {
+            			gestureSelection = false;
+            			
             			switch (mActiveCategory) {
             				case UP:
             					switch (mSubSelection) {
@@ -722,11 +725,23 @@ public class DrawView extends View {
             					break;
             			}
             		} else {
+            			gestureSelection = true;
                 		mGesture = mGestureDetector.recognize();
             		}
 
-            		if (mGestureSelections.containsKey(mGesture))
+        			long menuOpenNs = now - mPossibleGestureFingerTime - mGestureMenuDelay;
+        			long menuOpenMs = menuOpenNs / 1000 / 1000;
+        			
+            		if (mGestureSelections.containsKey(mGesture)) {
+            			if (gestureSelection)
+            				mLog.event("Menu closed with gesture selection: " + menuOpenMs + " ms");
+            			else
+            				mLog.event("Menu closed with exact selection: " + menuOpenMs + " ms");
+            			
             			changeSelection(mGestureSelections.get(mGesture));
+            		} else {
+            			mLog.event("Menu closed without selection: " + menuOpenMs + " ms");
+            		}
 
         			mActiveCategory = Gesture.UNKNOWN;
         			draw = false;
