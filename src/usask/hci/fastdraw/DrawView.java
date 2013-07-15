@@ -119,7 +119,7 @@ public class DrawView extends View {
         mMainActivity = (MainActivity) mainActivity;
         mStudyMode = false;
         mLog = new StudyLogger(mainActivity);
-		mStudyCtl = new StudyController(mLog);
+		mStudyCtl = new StudyController(this, mLog);
         mBitmapPaint = new Paint(Paint.DITHER_FLAG);
         mPaint = new Paint();
         mPaint.setTextSize(26);
@@ -271,7 +271,8 @@ public class DrawView extends View {
         			if (mStudyMode) {
         				mStudyCtl.setSetNum(setNumPicker.getValue());
         				mStudyCtl.setBlockNum(blockNumPicker.getValue());
-        				mMainActivity.setTitle(mStudyCtl.getPrompt());
+                        mMainActivity.setTitle("Your targets will appear here.");
+                        pauseStudy("Press OK when you are ready to begin.");
         			}
         			
         			mLog.setSubjectId(subjectIdPicker.getValue());
@@ -281,6 +282,19 @@ public class DrawView extends View {
         	})
         	.setView(studySetupLayout)
         	.show();
+    }
+    
+    public void pauseStudy(String message) {
+        new AlertDialog.Builder(mMainActivity)
+        .setMessage(message)
+        .setCancelable(false)
+        .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int which) {
+                mStudyCtl.unpause();
+                mMainActivity.setTitle(mStudyCtl.getPrompt());
+            }
+        })
+        .show();
     }
     
     public int getColor() {
@@ -876,13 +890,16 @@ public class DrawView extends View {
 	    		mStudyCtl.addUITime(-overlayTime);
 	    	}
 	    	
-	    	mMainActivity.setTitle(mStudyCtl.getPrompt());
+	    	if (mStudyCtl.shouldPause())
+	    	    mStudyCtl.pause("Press OK when you are ready to continue.");
+	    	else
+	    	    mMainActivity.setTitle(mStudyCtl.getPrompt());
     	}
     }
 
-	public void loadPreferences(SharedPreferences sharedPreferences) {
-		mLeftHanded = sharedPreferences.getBoolean("pref_left_handed", false);
-		mPermanentGrid = sharedPreferences.getBoolean("pref_permanent_grid", false);
-		invalidate();
-	}
+    public void loadPreferences(SharedPreferences sharedPreferences) {
+        mLeftHanded = sharedPreferences.getBoolean("pref_left_handed", false);
+        mPermanentGrid = sharedPreferences.getBoolean("pref_permanent_grid", false);
+        invalidate();
+    }
 }

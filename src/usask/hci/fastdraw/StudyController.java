@@ -8,6 +8,7 @@ import java.util.Set;
 public class StudyController {
 	private final String[][][] mTrials;
 	private final StudyLogger mLog;
+	private final DrawView mDrawView;
 	private int mTrialNum;
 	private int mTrialIndex;
 	private int mBlockNum;
@@ -21,8 +22,10 @@ public class StudyController {
 	private int mTimesPainted;
 	private boolean mFinished;
 	private long mUITime;
+	private boolean mShouldPause;
 
-	public StudyController(StudyLogger logger) {
+	public StudyController(DrawView drawView, StudyLogger logger) {
+	    mDrawView = drawView;
 		mLog = logger;
 
 		mTrials = new String[][][] {
@@ -59,9 +62,23 @@ public class StudyController {
 		mSetIndex = 0;
 		mBlockNum = 0;
 		mFinished = false;
+		mShouldPause = false;
 		
 		nextBlock();
 	}
+	
+	public boolean shouldPause() {
+	    return mShouldPause;
+	}
+	
+	public void pause(String message) {
+	    mDrawView.pauseStudy(message);
+	}
+
+    public void unpause() {
+        mTrialStart = System.nanoTime();
+        mShouldPause = false;
+    }
 	
 	public int getNumSets() {
 		return mTrials.length;
@@ -168,6 +185,7 @@ public class StudyController {
 		mBlockNum++;
 		mTrialNum = 0;
 		nextTrial();
+		mShouldPause = true;
 	}
 	
 	private void nextTrial() {
