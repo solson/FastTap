@@ -20,6 +20,7 @@ import android.graphics.Paint.Style;
 import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.RectF;
+import android.os.Handler;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.MotionEvent;
@@ -76,12 +77,13 @@ public class DrawView extends View {
 	private PointF mActiveCategoryOrigin;
 	private Gesture mSubSelection;
 	private UI mUI;
-    private final int mChordDelay = 1000 * 1000 * 200; // 200ms in ns
-	private final int mFlashDelay = 1000 * 1000 * 400; // 400ms in ns
-    private final int mGestureMenuDelay = 1000 * 1000 * 200; // 200ms in ns
-	private final int mOverlayButtonIndex = 16;
-	private final int mGestureButtonDist = 150;
-	private final int mGestureButtonSize = 75;
+	private final Handler mHandler = new Handler();
+    private static final int mChordDelay = 1000 * 1000 * 200; // 200ms in ns
+	private static final int mFlashDelay = 1000 * 1000 * 400; // 400ms in ns
+    private static final int mGestureMenuDelay = 1000 * 1000 * 200; // 200ms in ns
+	private static final int mOverlayButtonIndex = 16;
+	private static final int mGestureButtonDist = 150;
+	private static final int mGestureButtonSize = 75;
 	
 	private enum UI {
 		CHORD, GESTURE
@@ -290,8 +292,15 @@ public class DrawView extends View {
         .setCancelable(false)
         .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int which) {
-                mStudyCtl.unpause();
-                mMainActivity.setTitle(mStudyCtl.getPrompt());
+                mMainActivity.setTitle("Wait for it...");
+                
+                mHandler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        mStudyCtl.unpause();
+                        mMainActivity.setTitle(mStudyCtl.getPrompt());
+                    }
+                }, 1000);
             }
         })
         .show();
