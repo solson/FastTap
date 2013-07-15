@@ -789,8 +789,12 @@ public class DrawView extends View {
             			long duration = now - mOverlayStart;
             			mLog.event("Overlay hidden after " + duration / 1000000 + " ms");
             			
-            			if (mStudyMode)
-            				mStudyCtl.addUITime(duration);
+            			if (mStudyMode) {
+                            if (mOverlayStart > mStudyCtl.getTrialStart())
+                                mStudyCtl.addUITime(duration);
+                            else
+                                mStudyCtl.addUITime(now - mStudyCtl.getTrialStart());
+            			}
             		}
             	} else if (draw) {
                     if (event.getPointerCount() == 1 && mChanged) {
@@ -891,21 +895,16 @@ public class DrawView extends View {
     	if (fromUser && mStudyMode) {
     		boolean gesture = mUI == UI.GESTURE;
 	    	
-    		long overlayTime = System.nanoTime() - mOverlayStart;
-    		
-    		// Add the overlay time if the overlay is still open at trial completion.
 	    	if (mUI == UI.CHORD && mShowOverlay) {
-	    		mStudyCtl.addUITime(overlayTime);
+	    	    long now = System.nanoTime();
+	            
+                if (mOverlayStart > mStudyCtl.getTrialStart())
+                    mStudyCtl.addUITime(now - mOverlayStart);
+                else
+                    mStudyCtl.addUITime(now - mStudyCtl.getTrialStart());
 	    	}
 	    	
 	    	boolean correctSelection = mStudyCtl.handleSelected(selection.name, gesture);
-	    	
-	    	// Subtract the current overlay time from the next trial so when the
-	    	// overlay is released it will only count the time from the start of
-	    	// this new trial.
-	    	if (mUI == UI.CHORD && mShowOverlay) {
-	    		mStudyCtl.addUITime(-overlayTime);
-	    	}
 	    	
 	    	if (mStudyCtl.shouldPause) {
 	    	    pauseStudy("Press OK when you are ready to continue.");

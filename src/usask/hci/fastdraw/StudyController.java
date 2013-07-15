@@ -81,6 +81,10 @@ public class StudyController {
 	        mNumWaitDots++;
 	    }
 	}
+    
+    public long getTrialStart() {
+        return mTrialStart;
+    }
 	
 	public int getNumSets() {
 		return mTrials.length;
