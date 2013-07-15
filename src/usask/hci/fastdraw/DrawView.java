@@ -78,9 +78,11 @@ public class DrawView extends View {
 	private Gesture mSubSelection;
 	private UI mUI;
 	private final Handler mHandler = new Handler();
-    private static final int mChordDelay = 1000 * 1000 * 200; // 200ms in ns
-	private static final int mFlashDelay = 1000 * 1000 * 400; // 400ms in ns
-    private static final int mGestureMenuDelay = 1000 * 1000 * 200; // 200ms in ns
+    private static final int mChordDelay = 1000 * 1000 * 200; // 200 ms in ns
+	private static final int mFlashDelay = 1000 * 1000 * 400; // 400 ms in ns
+    private static final int mGestureMenuDelay = 1000 * 1000 * 200; // 200 ms in ns
+    private static final int mTrialDelay = 500; // 500 ms
+    private static final int mBlockDelay = 1000; // 1 sec
 	private static final int mOverlayButtonIndex = 16;
 	private static final int mGestureButtonDist = 150;
 	private static final int mGestureButtonSize = 75;
@@ -121,7 +123,7 @@ public class DrawView extends View {
         mMainActivity = (MainActivity) mainActivity;
         mStudyMode = false;
         mLog = new StudyLogger(mainActivity);
-		mStudyCtl = new StudyController(this, mLog);
+		mStudyCtl = new StudyController(mLog);
         mBitmapPaint = new Paint(Paint.DITHER_FLAG);
         mPaint = new Paint();
         mPaint.setTextSize(26);
@@ -287,23 +289,29 @@ public class DrawView extends View {
     }
     
     public void pauseStudy(String message) {
+        mStudyCtl.shouldPause = false;
+        
         new AlertDialog.Builder(mMainActivity)
-        .setMessage(message)
-        .setCancelable(false)
-        .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int which) {
-                mMainActivity.setTitle("Wait for it...");
-                
-                mHandler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        mStudyCtl.unpause();
-                        mMainActivity.setTitle(mStudyCtl.getPrompt());
-                    }
-                }, 1000);
-            }
-        })
-        .show();
+            .setMessage(message)
+            .setCancelable(false)
+            .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int which) {
+                    Runnable waitStep = new Runnable() {
+                        @Override
+                        public void run() {
+                            mStudyCtl.waitStep();
+                            mMainActivity.setTitle(mStudyCtl.getPrompt());
+                        }
+                    };
+                    
+                    waitStep.run();
+                    mHandler.postDelayed(waitStep, mBlockDelay / 4);
+                    mHandler.postDelayed(waitStep, mBlockDelay / 2);
+                    mHandler.postDelayed(waitStep, mBlockDelay * 3 / 4);
+                    mHandler.postDelayed(waitStep, mBlockDelay);
+                }
+            })
+            .show();
     }
     
     public int getColor() {
@@ -890,7 +898,7 @@ public class DrawView extends View {
 	    		mStudyCtl.addUITime(overlayTime);
 	    	}
 	    	
-	    	mStudyCtl.handleSelected(selection.name, gesture);
+	    	boolean correctSelection = mStudyCtl.handleSelected(selection.name, gesture);
 	    	
 	    	// Subtract the current overlay time from the next trial so when the
 	    	// overlay is released it will only count the time from the start of
@@ -899,10 +907,23 @@ public class DrawView extends View {
 	    		mStudyCtl.addUITime(-overlayTime);
 	    	}
 	    	
-	    	if (mStudyCtl.shouldPause())
-	    	    mStudyCtl.pause("Press OK when you are ready to continue.");
-	    	else
-	    	    mMainActivity.setTitle(mStudyCtl.getPrompt());
+	    	if (mStudyCtl.shouldPause) {
+	    	    pauseStudy("Press OK when you are ready to continue.");
+	    	} else if (correctSelection) {
+                Runnable waitStep = new Runnable() {
+                    @Override
+                    public void run() {
+                        mStudyCtl.waitStep();
+                        mMainActivity.setTitle(mStudyCtl.getPrompt());
+                    }
+                };
+                
+                waitStep.run();
+                mHandler.postDelayed(waitStep, mTrialDelay / 4);
+                mHandler.postDelayed(waitStep, mTrialDelay / 2);
+                mHandler.postDelayed(waitStep, mTrialDelay * 3 / 4);
+                mHandler.postDelayed(waitStep, mTrialDelay);
+	    	}
     	}
     }
 

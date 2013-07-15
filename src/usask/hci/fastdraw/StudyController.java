@@ -8,7 +8,6 @@ import java.util.Set;
 public class StudyController {
 	private final String[][][] mTrials;
 	private final StudyLogger mLog;
-	private final DrawView mDrawView;
 	private int mTrialNum;
 	private int mTrialIndex;
 	private int mBlockNum;
@@ -22,10 +21,12 @@ public class StudyController {
 	private int mTimesPainted;
 	private boolean mFinished;
 	private long mUITime;
-	private boolean mShouldPause;
+	private boolean mWaiting;
+	private int mNumWaitDots;
+	
+    public boolean shouldPause;
 
-	public StudyController(DrawView drawView, StudyLogger logger) {
-	    mDrawView = drawView;
+	public StudyController(StudyLogger logger) {
 		mLog = logger;
 
 		mTrials = new String[][][] {
@@ -62,23 +63,24 @@ public class StudyController {
 		mSetIndex = 0;
 		mBlockNum = 0;
 		mFinished = false;
-		mShouldPause = false;
+		shouldPause = false;
+		mWaiting = false;
+		mNumWaitDots = 0;
 		
 		nextBlock();
 	}
 	
-	public boolean shouldPause() {
-	    return mShouldPause;
+	public void waitStep() {
+	    if (!mWaiting) {
+	        mWaiting = true;
+	    } else if (mNumWaitDots == 3) {
+	        mWaiting = false;
+	        mNumWaitDots = 0;
+	        mTrialStart = System.nanoTime();
+	    } else {
+	        mNumWaitDots++;
+	    }
 	}
-	
-	public void pause(String message) {
-	    mDrawView.pauseStudy(message);
-	}
-
-    public void unpause() {
-        mTrialStart = System.nanoTime();
-        mShouldPause = false;
-    }
 	
 	public int getNumSets() {
 		return mTrials.length;
@@ -102,9 +104,10 @@ public class StudyController {
 		mTimesPainted++;
 	}
 	
-	public void handleSelected(String selection, boolean gesture) {
+	// Return whether the selection was one of the current targets.
+	public boolean handleSelected(String selection, boolean gesture) {
 		if (mFinished)
-			return;
+			return false;
 		
 		if (mToSelect.contains(selection)) {
 			mToSelect.remove(selection);
@@ -132,12 +135,16 @@ public class StudyController {
 
 				nextTrial();
 			}
+			
+			return true;
 		} else {
 			if (mNumErrors != 0)
 				mErrors.append(",");
 			
 			mErrors.append(selection);
 			mNumErrors++;
+			
+			return false;
 		}
 	}
 	
@@ -150,7 +157,17 @@ public class StudyController {
 			return "You are finished!";
 		
 		String progress = "#" + mBlockNum + " (" + mTrialNum + "/" + mTrials[mSetIndex].length + ")";
-    	StringBuilder title = new StringBuilder(progress + " Please select: ");
+        
+        if (mWaiting) {
+            StringBuilder dots = new StringBuilder("");
+            
+            for (int i = 0; i < mNumWaitDots; i++)
+                dots.append(".");
+            
+            return progress + " Please select: " + dots;
+        }
+    	
+        StringBuilder title = new StringBuilder(progress + " Please select: ");
     	
     	for (String toSelect : mToSelect) {
     		title.append(toSelect);
@@ -185,7 +202,7 @@ public class StudyController {
 		mBlockNum++;
 		mTrialNum = 0;
 		nextTrial();
-		mShouldPause = true;
+		shouldPause = true;
 	}
 	
 	private void nextTrial() {
