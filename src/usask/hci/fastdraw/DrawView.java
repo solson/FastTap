@@ -316,6 +316,14 @@ public class DrawView extends View {
             .show();
     }
     
+    public void alert(String message) {
+        new AlertDialog.Builder(mMainActivity)
+            .setMessage(message)
+            .setCancelable(false)
+            .setPositiveButton(android.R.string.yes, null)
+            .show();
+    }
+    
     public int getColor() {
     	return mColor;
     }
@@ -909,7 +917,13 @@ public class DrawView extends View {
 	    	boolean wasLastTarget = mStudyCtl.isOnLastTarget();
 	    	boolean correctSelection = mStudyCtl.handleSelected(selection.name, gesture);
 	    	
-	    	if (mStudyCtl.shouldPause) {
+	    	if (mStudyCtl.isFinished()) {
+                mMainActivity.getActionBar().setIcon(R.drawable.trans);
+                mMainActivity.setTitle(mStudyCtl.getPrompt());
+                
+                if (wasLastTarget)
+                    alert("You are finished!\n\nThank you for participating!");
+	    	} else if (mStudyCtl.shouldPause) {
                 mMainActivity.getActionBar().setIcon(R.drawable.check);
                 mMainActivity.setTitle(mStudyCtl.getPrompt(true));
 	    	    pauseStudy("Press OK when you are ready to continue.");

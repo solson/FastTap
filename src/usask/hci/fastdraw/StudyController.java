@@ -81,6 +81,10 @@ public class StudyController {
 	        mNumWaitDots++;
 	    }
 	}
+	
+	public boolean isFinished() {
+	    return mFinished;
+	}
     
     public long getTrialStart() {
         return mTrialStart;
