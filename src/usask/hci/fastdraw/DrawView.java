@@ -286,6 +286,8 @@ public class DrawView extends View {
         	})
         	.setView(studySetupLayout)
         	.show();
+
+        mMainActivity.getActionBar().setIcon(R.drawable.trans);
     }
     
     public void pauseStudy(String message) {
