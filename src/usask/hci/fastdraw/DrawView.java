@@ -904,11 +904,16 @@ public class DrawView extends View {
                     mStudyCtl.addUITime(now - mStudyCtl.getTrialStart());
 	    	}
 	    	
+	    	boolean wasLastTarget = mStudyCtl.isOnLastTarget();
 	    	boolean correctSelection = mStudyCtl.handleSelected(selection.name, gesture);
 	    	
 	    	if (mStudyCtl.shouldPause) {
+                mMainActivity.getActionBar().setIcon(R.drawable.check);
+                mMainActivity.setTitle(mStudyCtl.getPrompt(true));
 	    	    pauseStudy("Press OK when you are ready to continue.");
-	    	} else if (correctSelection) {
+	    	} else if (correctSelection && wasLastTarget) {
+	    	    mMainActivity.getActionBar().setIcon(R.drawable.check);
+	    	    
                 Runnable waitStep = new Runnable() {
                     @Override
                     public void run() {
@@ -922,6 +927,18 @@ public class DrawView extends View {
                 mHandler.postDelayed(waitStep, mTrialDelay / 2);
                 mHandler.postDelayed(waitStep, mTrialDelay * 3 / 4);
                 mHandler.postDelayed(waitStep, mTrialDelay);
+
+                mHandler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        mMainActivity.getActionBar().setIcon(R.drawable.trans);
+                    }
+                }, mTrialDelay);
+	    	} else if (!correctSelection) {
+                mMainActivity.getActionBar().setIcon(R.drawable.x);
+	    	} else {
+                mMainActivity.getActionBar().setIcon(R.drawable.trans);
+                mMainActivity.setTitle(mStudyCtl.getPrompt());
 	    	}
     	}
     }

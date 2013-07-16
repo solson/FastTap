@@ -156,7 +156,11 @@ public class StudyController {
 		mUITime += duration;
 	}
 	
-	public String getPrompt() {
+    public String getPrompt() {
+        return getPrompt(false);
+    }
+	
+	public String getPrompt(boolean hideTarget) {
 		if (mFinished)
 			return "You are finished!";
 		
@@ -172,6 +176,9 @@ public class StudyController {
         }
     	
         StringBuilder title = new StringBuilder(progress + " Please select: ");
+        
+        if (hideTarget)
+            return title.toString();
     	
     	for (String toSelect : mToSelect) {
     		title.append(toSelect);
@@ -226,4 +233,8 @@ public class StudyController {
 		
 		mToSelect = new LinkedHashSet<String>(Arrays.asList(mTrials[mSetIndex][mTrialIndex]));
 	}
+
+    public boolean isOnLastTarget() {
+        return mToSelect.size() == 1;
+    }
 }
