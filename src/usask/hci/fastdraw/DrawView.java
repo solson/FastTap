@@ -928,6 +928,11 @@ public class DrawView extends View {
                 mMainActivity.setTitle(mStudyCtl.getPrompt(true));
 	    	    pauseStudy("Press OK when you are ready to continue.");
 	    	} else if (correctSelection && wasLastTarget) {
+                // Clear screen and undo history
+                Canvas canvas = new Canvas(mBitmap);
+                canvas.drawRGB(0xFF, 0xFF, 0xFF);
+                mUndo = mBitmap.copy(mBitmap.getConfig(), true);
+                
 	    	    mMainActivity.getActionBar().setIcon(R.drawable.check);
 	    	    
                 Runnable waitStep = new Runnable() {
