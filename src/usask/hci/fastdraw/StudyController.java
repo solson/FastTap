@@ -157,7 +157,8 @@ public class StudyController {
 	}
 	
 	public void addUITime(long duration) {
-		mUITime += duration;
+	    if (!mWaiting)
+	        mUITime += duration;
 	}
 	
     public String getPrompt() {
