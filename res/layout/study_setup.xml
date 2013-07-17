@@ -52,5 +52,19 @@
 	        android:checked="false"
 		    android:layout_width="fill_parent"
 		    android:layout_height="wrap_content" />
+        
+        <CheckBox
+            android:id="@+id/left_handed_checkbox"
+            android:text="Left handed"
+            android:checked="false"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content" />
+        
+        <CheckBox
+            android:id="@+id/permanent_grid_checkbox"
+            android:text="Permanent grid"
+            android:checked="false"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content" />
 	</LinearLayout>
 </ScrollView>

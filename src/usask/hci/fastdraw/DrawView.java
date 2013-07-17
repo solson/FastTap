@@ -242,6 +242,8 @@ public class DrawView extends View {
         View studySetupLayout = mMainActivity.getLayoutInflater().inflate(R.layout.study_setup, null);
 		final CheckBox studyCheckBox = (CheckBox) studySetupLayout.findViewById(R.id.study_mode_checkbox);
 		final CheckBox gestureCheckBox = (CheckBox) studySetupLayout.findViewById(R.id.gesture_mode_checkbox);
+        final CheckBox leftHandedCheckBox = (CheckBox) studySetupLayout.findViewById(R.id.left_handed_checkbox);
+        final CheckBox permanentGridCheckBox = (CheckBox) studySetupLayout.findViewById(R.id.permanent_grid_checkbox);
         
         final NumberPicker subjectIdPicker = (NumberPicker) studySetupLayout.findViewById(R.id.subject_id_picker);
         subjectIdPicker.setMinValue(0);
@@ -281,6 +283,8 @@ public class DrawView extends View {
         			
         			mLog.setSubjectId(subjectIdPicker.getValue());
         			mUI = gestureCheckBox.isChecked() ? UI.GESTURE : UI.CHORD;
+        			mLeftHanded = leftHandedCheckBox.isChecked();
+        			mPermanentGrid = permanentGridCheckBox.isChecked();
         			DrawView.this.invalidate();
         		}
         	})
