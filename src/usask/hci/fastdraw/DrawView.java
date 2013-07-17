@@ -904,8 +904,9 @@ public class DrawView extends View {
     	
     	if (fromUser && mStudyMode) {
     		boolean gesture = mUI == UI.GESTURE;
+            boolean wasLastTarget = mStudyCtl.isOnLastTarget();
 	    	
-	    	if (mUI == UI.CHORD && mShowOverlay) {
+	    	if (mUI == UI.CHORD && mShowOverlay && wasLastTarget) {
 	    	    long now = System.nanoTime();
 	            
                 if (mOverlayStart > mStudyCtl.getTrialStart())
@@ -914,7 +915,6 @@ public class DrawView extends View {
                     mStudyCtl.addUITime(now - mStudyCtl.getTrialStart());
 	    	}
 	    	
-	    	boolean wasLastTarget = mStudyCtl.isOnLastTarget();
 	    	boolean correctSelection = mStudyCtl.handleSelected(selection.name, gesture);
 	    	
 	    	if (mStudyCtl.isFinished()) {
