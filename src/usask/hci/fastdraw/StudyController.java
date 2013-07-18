@@ -31,9 +31,8 @@ public class StudyController {
     private long mUITime;
     private boolean mWaiting;
     private int mNumWaitDots;
+    private boolean mHideTargets;
     
-    public boolean shouldPause;
-
     public StudyController(StudyLogger logger) {
         mLog = logger;
 
@@ -72,20 +71,29 @@ public class StudyController {
         mSetIndex = 0;
         mBlockNum = 0;
         mFinished = false;
-        shouldPause = false;
         mWaiting = false;
         mNumWaitDots = 0;
+        mHideTargets = false;
         
         nextBlock();
     }
     
-    public void waitStep() {
+    public void hideTargets() {
+        mHideTargets = true;
+    }
+    
+    public void waitStep(boolean goNextTrial) {
         if (!mWaiting) {
             mWaiting = true;
         } else if (mNumWaitDots == 3) {
             mWaiting = false;
             mNumWaitDots = 0;
-            mTrialStart = System.nanoTime();
+            
+            if (mHideTargets)
+                mHideTargets = false;
+            
+            if (goNextTrial)
+                nextTrial();
         } else {
             mNumWaitDots++;
         }
@@ -149,8 +157,6 @@ public class StudyController {
                             targetString.toString(), mNumErrors, mErrors.toString(),
                             mTimesPainted, mUITime, now - mTrialStart);
                 }
-
-                nextTrial();
             }
             
             return true;
@@ -171,43 +177,45 @@ public class StudyController {
     }
     
     public CharSequence getPrompt() {
-        return getPrompt(false);
-    }
-    
-    public CharSequence getPrompt(boolean hideTarget) {
         if (mFinished)
             return "You are finished!";
         
         String progress = "#" + mBlockNum + " (" + mTrialNum + "/" + mTrials[mSetIndex].length + ")";
         
-        if (mWaiting) {
-            StringBuilder dots = new StringBuilder("");
-            
-            for (int i = 0; i < mNumWaitDots; i++)
-                dots.append(".");
-            
-            return progress + " Please select: " + dots;
-        }
-        
         SpannableStringBuilder title = new SpannableStringBuilder(progress + " Please select: ");
         
-        if (hideTarget)
-            return title.toString();
-        
-        boolean first = true;
-        for (String toSelect : mToSelect) {
-            if (!first)
-                title.append(", ");
-
-            SpannableString text = new SpannableString(toSelect);
-
-            if (mSelected.contains(toSelect)) {
-                text.setSpan(new StrikethroughSpan(), 0, text.length(), 0);
-                text.setSpan(new ForegroundColorSpan(Color.DKGRAY), 0, text.length(), 0);
+        if (!mHideTargets) {
+            int index = 0;
+            int last = mToSelect.size() - 1;
+            for (String toSelect : mToSelect) {
+                SpannableString text = new SpannableString(toSelect);
+    
+                if (mSelected.contains(toSelect)) {
+                    text.setSpan(new StrikethroughSpan(), 0, text.length(), 0);
+                    text.setSpan(new ForegroundColorSpan(Color.DKGRAY), 0, text.length(), 0);
+                }
+    
+                title.append(text);
+                
+                if (index != last) {
+                    if (mSelected.contains(toSelect)) {
+                        SpannableString comma = new SpannableString(", ");
+                        comma.setSpan(new ForegroundColorSpan(Color.DKGRAY), 0, comma.length(), 0);
+                        title.append(comma);
+                    } else {
+                        title.append(", ");
+                    }
+                }
+                
+                index++;
             }
-
-            title.append(text);
-            first = false;
+        }
+        
+        if (mWaiting) {
+            title.append(" ");
+            
+            for (int i = 0; i < mNumWaitDots; i++)
+                title.append(".");
         }
         
         return title;
@@ -238,10 +246,9 @@ public class StudyController {
         mBlockNum++;
         mTrialNum = 0;
         nextTrial();
-        shouldPause = true;
     }
     
-    private void nextTrial() {
+    public void nextTrial() {
         if (mTrialNum >= mTrials[mSetIndex].length) {
             nextBlock();
             return;
@@ -262,5 +269,9 @@ public class StudyController {
 
     public boolean isOnLastTarget() {
         return mToSelect.size() - mSelected.size() == 1;
+    }
+
+    public boolean isOnLastTrial() {
+        return mTrialNum == mTrials[mSetIndex].length;
     }
 }

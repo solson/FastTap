@@ -292,8 +292,6 @@ public class DrawView extends View {
     }
     
     public void pauseStudy(String message) {
-        mStudyCtl.shouldPause = false;
-        
         new AlertDialog.Builder(mMainActivity)
             .setMessage(message)
             .setCancelable(false)
@@ -302,11 +300,12 @@ public class DrawView extends View {
                     Runnable waitStep = new Runnable() {
                         @Override
                         public void run() {
-                            mStudyCtl.waitStep();
+                            mStudyCtl.waitStep(false);
                             mMainActivity.setTitle(mStudyCtl.getPrompt());
                         }
                     };
                     
+                    mStudyCtl.hideTargets();
                     waitStep.run();
                     mHandler.postDelayed(waitStep, mBlockDelay / 4);
                     mHandler.postDelayed(waitStep, mBlockDelay / 2);
@@ -939,6 +938,7 @@ public class DrawView extends View {
         if (fromUser && mStudyMode) {
             boolean gesture = mUI == UI.GESTURE;
             boolean wasLastTarget = mStudyCtl.isOnLastTarget();
+            boolean wasLastTrial = mStudyCtl.isOnLastTrial();
             
             if (mUI == UI.CHORD && mShowOverlay && wasLastTarget) {
                 long now = System.nanoTime();
@@ -957,10 +957,6 @@ public class DrawView extends View {
                 
                 if (wasLastTarget)
                     alert("You are finished!\n\nThank you for participating!");
-            } else if (mStudyCtl.shouldPause) {
-                mMainActivity.getActionBar().setIcon(R.drawable.check);
-                mMainActivity.setTitle(mStudyCtl.getPrompt(true));
-                pauseStudy("Press OK when you are ready to continue.");
             } else if (correctSelection && wasLastTarget) {
                 // Clear screen and undo history
                 Canvas canvas = new Canvas(mBitmap);
@@ -974,26 +970,32 @@ public class DrawView extends View {
                 
                 mMainActivity.getActionBar().setIcon(R.drawable.check);
                 
-                Runnable waitStep = new Runnable() {
-                    @Override
-                    public void run() {
-                        mStudyCtl.waitStep();
-                        mMainActivity.setTitle(mStudyCtl.getPrompt());
-                    }
-                };
-                
-                waitStep.run();
-                mHandler.postDelayed(waitStep, mTrialDelay / 4);
-                mHandler.postDelayed(waitStep, mTrialDelay / 2);
-                mHandler.postDelayed(waitStep, mTrialDelay * 3 / 4);
-                mHandler.postDelayed(waitStep, mTrialDelay);
-
-                mHandler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        mMainActivity.getActionBar().setIcon(R.drawable.trans);
-                    }
-                }, mTrialDelay);
+                if (wasLastTrial) {
+                    mMainActivity.setTitle(mStudyCtl.getPrompt());
+                    mStudyCtl.nextTrial();
+                    pauseStudy("Press OK when you are ready to continue.");
+                } else {
+                    Runnable waitStep = new Runnable() {
+                        @Override
+                        public void run() {
+                            mStudyCtl.waitStep(true);
+                            mMainActivity.setTitle(mStudyCtl.getPrompt());
+                        }
+                    };
+                    
+                    waitStep.run();
+                    mHandler.postDelayed(waitStep, mTrialDelay / 4);
+                    mHandler.postDelayed(waitStep, mTrialDelay / 2);
+                    mHandler.postDelayed(waitStep, mTrialDelay * 3 / 4);
+                    mHandler.postDelayed(waitStep, mTrialDelay);
+    
+                    mHandler.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            mMainActivity.getActionBar().setIcon(R.drawable.trans);
+                        }
+                    }, mTrialDelay);
+                }
             } else if (!correctSelection) {
                 mMainActivity.getActionBar().setIcon(R.drawable.x);
             } else {
