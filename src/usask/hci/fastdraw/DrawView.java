@@ -10,7 +10,6 @@ import usask.hci.fastdraw.GestureDetector.Gesture;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -1002,11 +1001,5 @@ public class DrawView extends View {
                 mMainActivity.setTitle(mStudyCtl.getPrompt());
             }
         }
-    }
-
-    public void loadPreferences(SharedPreferences sharedPreferences) {
-        mLeftHanded = sharedPreferences.getBoolean("pref_left_handed", false);
-        mPermanentGrid = sharedPreferences.getBoolean("pref_permanent_grid", false);
-        invalidate();
     }
 }
