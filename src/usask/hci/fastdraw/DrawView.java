@@ -25,6 +25,7 @@ import android.util.SparseArray;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.NumberPicker;
 
 public class DrawView extends View {
@@ -69,7 +70,9 @@ public class DrawView extends View {
     private int mPossibleGestureFinger;
     private long mPossibleGestureFingerTime;
     private int mGestureFinger;
+    private long mGestureMenuTime;
     private PointF mGestureFingerPos;
+    private boolean mInstantMenu;
     private boolean mShowGestureMenu;
     private Gesture mActiveCategory;
     private PointF mActiveCategoryOrigin;
@@ -141,6 +144,7 @@ public class DrawView extends View {
         mGestureDetector = new GestureDetector();
         mGestureFinger = -1;
         mPossibleGestureFinger = -1;
+        mInstantMenu = false;
         mShowGestureMenu = false;
         mActiveCategory = Gesture.UNKNOWN;
         mActiveCategoryOrigin = new PointF();
@@ -230,6 +234,7 @@ public class DrawView extends View {
                         mIgnoredFingers.add(mGestureFinger);
                         mPossibleGestureFinger = -1;
                         mShowGestureMenu = true;
+                        mGestureMenuTime = now;
                         postInvalidate();
                     }
                 }
@@ -241,6 +246,14 @@ public class DrawView extends View {
         final CheckBox gestureCheckBox = (CheckBox) studySetupLayout.findViewById(R.id.gesture_mode_checkbox);
         final CheckBox leftHandedCheckBox = (CheckBox) studySetupLayout.findViewById(R.id.left_handed_checkbox);
         final CheckBox permanentGridCheckBox = (CheckBox) studySetupLayout.findViewById(R.id.permanent_grid_checkbox);
+        
+        gestureCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                leftHandedCheckBox.setEnabled(!isChecked);
+                permanentGridCheckBox.setEnabled(!isChecked);
+            }
+        });
         
         final NumberPicker subjectIdPicker = (NumberPicker) studySetupLayout.findViewById(R.id.subject_id_picker);
         subjectIdPicker.setMinValue(0);
@@ -371,10 +384,8 @@ public class DrawView extends View {
         if (mShowOverlay)
             canvas.drawARGB(0xAA, 0xFF, 0xFF, 0xFF);
         
-        if (mUI == UI.CHORD) {
-            mPaint.setColor(0xEEFFFFAA);
-            canvas.drawRect(bounds, mPaint);
-        }
+        mPaint.setColor(0xEEFFFFAA);
+        canvas.drawRect(bounds, mPaint);
         
         if (mShowOverlay || (mPermanentGrid && mUI == UI.CHORD)) {
             mPaint.setColor(0x44666666);
@@ -405,7 +416,7 @@ public class DrawView extends View {
                     }
                 }
             }
-        } else if (!mPermanentGrid && mUI == UI.CHORD) {
+        } else if (!mPermanentGrid) {
             mPaint.setColor(0x44666666);
             canvas.drawLine(bounds.left, bounds.top, bounds.right, bounds.top, mPaint);
             
@@ -442,21 +453,12 @@ public class DrawView extends View {
         
         mPaint.setColor(0xFF666666);
         
-        if (mUI == UI.CHORD) {
-            canvas.drawText(mThicknessName, bounds.left + mColWidth / 2,
-                    bounds.top + mRowHeight / 2 + getTextHeight(mThicknessName, mPaint) / 2 - 30, mPaint);
-            canvas.drawText(mColorName, bounds.left + mColWidth / 2,
-                    bounds.top + mRowHeight / 2 + getTextHeight(mColorName, mPaint) / 2, mPaint);
-            canvas.drawText(mToolName, bounds.left + mColWidth / 2,
-                    bounds.top + mRowHeight / 2 + getTextHeight(mToolName, mPaint) / 2 + 30, mPaint);
-        } else if (mUI == UI.GESTURE) {
-            String tools = mThicknessName + " " + mColorName + " " + mToolName;
-            int padding = 10;
-            mPaint.setColor(0xBBAAAAAA);
-            canvas.drawRect(0, getHeight() - getTextHeight(tools, mPaint) - padding * 2, getTextWidth(tools, mPaint) + padding * 2, getHeight(), mPaint);
-            mPaint.setColor(0xFF444444);
-            canvas.drawText(tools, getTextWidth(tools, mPaint) / 2 + padding, getHeight() - padding, mPaint);
-        }
+        canvas.drawText(mThicknessName, bounds.left + mColWidth / 2,
+                bounds.top + mRowHeight / 2 + getTextHeight(mThicknessName, mPaint) / 2 - 30, mPaint);
+        canvas.drawText(mColorName, bounds.left + mColWidth / 2,
+                bounds.top + mRowHeight / 2 + getTextHeight(mColorName, mPaint) / 2, mPaint);
+        canvas.drawText(mToolName, bounds.left + mColWidth / 2,
+                bounds.top + mRowHeight / 2 + getTextHeight(mToolName, mPaint) / 2 + 30, mPaint);
         
         if (mShowGestureMenu) {
             PointF origin = mOrigins.get(mGestureFinger);
@@ -612,11 +614,6 @@ public class DrawView extends View {
         return mTextBounds.height();
     }
     
-    private int getTextWidth(String text, Paint paint) {
-        mPaint.getTextBounds(text, 0, text.length(), mTextBounds);
-        return mTextBounds.width();
-    }
-    
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         int index = event.getActionIndex();
@@ -666,11 +663,26 @@ public class DrawView extends View {
                         }
                     }
                 } else if (mUI == UI.GESTURE) {
-                    if (event.getPointerCount() == 1) {
-                        mGestureDetector.clear();
-                        mPossibleGestureFinger = id;
+                    if (mInstantMenu && !getOverlayButtonBounds().contains(x, y) && !mShowGestureMenu) {
+                        mInstantMenu = false;
+                        mGestureFinger = id;
+                        mGestureMenuTime = now;
+                        mShowGestureMenu = true;
+                        mIgnoredFingers.add(id);
                         mGestureFingerPos = new PointF(x, y);
-                        mPossibleGestureFingerTime = now;
+                        mOrigins.put(id, mGestureFingerPos);
+                        mGestureDetector.clear();
+                    } else if (event.getPointerCount() == 1) {
+                        mGestureDetector.clear();
+                        
+                        if (getOverlayButtonBounds().contains(x, y)) {
+                            mIgnoredFingers.add(id);
+                            mInstantMenu = true;
+                        } else {
+                            mPossibleGestureFinger = id;
+                            mGestureFingerPos = new PointF(x, y);
+                            mPossibleGestureFingerTime = now;
+                        }
                     }
                     
                     if (mShowGestureMenu)
@@ -800,7 +812,7 @@ public class DrawView extends View {
                         gesture = mGestureDetector.recognize();
                     }
 
-                    long menuOpenNs = now - mPossibleGestureFingerTime - mGestureMenuDelay;
+                    long menuOpenNs = now - mGestureMenuTime;
                     long menuOpenMs = menuOpenNs / 1000000;
                     
                     if (mStudyMode)
