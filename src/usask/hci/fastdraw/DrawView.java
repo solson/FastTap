@@ -67,7 +67,6 @@ public class DrawView extends View {
     private SparseArray<Long> mRecentTouches;
     private boolean mChanged;
 	private GestureDetector mGestureDetector;
-	private Gesture mGesture;
 	private int mPossibleGestureFinger;
 	private long mPossibleGestureFingerTime;
 	private int mGestureFinger;
@@ -141,7 +140,6 @@ public class DrawView extends View {
         mRecentTouches = new SparseArray<Long>();
         mChanged = false;
         mGestureDetector = new GestureDetector();
-        mGesture = Gesture.UNKNOWN;
         mGestureFinger = -1;
         mPossibleGestureFinger = -1;
         mShowGestureMenu = false;
@@ -464,22 +462,52 @@ public class DrawView extends View {
         
         if (mShowGestureMenu) {
         	PointF origin = mOrigins.get(mGestureFinger);
+            Gesture gesture = mGestureDetector.recognize();
+            Gesture mainGesture = Gesture.UNKNOWN;
+            Gesture subGesture = Gesture.UNKNOWN;
+            
+            if (gesture != Gesture.UNKNOWN) {
+                switch (gesture) {
+                    case UP: mainGesture = Gesture.UP; subGesture = Gesture.UP; break;
+                    case UP_LEFT: mainGesture = Gesture.UP; subGesture = Gesture.LEFT; break;
+                    case UP_RIGHT: mainGesture = Gesture.UP; subGesture = Gesture.RIGHT; break;
+                    case UP_DOWN: mainGesture = Gesture.UP; subGesture = Gesture.DOWN; break;
+                    
+                    case LEFT: mainGesture = Gesture.LEFT; subGesture = Gesture.LEFT; break;
+                    case LEFT_RIGHT: mainGesture = Gesture.LEFT; subGesture = Gesture.RIGHT; break;
+                    case LEFT_UP: mainGesture = Gesture.LEFT; subGesture = Gesture.UP; break;
+                    case LEFT_DOWN: mainGesture = Gesture.LEFT; subGesture = Gesture.DOWN; break;
+                    
+                    case RIGHT: mainGesture = Gesture.RIGHT; subGesture = Gesture.RIGHT; break;
+                    case RIGHT_LEFT: mainGesture = Gesture.RIGHT; subGesture = Gesture.LEFT; break;
+                    case RIGHT_UP: mainGesture = Gesture.RIGHT; subGesture = Gesture.UP; break;
+                    case RIGHT_DOWN: mainGesture = Gesture.RIGHT; subGesture = Gesture.DOWN; break;
+                    
+                    case DOWN: mainGesture = Gesture.DOWN; subGesture = Gesture.DOWN; break;
+                    case DOWN_LEFT: mainGesture = Gesture.DOWN; subGesture = Gesture.LEFT; break;
+                    case DOWN_RIGHT: mainGesture = Gesture.DOWN; subGesture = Gesture.RIGHT; break;
+                    case DOWN_UP: mainGesture = Gesture.DOWN; subGesture = Gesture.UP; break;
+                    
+                    default:
+                        break;
+                }
+            }
 
         	if (isInCircle(mGestureFingerPos, origin.x, origin.y - mGestureButtonDist, mGestureButtonSize)) {
-        		mActiveCategoryOrigin.x = origin.x;
-        		mActiveCategoryOrigin.y = origin.y - mGestureButtonDist;
+                mActiveCategoryOrigin.x = origin.x;
+                mActiveCategoryOrigin.y = origin.y - mGestureButtonDist;
         		mActiveCategory = Gesture.UP;
         	} else if (isInCircle(mGestureFingerPos, origin.x - mGestureButtonDist, origin.y, mGestureButtonSize)) {
-        		mActiveCategoryOrigin.x = origin.x - mGestureButtonDist;
-        		mActiveCategoryOrigin.y = origin.y;
+                mActiveCategoryOrigin.x = origin.x - mGestureButtonDist;
+                mActiveCategoryOrigin.y = origin.y;
         		mActiveCategory = Gesture.LEFT;
         	} else if (isInCircle(mGestureFingerPos, origin.x + mGestureButtonDist, origin.y, mGestureButtonSize)) {
-        		mActiveCategoryOrigin.x = origin.x + mGestureButtonDist;
-        		mActiveCategoryOrigin.y = origin.y;
+                mActiveCategoryOrigin.x = origin.x + mGestureButtonDist;
+                mActiveCategoryOrigin.y = origin.y;
         		mActiveCategory = Gesture.RIGHT;
         	} else if (isInCircle(mGestureFingerPos, origin.x, origin.y + mGestureButtonDist, mGestureButtonSize)) {
-        		mActiveCategoryOrigin.x = origin.x;
-        		mActiveCategoryOrigin.y = origin.y + mGestureButtonDist;
+                mActiveCategoryOrigin.x = origin.x;
+                mActiveCategoryOrigin.y = origin.y + mGestureButtonDist;
         		mActiveCategory = Gesture.DOWN;
         	}
         	
@@ -498,8 +526,8 @@ public class DrawView extends View {
         	int subDist = size + subSize;
         	float subOriginX = mActiveCategoryOrigin.x;
         	float subOriginY = mActiveCategoryOrigin.y;
-
-        	if (isInCircle(mGestureFingerPos, subOriginX, subOriginY - subDist, subSize)) {
+            
+            if (isInCircle(mGestureFingerPos, subOriginX, subOriginY - subDist, subSize)) {
         		mSubSelection = Gesture.UP;
         	} else if (isInCircle(mGestureFingerPos, subOriginX - subDist, subOriginY, subSize)) {
         		mSubSelection = Gesture.LEFT;
@@ -507,6 +535,8 @@ public class DrawView extends View {
         		mSubSelection = Gesture.RIGHT;
         	} else if (isInCircle(mGestureFingerPos, subOriginX, subOriginY + subDist, subSize)) {
         		mSubSelection = Gesture.DOWN;
+        	} else if (mainGesture == mActiveCategory) {
+        	    mSubSelection = subGesture;
         	} else {
         		mSubSelection = Gesture.UNKNOWN;
         	}
@@ -718,6 +748,7 @@ public class DrawView extends View {
             		mGestureFinger = -1;
             		mShowGestureMenu = false;
             		boolean gestureSelection;
+                    Gesture gesture = Gesture.UNKNOWN;
             		
             		if (mActiveCategory != Gesture.UNKNOWN && mSubSelection != Gesture.UNKNOWN) {
             			gestureSelection = false;
@@ -725,40 +756,40 @@ public class DrawView extends View {
             			switch (mActiveCategory) {
             				case UP:
             					switch (mSubSelection) {
-            						case UP: mGesture = Gesture.UP; break;
-            						case LEFT: mGesture = Gesture.UP_LEFT; break;
-            						case RIGHT: mGesture = Gesture.UP_RIGHT; break;
-            						case DOWN: mGesture = Gesture.UP_DOWN; break;
+            						case UP: gesture = Gesture.UP; break;
+            						case LEFT: gesture = Gesture.UP_LEFT; break;
+            						case RIGHT: gesture = Gesture.UP_RIGHT; break;
+            						case DOWN: gesture = Gesture.UP_DOWN; break;
             						default: break;
             					}
             					break;
             					
             				case LEFT:
             					switch (mSubSelection) {
-            						case UP: mGesture = Gesture.LEFT_UP; break;
-            						case LEFT: mGesture = Gesture.LEFT; break;
-            						case RIGHT: mGesture = Gesture.LEFT_RIGHT; break;
-            						case DOWN: mGesture = Gesture.LEFT_DOWN; break;
+            						case UP: gesture = Gesture.LEFT_UP; break;
+            						case LEFT: gesture = Gesture.LEFT; break;
+            						case RIGHT: gesture = Gesture.LEFT_RIGHT; break;
+            						case DOWN: gesture = Gesture.LEFT_DOWN; break;
             						default: break;
             					}
             					break;
 
             				case RIGHT:
             					switch (mSubSelection) {
-            						case UP: mGesture = Gesture.RIGHT_UP; break;
-            						case LEFT: mGesture = Gesture.RIGHT_LEFT; break;
-            						case RIGHT: mGesture = Gesture.RIGHT; break;
-            						case DOWN: mGesture = Gesture.RIGHT_DOWN; break;
+            						case UP: gesture = Gesture.RIGHT_UP; break;
+            						case LEFT: gesture = Gesture.RIGHT_LEFT; break;
+            						case RIGHT: gesture = Gesture.RIGHT; break;
+            						case DOWN: gesture = Gesture.RIGHT_DOWN; break;
             						default: break;
             					}
             					break;
 
             				case DOWN:
             					switch (mSubSelection) {
-            						case UP: mGesture = Gesture.DOWN_UP; break;
-            						case LEFT: mGesture = Gesture.DOWN_LEFT; break;
-            						case RIGHT: mGesture = Gesture.DOWN_RIGHT; break;
-            						case DOWN: mGesture = Gesture.DOWN; break;
+            						case UP: gesture = Gesture.DOWN_UP; break;
+            						case LEFT: gesture = Gesture.DOWN_LEFT; break;
+            						case RIGHT: gesture = Gesture.DOWN_RIGHT; break;
+            						case DOWN: gesture = Gesture.DOWN; break;
             						default: break;
             					}
             					break;
@@ -768,7 +799,7 @@ public class DrawView extends View {
             			}
             		} else {
             			gestureSelection = true;
-                		mGesture = mGestureDetector.recognize();
+                		gesture = mGestureDetector.recognize();
             		}
 
         			long menuOpenNs = now - mPossibleGestureFingerTime - mGestureMenuDelay;
@@ -777,13 +808,13 @@ public class DrawView extends View {
         			if (mStudyMode)
         				mStudyCtl.addUITime(menuOpenNs);
         			
-            		if (mGestureSelections.containsKey(mGesture)) {
+            		if (mGestureSelections.containsKey(gesture)) {
             			if (gestureSelection)
             				mLog.event("Menu closed with gesture selection: " + menuOpenMs + " ms");
             			else
             				mLog.event("Menu closed with exact selection: " + menuOpenMs + " ms");
             			
-            			changeSelection(mGestureSelections.get(mGesture));
+            			changeSelection(mGestureSelections.get(gesture));
             		} else {
             			mLog.event("Menu closed without selection: " + menuOpenMs + " ms");
             		}
