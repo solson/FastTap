@@ -2,8 +2,15 @@ package usask.hci.fastdraw;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
+
+import android.graphics.Color;
+import android.text.SpannableString;
+import android.text.SpannableStringBuilder;
+import android.text.style.ForegroundColorSpan;
+import android.text.style.StrikethroughSpan;
 
 public class StudyController {
     private final String[][][] mTrials;
@@ -13,6 +20,7 @@ public class StudyController {
     private int mBlockNum;
     private int mSetIndex;
     private Set<String> mToSelect;
+    private Set<String> mSelected;
     private Integer[] mTrialOrder;
     private long mTrialStart;
     private int mNumErrors;
@@ -60,6 +68,7 @@ public class StudyController {
         
         mBlocksPerSet = new int[] { 5, 5, 5 };
 
+        mSelected = new HashSet<String>();
         mSetIndex = 0;
         mBlockNum = 0;
         mFinished = false;
@@ -117,12 +126,12 @@ public class StudyController {
         if (mFinished)
             return false;
         
-        if (mToSelect.contains(selection)) {
-            mToSelect.remove(selection);
+        if (mToSelect.contains(selection) && !mSelected.contains(selection)) {
+            mSelected.add(selection);
 
-            if (mToSelect.isEmpty()) {
+            if (mToSelect.size() == mSelected.size()) {
                 long now = System.nanoTime();
-                
+
                 int numTargets = mTrials[mSetIndex][mTrialIndex].length;
                 StringBuilder targetString = new StringBuilder();
                 for (int i = 0; i < numTargets; i++) {
@@ -161,11 +170,11 @@ public class StudyController {
             mUITime += duration;
     }
     
-    public String getPrompt() {
+    public CharSequence getPrompt() {
         return getPrompt(false);
     }
     
-    public String getPrompt(boolean hideTarget) {
+    public CharSequence getPrompt(boolean hideTarget) {
         if (mFinished)
             return "You are finished!";
         
@@ -180,17 +189,28 @@ public class StudyController {
             return progress + " Please select: " + dots;
         }
         
-        StringBuilder title = new StringBuilder(progress + " Please select: ");
+        SpannableStringBuilder title = new SpannableStringBuilder(progress + " Please select: ");
         
         if (hideTarget)
             return title.toString();
         
+        boolean first = true;
         for (String toSelect : mToSelect) {
-            title.append(toSelect);
-            title.append(", ");
+            if (!first)
+                title.append(", ");
+
+            SpannableString text = new SpannableString(toSelect);
+
+            if (mSelected.contains(toSelect)) {
+                text.setSpan(new StrikethroughSpan(), 0, text.length(), 0);
+                text.setSpan(new ForegroundColorSpan(Color.DKGRAY), 0, text.length(), 0);
+            }
+
+            title.append(text);
+            first = false;
         }
         
-        return title.substring(0, title.length() - 2);
+        return title;
     }
     
     private void nextSet() {
@@ -237,9 +257,10 @@ public class StudyController {
         mTrialNum++;
         
         mToSelect = new LinkedHashSet<String>(Arrays.asList(mTrials[mSetIndex][mTrialIndex]));
+        mSelected.clear();
     }
 
     public boolean isOnLastTarget() {
-        return mToSelect.size() == 1;
+        return mToSelect.size() - mSelected.size() == 1;
     }
 }
