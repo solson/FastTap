@@ -703,17 +703,17 @@ public class DrawView extends View {
                 
                 for (int i = 0; i < count; i++) {
                     int fingerId = event.getPointerId(i);
+                    float x2 = event.getX(i);
+                    float y2 = event.getY(i);
                     
                     if (fingerId == mGestureFinger) {
-                        mGestureFingerPos = new PointF(x, y);
-                        mGestureDetector.addPoint(x, y);
+                        mGestureFingerPos = new PointF(x2, y2);
+                        mGestureDetector.addPoint(x2, y2);
                     }
                     
                     if(mIgnoredFingers.contains(fingerId))
                         continue;
                     
-                    float x2 = event.getX(i);
-                    float y2 = event.getY(i);
                     PointF origin = mOrigins.get(fingerId);
                     
                     if (origin != null) {
