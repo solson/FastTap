@@ -971,9 +971,11 @@ public class DrawView extends View {
                 mUndo = mBitmap.copy(mBitmap.getConfig(), true);
                 
                 // Forcibly unpost the command map overlay
-                mShowOverlay = false;
-                long duration = System.nanoTime() - mOverlayStart;
-                mLog.event("Overlay automatically hidden at end of trial after " + duration / 1000000 + " ms");
+                if (mShowOverlay) {
+                    mShowOverlay = false;
+                    long duration = System.nanoTime() - mOverlayStart;
+                    mLog.event("Overlay automatically hidden at end of trial after " + duration / 1000000 + " ms");
+                }
                 
                 mMainActivity.getActionBar().setIcon(R.drawable.check);
                 
