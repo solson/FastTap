@@ -329,7 +329,7 @@ public class GestureDetector {
     private static float anglePrecision = degreesToRadians(2.0f);
     
     public Gesture recognize() {
-        if (points.isEmpty() || points.size() < 5)
+        if (points.isEmpty() || points.size() < 2)
             return Gesture.UNKNOWN;
 
         ArrayList<PointF> pointsx = resample(points, numPoints);
