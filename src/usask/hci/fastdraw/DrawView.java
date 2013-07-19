@@ -706,7 +706,7 @@ public class DrawView extends View {
                     float x2 = event.getX(i);
                     float y2 = event.getY(i);
                     
-                    if (fingerId == mGestureFinger) {
+                    if (fingerId == mGestureFinger && !mGestureFingerPos.equals(x2, y2)) {
                         mGestureFingerPos = new PointF(x2, y2);
                         mGestureDetector.addPoint(x2, y2);
                     }
