@@ -947,10 +947,11 @@ public class DrawView extends View {
                 break;
         }
         
-        if (fromUser && mStudyMode) {
+        if (fromUser && mStudyMode && !mStudyCtl.isFinished()) {
             boolean gesture = mUI == UI.GESTURE;
             boolean wasLastTarget = mStudyCtl.isOnLastTarget();
             boolean wasLastTrial = mStudyCtl.isOnLastTrial();
+            boolean ending = mStudyCtl.isOnLastBlock() && mStudyCtl.isOnLastSet();
             
             if (mUI == UI.CHORD && mShowOverlay && wasLastTarget) {
                 long now = System.nanoTime();
@@ -963,13 +964,7 @@ public class DrawView extends View {
             
             boolean correctSelection = mStudyCtl.handleSelected(selection.name, gesture);
             
-            if (mStudyCtl.isFinished()) {
-                mMainActivity.getActionBar().setIcon(R.drawable.trans);
-                mMainActivity.setTitle(mStudyCtl.getPrompt());
-                
-                if (wasLastTarget)
-                    alert("You are finished!\n\nThank you for participating!");
-            } else if (correctSelection && wasLastTarget) {
+            if (correctSelection && wasLastTarget) {
                 // Clear screen and undo history
                 Canvas canvas = new Canvas(mBitmap);
                 canvas.drawRGB(0xFF, 0xFF, 0xFF);
@@ -983,9 +978,16 @@ public class DrawView extends View {
                 mMainActivity.getActionBar().setIcon(R.drawable.check);
                 
                 if (wasLastTrial) {
-                    mMainActivity.setTitle(mStudyCtl.getPrompt());
-                    mStudyCtl.nextTrial();
-                    pauseStudy("Press OK when you are ready to continue.");
+                    if (ending) {
+                        mStudyCtl.finish();
+                        mMainActivity.getActionBar().setIcon(R.drawable.trans);
+                        mMainActivity.setTitle(mStudyCtl.getPrompt());
+                        alert("You are finished!\n\nThank you for participating!");
+                    } else {
+                        mMainActivity.setTitle(mStudyCtl.getPrompt());
+                        mStudyCtl.nextTrial();
+                        pauseStudy("Press OK when you are ready to continue.");
+                    }
                 } else {
                     Runnable waitStep = new Runnable() {
                         @Override

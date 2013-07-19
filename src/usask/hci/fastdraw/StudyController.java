@@ -99,6 +99,10 @@ public class StudyController {
         }
     }
     
+    public void finish() {
+        mFinished = true;
+    }
+    
     public boolean isFinished() {
         return mFinished;
     }
@@ -222,11 +226,6 @@ public class StudyController {
     }
     
     private void nextSet() {
-        if (mSetIndex == mTrials.length - 1) {
-            mFinished = true;
-            return;
-        }
-        
         mSetIndex++;
         mBlockNum = 0;
         nextBlock();
@@ -273,5 +272,13 @@ public class StudyController {
 
     public boolean isOnLastTrial() {
         return mTrialNum == mTrials[mSetIndex].length;
+    }
+
+    public boolean isOnLastBlock() {
+        return mBlockNum == mBlocksPerSet[mSetIndex];
+    }
+
+    public boolean isOnLastSet() {
+        return mSetIndex == mTrials.length - 1;
     }
 }
