@@ -913,8 +913,10 @@ public class DrawView extends View {
             return;
         
         if (fromUser) {
-            synchronized (mFlashTimes) {
-                mFlashTimes.put(selected, System.nanoTime());
+            if (mUI == UI.CHORD) {
+                synchronized (mFlashTimes) {
+                    mFlashTimes.put(selected, System.nanoTime());
+                }
             }
             
             invalidate();
