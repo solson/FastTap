@@ -21,6 +21,7 @@ import android.graphics.Rect;
 import android.graphics.RectF;
 import android.os.Handler;
 import android.util.Log;
+import android.util.Pair;
 import android.util.SparseArray;
 import android.view.MotionEvent;
 import android.view.View;
@@ -467,35 +468,10 @@ public class DrawView extends View {
         if (mShowGestureMenu) {
             PointF origin = mOrigins.get(mGestureFinger);
             Gesture gesture = mGestureDetector.recognize();
-            Gesture mainGesture = Gesture.UNKNOWN;
-            Gesture subGesture = Gesture.UNKNOWN;
             
-            if (gesture != Gesture.UNKNOWN) {
-                switch (gesture) {
-                    case UP: mainGesture = Gesture.UP; subGesture = Gesture.UP; break;
-                    case UP_LEFT: mainGesture = Gesture.UP; subGesture = Gesture.LEFT; break;
-                    case UP_RIGHT: mainGesture = Gesture.UP; subGesture = Gesture.RIGHT; break;
-                    case UP_DOWN: mainGesture = Gesture.UP; subGesture = Gesture.DOWN; break;
-                    
-                    case LEFT: mainGesture = Gesture.LEFT; subGesture = Gesture.LEFT; break;
-                    case LEFT_RIGHT: mainGesture = Gesture.LEFT; subGesture = Gesture.RIGHT; break;
-                    case LEFT_UP: mainGesture = Gesture.LEFT; subGesture = Gesture.UP; break;
-                    case LEFT_DOWN: mainGesture = Gesture.LEFT; subGesture = Gesture.DOWN; break;
-                    
-                    case RIGHT: mainGesture = Gesture.RIGHT; subGesture = Gesture.RIGHT; break;
-                    case RIGHT_LEFT: mainGesture = Gesture.RIGHT; subGesture = Gesture.LEFT; break;
-                    case RIGHT_UP: mainGesture = Gesture.RIGHT; subGesture = Gesture.UP; break;
-                    case RIGHT_DOWN: mainGesture = Gesture.RIGHT; subGesture = Gesture.DOWN; break;
-                    
-                    case DOWN: mainGesture = Gesture.DOWN; subGesture = Gesture.DOWN; break;
-                    case DOWN_LEFT: mainGesture = Gesture.DOWN; subGesture = Gesture.LEFT; break;
-                    case DOWN_RIGHT: mainGesture = Gesture.DOWN; subGesture = Gesture.RIGHT; break;
-                    case DOWN_UP: mainGesture = Gesture.DOWN; subGesture = Gesture.UP; break;
-                    
-                    default:
-                        break;
-                }
-            }
+            Pair<Gesture, Gesture> gestures = splitGesture(gesture);
+            Gesture mainGesture = gestures.first;
+            Gesture subGesture = gestures.second;
 
             if (isInCircle(mGestureFingerPos, origin.x, origin.y - mGestureButtonDist, mGestureButtonSize)) {
                 mActiveCategoryOrigin.x = origin.x;
@@ -515,15 +491,15 @@ public class DrawView extends View {
                 mActiveCategory = Gesture.DOWN;
             }
             
-            boolean greyout = mActiveCategory != Gesture.UNKNOWN;
+            boolean greyoutInactive = mActiveCategory != Gesture.UNKNOWN;
             
             mPaint.setTextSize(22);
             int size = mGestureButtonSize;
             
-            drawGestureButton(canvas, "Tools", origin.x, origin.y - mGestureButtonDist, size, mPaint, mActiveCategory == Gesture.UP, greyout);
-            drawGestureButton(canvas, "Colors", origin.x - mGestureButtonDist, origin.y, size, mPaint, mActiveCategory == Gesture.LEFT, greyout);
-            drawGestureButton(canvas, "Colors", origin.x + mGestureButtonDist, origin.y, size, mPaint, mActiveCategory == Gesture.RIGHT, greyout);
-            drawGestureButton(canvas, "Widths", origin.x, origin.y + mGestureButtonDist, size, mPaint, mActiveCategory == Gesture.DOWN, greyout);
+            drawGestureButton(canvas, "Tools", origin.x, origin.y - mGestureButtonDist, size, mPaint, mActiveCategory == Gesture.UP, greyoutInactive);
+            drawGestureButton(canvas, "Colors", origin.x - mGestureButtonDist, origin.y, size, mPaint, mActiveCategory == Gesture.LEFT, greyoutInactive);
+            drawGestureButton(canvas, "Colors", origin.x + mGestureButtonDist, origin.y, size, mPaint, mActiveCategory == Gesture.RIGHT, greyoutInactive);
+            drawGestureButton(canvas, "Widths", origin.x, origin.y + mGestureButtonDist, size, mPaint, mActiveCategory == Gesture.DOWN, greyoutInactive);
             
             mPaint.setTextSize(18);
             int subSize = (int)(size * 0.70);
@@ -545,41 +521,84 @@ public class DrawView extends View {
                 mSubSelection = Gesture.UNKNOWN;
             }
             
+            String up = null, left = null, right = null, down = null;
+            
             switch (mActiveCategory) {
                 case UP:
-                    drawGestureButton(canvas, "Paintbrush", subOriginX, subOriginY - subDist, subSize, mPaint, mSubSelection == Gesture.UP, false);
-                    drawGestureButton(canvas, "Rectangle", subOriginX - subDist, subOriginY, subSize, mPaint, mSubSelection == Gesture.LEFT, false);
-                    drawGestureButton(canvas, "Line", subOriginX + subDist, subOriginY, subSize, mPaint, mSubSelection == Gesture.RIGHT, false);
-                    drawGestureButton(canvas, "Circle", subOriginX, subOriginY + subDist, subSize, mPaint, mSubSelection == Gesture.DOWN, false);
+                    up = "Paintbrush";
+                    left = "Rectangle";
+                    right = "Line";
+                    down = "Circle";
                     break;
                     
                 case LEFT:
-                    drawGestureButton(canvas, "Red", subOriginX, subOriginY - subDist, subSize, mPaint, mSubSelection == Gesture.UP, false);
-                    drawGestureButton(canvas, "Black", subOriginX - subDist, subOriginY, subSize, mPaint, mSubSelection == Gesture.LEFT, false);
-                    drawGestureButton(canvas, "Green", subOriginX + subDist, subOriginY, subSize, mPaint, mSubSelection == Gesture.RIGHT, false);
-                    drawGestureButton(canvas, "Blue", subOriginX, subOriginY + subDist, subSize, mPaint, mSubSelection == Gesture.DOWN, false);
+                    up = "Red";
+                    left = "Black";
+                    right = "Green";
+                    down = "Blue";
                     break;
                     
                 case RIGHT:
-                    drawGestureButton(canvas, "Magenta", subOriginX, subOriginY - subDist, subSize, mPaint, mSubSelection == Gesture.UP, false);
-                    drawGestureButton(canvas, "Cyan", subOriginX - subDist, subOriginY, subSize, mPaint, mSubSelection == Gesture.LEFT, false);
-                    drawGestureButton(canvas, "White", subOriginX + subDist, subOriginY, subSize, mPaint, mSubSelection == Gesture.RIGHT, false);
-                    drawGestureButton(canvas, "Yellow", subOriginX, subOriginY + subDist, subSize, mPaint, mSubSelection == Gesture.DOWN, false);
+                    up = "Magenta";
+                    left = "Cyan";
+                    right = "White";
+                    down = "Yellow";
                     break;
                     
                 case DOWN:
-                    drawGestureButton(canvas, "Thin", subOriginX, subOriginY - subDist, subSize, mPaint, mSubSelection == Gesture.UP, false);
-                    drawGestureButton(canvas, "Fine", subOriginX - subDist, subOriginY, subSize, mPaint, mSubSelection == Gesture.LEFT, false);
-                    drawGestureButton(canvas, "Wide", subOriginX + subDist, subOriginY, subSize, mPaint, mSubSelection == Gesture.RIGHT, false);
-                    drawGestureButton(canvas, "Normal", subOriginX, subOriginY + subDist, subSize, mPaint, mSubSelection == Gesture.DOWN, false);
+                    up = "Thin";
+                    left = "Fine";
+                    right = "Wide";
+                    down = "Normal";
                     break;
                     
                 default:
                     break;
             }
             
+            if (up != null) {
+                drawGestureButton(canvas, up, subOriginX, subOriginY - subDist, subSize, mPaint, mSubSelection == Gesture.UP, false);
+                drawGestureButton(canvas, left, subOriginX - subDist, subOriginY, subSize, mPaint, mSubSelection == Gesture.LEFT, false);
+                drawGestureButton(canvas, right, subOriginX + subDist, subOriginY, subSize, mPaint, mSubSelection == Gesture.RIGHT, false);
+                drawGestureButton(canvas, down, subOriginX, subOriginY + subDist, subSize, mPaint, mSubSelection == Gesture.DOWN, false);
+            }
+            
             mPaint.setTextSize(26);
         }
+    }
+    
+    private Pair<Gesture, Gesture> splitGesture(Gesture gesture) {
+        Gesture mainGesture = Gesture.UNKNOWN;
+        Gesture subGesture = Gesture.UNKNOWN;
+
+        if (gesture != Gesture.UNKNOWN) {
+            switch (gesture) {
+                case UP: mainGesture = Gesture.UP; subGesture = Gesture.UP; break;
+                case UP_LEFT: mainGesture = Gesture.UP; subGesture = Gesture.LEFT; break;
+                case UP_RIGHT: mainGesture = Gesture.UP; subGesture = Gesture.RIGHT; break;
+                case UP_DOWN: mainGesture = Gesture.UP; subGesture = Gesture.DOWN; break;
+                
+                case LEFT: mainGesture = Gesture.LEFT; subGesture = Gesture.LEFT; break;
+                case LEFT_RIGHT: mainGesture = Gesture.LEFT; subGesture = Gesture.RIGHT; break;
+                case LEFT_UP: mainGesture = Gesture.LEFT; subGesture = Gesture.UP; break;
+                case LEFT_DOWN: mainGesture = Gesture.LEFT; subGesture = Gesture.DOWN; break;
+                
+                case RIGHT: mainGesture = Gesture.RIGHT; subGesture = Gesture.RIGHT; break;
+                case RIGHT_LEFT: mainGesture = Gesture.RIGHT; subGesture = Gesture.LEFT; break;
+                case RIGHT_UP: mainGesture = Gesture.RIGHT; subGesture = Gesture.UP; break;
+                case RIGHT_DOWN: mainGesture = Gesture.RIGHT; subGesture = Gesture.DOWN; break;
+                
+                case DOWN: mainGesture = Gesture.DOWN; subGesture = Gesture.DOWN; break;
+                case DOWN_LEFT: mainGesture = Gesture.DOWN; subGesture = Gesture.LEFT; break;
+                case DOWN_RIGHT: mainGesture = Gesture.DOWN; subGesture = Gesture.RIGHT; break;
+                case DOWN_UP: mainGesture = Gesture.DOWN; subGesture = Gesture.UP; break;
+                
+                default:
+                    break;
+            }
+        }
+        
+        return new Pair<Gesture, Gesture>(mainGesture, subGesture);
     }
     
     private boolean isInCircle(PointF point, float cx, float cy, float radius) {
