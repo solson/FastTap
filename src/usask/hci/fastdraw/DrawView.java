@@ -522,13 +522,13 @@ public class DrawView extends View {
             }
             
             if (mActiveCategory != Gesture.UNKNOWN) {
-                drawGestureButton(canvas, toolNameForGesture(mActiveCategory, Gesture.UP),
+                drawGestureButton(canvas, toolNameForGesture(combineGestures(mActiveCategory, Gesture.UP)),
                         subOriginX, subOriginY - subDist, subSize, mPaint, mSubSelection == Gesture.UP, false);
-                drawGestureButton(canvas, toolNameForGesture(mActiveCategory, Gesture.LEFT),
+                drawGestureButton(canvas, toolNameForGesture(combineGestures(mActiveCategory, Gesture.LEFT)),
                         subOriginX - subDist, subOriginY, subSize, mPaint, mSubSelection == Gesture.LEFT, false);
-                drawGestureButton(canvas, toolNameForGesture(mActiveCategory, Gesture.RIGHT),
+                drawGestureButton(canvas, toolNameForGesture(combineGestures(mActiveCategory, Gesture.RIGHT)),
                         subOriginX + subDist, subOriginY, subSize, mPaint, mSubSelection == Gesture.RIGHT, false);
-                drawGestureButton(canvas, toolNameForGesture(mActiveCategory, Gesture.DOWN),
+                drawGestureButton(canvas, toolNameForGesture(combineGestures(mActiveCategory, Gesture.DOWN)),
                         subOriginX, subOriginY + subDist, subSize, mPaint, mSubSelection == Gesture.DOWN, false);
             }
             
@@ -536,9 +536,7 @@ public class DrawView extends View {
         }
     }
     
-    private String toolNameForGesture(Gesture mainGesture, Gesture subGesture) {
-        Gesture gesture = combineGestures(mainGesture, subGesture);
-        
+    private String toolNameForGesture(Gesture gesture) {
         if (!mGestureSelections.containsKey(gesture))
             return "";
         
