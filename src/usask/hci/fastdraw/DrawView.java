@@ -384,7 +384,11 @@ public class DrawView extends View {
         if (mShowOverlay)
             canvas.drawARGB(0xAA, 0xFF, 0xFF, 0xFF);
         
-        mPaint.setColor(0xEEFFFFAA);
+        if (mShowOverlay || mFlashTimes.size() > 0)
+            mPaint.setColor(0xEEEEEE99);
+        else
+            mPaint.setColor(0xEEFFFFAA);
+        
         canvas.drawRect(bounds, mPaint);
         
         if (mShowOverlay || (mPermanentGrid && mUI == UI.CHORD)) {
