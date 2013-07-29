@@ -714,7 +714,6 @@ public class DrawView extends View {
                     }
                 } else if (mUI == UI.GESTURE) {
                     if (mInstantMenu && !getOverlayButtonBounds().contains(x, y) && !mShowGestureMenu) {
-                        mInstantMenu = false;
                         mGestureFinger = id;
                         mGestureMenuTime = now;
                         mShowGestureMenu = true;
@@ -728,6 +727,7 @@ public class DrawView extends View {
                         if (getOverlayButtonBounds().contains(x, y)) {
                             mIgnoredFingers.add(id);
                             mInstantMenu = true;
+                            mFingerInside = id;
                         } else {
                             mPossibleGestureFinger = id;
                             mGestureFingerPos = new PointF(x, y);
@@ -796,8 +796,10 @@ public class DrawView extends View {
                 mOrigins.delete(id);
                 mFingers.remove(id);
 
-                if (id == mFingerInside)
+                if (id == mFingerInside) {
+                    mInstantMenu = false;
                     mFingerInside = -1;
+                }
                 
                 if (id == mPossibleGestureFinger)
                     mPossibleGestureFinger = -1;
