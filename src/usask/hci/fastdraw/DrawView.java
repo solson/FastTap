@@ -437,7 +437,7 @@ public class DrawView extends View {
                         float centerX = (x + 0.5f) * mColWidth;
                         float centerY = (y + 0.5f) * mRowHeight;
                         
-                        Bitmap icon = BitmapFactory.decodeResource(getResources(), R.drawable.fastdraw);
+                        Bitmap icon = BitmapFactory.decodeResource(getResources(), R.drawable.paintbrush);
                         float iconWidth = icon.getWidth();
                         float iconHeight = icon.getHeight();
                         
@@ -472,7 +472,7 @@ public class DrawView extends View {
                         canvas.drawRect(buttonBounds, mPaint);
                         mPaint.setStyle(Style.FILL);
                         
-                        Bitmap icon = BitmapFactory.decodeResource(getResources(), R.drawable.fastdraw);
+                        Bitmap icon = BitmapFactory.decodeResource(getResources(), R.drawable.paintbrush);
                         float iconWidth = icon.getWidth();
                         float iconHeight = icon.getHeight();
                         float centerX = buttonBounds.left + 0.5f * mColWidth;
