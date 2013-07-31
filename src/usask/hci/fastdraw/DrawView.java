@@ -81,6 +81,9 @@ public class DrawView extends View {
     private Gesture mSubSelection;
     private ArrayList<Gesture> mButtonDirections;
     private HashMap<Gesture, String> mMainButtonNames;
+    private PointF mGestureFlashLocation;
+    private long mGestureFlashTime;
+    private String mGestureFlashText;
     private UI mUI;
     private final Handler mHandler = new Handler();
     private static final int mChordDelay = 1000 * 1000 * 200; // 200 ms in ns
@@ -91,6 +94,7 @@ public class DrawView extends View {
     private static final int mOverlayButtonIndex = 16;
     private static final int mGestureButtonDist = 150;
     private static final int mGestureButtonSize = 75;
+    private static final int mGestureSubButtonSize = (int)(mGestureButtonSize * 0.70);
     
     private enum UI {
         CHORD, GESTURE
@@ -245,11 +249,17 @@ public class DrawView extends View {
                         postInvalidate();
                     }
                 } else if (mUI == UI.GESTURE) {
+                    if (now - mGestureFlashTime > mFlashDelay) {
+                        mGestureFlashLocation = null;
+                        postInvalidate();
+                    }
+                    
                     if (mPossibleGestureFinger != -1 && now - mPossibleGestureFingerTime > mGestureMenuDelay && !mChanged) {
                         mGestureFinger = mPossibleGestureFinger;
                         mIgnoredFingers.add(mGestureFinger);
                         mPossibleGestureFinger = -1;
                         mShowGestureMenu = true;
+                        mGestureFlashLocation = null;
                         mGestureMenuTime = now;
                         postInvalidate();
                     }
@@ -469,6 +479,12 @@ public class DrawView extends View {
                     }
                 }
             }
+        } else if (mUI == UI.GESTURE) {
+            if (mGestureFlashLocation != null) {
+                mPaint.setTextSize(18);
+                drawGestureButton(canvas, mGestureFlashText, mGestureFlashLocation, mGestureSubButtonSize, mPaint, true, false);
+                mPaint.setTextSize(26);
+            }
         }
         
         mPaint.setColor(0xFF666666);
@@ -511,13 +527,12 @@ public class DrawView extends View {
             }
             
             mPaint.setTextSize(18);
-            int subSize = (int)(mGestureButtonSize * 0.70);
             mSubSelection = Gesture.UNKNOWN;
 
             for (Gesture buttonDirection : mButtonDirections) {
-                PointF position = subButtonPosition(mActiveCategoryOrigin, subSize, buttonDirection);
+                PointF position = subButtonPosition(mActiveCategoryOrigin, buttonDirection);
                 
-                if (isInCircle(mGestureFingerPos, position, subSize)) {
+                if (isInCircle(mGestureFingerPos, position, mGestureSubButtonSize)) {
                     mSubSelection = buttonDirection;
                     break;
                 }
@@ -528,11 +543,11 @@ public class DrawView extends View {
             
             if (mActiveCategory != Gesture.UNKNOWN) {
                 for (Gesture buttonDirection : mButtonDirections) {
-                    PointF position = subButtonPosition(mActiveCategoryOrigin, subSize, buttonDirection);
+                    PointF position = subButtonPosition(mActiveCategoryOrigin, buttonDirection);
                     boolean active = mSubSelection == buttonDirection;
                     String name = toolNameForGesture(combineGestures(mActiveCategory, buttonDirection));
                     
-                    drawGestureButton(canvas, name, position, subSize, mPaint, active, false);
+                    drawGestureButton(canvas, name, position, mGestureSubButtonSize, mPaint, active, false);
                 }
             }
             
@@ -559,21 +574,21 @@ public class DrawView extends View {
         }
     }
     
-    private PointF subButtonPosition(PointF subOrigin, int subSize, Gesture gesture) {
-        int subDist = mGestureButtonSize + subSize;
+    private PointF subButtonPosition(PointF subOrigin, Gesture gesture) {
+        int dist = mGestureButtonSize + mGestureSubButtonSize;
         
         switch (gesture) {
             case UP:
-                return new PointF(subOrigin.x, subOrigin.y - subDist);
+                return new PointF(subOrigin.x, subOrigin.y - dist);
                 
             case LEFT:
-                return new PointF(subOrigin.x - subDist, subOrigin.y);
+                return new PointF(subOrigin.x - dist, subOrigin.y);
                 
             case RIGHT:
-                return new PointF(subOrigin.x + subDist, subOrigin.y);
+                return new PointF(subOrigin.x + dist, subOrigin.y);
                 
             case DOWN:
-                return new PointF(subOrigin.x, subOrigin.y + subDist);
+                return new PointF(subOrigin.x, subOrigin.y + dist);
                 
             default:
                 throw new IllegalArgumentException("Sub-button gesture must be up, left, right, or down.");
@@ -759,6 +774,7 @@ public class DrawView extends View {
                         mGestureFinger = id;
                         mGestureMenuTime = now;
                         mShowGestureMenu = true;
+                        mGestureFlashLocation = null;
                         mIgnoredFingers.add(id);
                         mGestureFingerPos = new PointF(x, y);
                         mOrigins.put(id, mGestureFingerPos);
@@ -835,6 +851,7 @@ public class DrawView extends View {
             case MotionEvent.ACTION_POINTER_UP:
                 mLog.event("Touch up: " + id);
 
+                PointF origin = mOrigins.get(id);
                 mOrigins.delete(id);
                 mFingers.remove(id);
 
@@ -872,6 +889,13 @@ public class DrawView extends View {
                             mLog.event("Menu closed with exact selection: " + menuOpenMs + " ms");
                         
                         changeSelection(mGestureSelections.get(gesture));
+                        
+                        Pair<Gesture, Gesture> gestures = splitGesture(gesture);
+                        PointF subOrigin = mainButtonPosition(origin, gestures.first);
+                        
+                        mGestureFlashLocation = subButtonPosition(subOrigin, gestures.second);
+                        mGestureFlashTime = now;
+                        mGestureFlashText = toolNameForGesture(gesture);
                     } else {
                         mLog.event("Menu closed without selection: " + menuOpenMs + " ms");
                     }
