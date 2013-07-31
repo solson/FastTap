@@ -103,9 +103,13 @@ public class DrawView extends View {
     private enum Action {
         SAVE, CLEAR, UNDO
     }
+    
+    private enum Effect {
+        PLAIN, GLOWING, BLURRED, DASHED
+    }
 
     private enum SelectionType {
-        TOOL, COLOR, THICKNESS, ACTION
+        TOOL, COLOR, THICKNESS, ACTION, EFFECT
     }
     
     private class Selection {
@@ -165,18 +169,18 @@ public class DrawView extends View {
             new Selection(new RectangleTool(this), "Rectangle", SelectionType.TOOL),
             
             new Selection(Color.BLACK, "Black", SelectionType.COLOR),
-            new Selection(Color.RED, "Red", SelectionType.COLOR),
-            new Selection(Color.GREEN, "Green", SelectionType.COLOR),
-            new Selection(Color.BLUE, "Blue", SelectionType.COLOR),
-
             new Selection(Color.WHITE, "White", SelectionType.COLOR),
-            new Selection(Color.YELLOW, "Yellow", SelectionType.COLOR),
-            new Selection(Color.CYAN, "Cyan", SelectionType.COLOR),
-            new Selection(Color.MAGENTA, "Magenta", SelectionType.COLOR),
+            new Selection(Color.RED, "Red", SelectionType.COLOR),
+            new Selection(Color.BLUE, "Blue", SelectionType.COLOR),
+            
+            new Selection(Effect.PLAIN, "Plain", SelectionType.EFFECT),
+            new Selection(Effect.GLOWING, "Glowing", SelectionType.EFFECT),
+            new Selection(Effect.BLURRED, "Blurred", SelectionType.EFFECT),
+            new Selection(Effect.DASHED, "Dashed", SelectionType.EFFECT),
 
             new Selection(1, "Fine", SelectionType.THICKNESS),
             new Selection(6, "Thin", SelectionType.THICKNESS),
-            new Selection(16, "Normal", SelectionType.THICKNESS),
+            new Selection(16, "Medium", SelectionType.THICKNESS),
             new Selection(50, "Wide", SelectionType.THICKNESS),
             
             null, // The position of the command map button
@@ -193,18 +197,18 @@ public class DrawView extends View {
         mGestureSelections.put(Gesture.UP_LEFT, 3);     // Rectangle
 
         mGestureSelections.put(Gesture.LEFT, 4);        // Black
-        mGestureSelections.put(Gesture.LEFT_UP, 5);     // Red
-        mGestureSelections.put(Gesture.LEFT_RIGHT, 6);  // Green
+        mGestureSelections.put(Gesture.LEFT_RIGHT, 5);  // White
+        mGestureSelections.put(Gesture.LEFT_UP, 6);     // Red
         mGestureSelections.put(Gesture.LEFT_DOWN, 7);   // Blue
         
-        mGestureSelections.put(Gesture.RIGHT, 8);       // White
-        mGestureSelections.put(Gesture.RIGHT_DOWN, 9);  // Yellow
-        mGestureSelections.put(Gesture.RIGHT_LEFT, 10); // Cyan
-        mGestureSelections.put(Gesture.RIGHT_UP, 11);   // Magenta
+        mGestureSelections.put(Gesture.RIGHT, 8);       // Plain
+        mGestureSelections.put(Gesture.RIGHT_DOWN, 9);  // Glowing
+        mGestureSelections.put(Gesture.RIGHT_LEFT, 10); // Blurred
+        mGestureSelections.put(Gesture.RIGHT_UP, 11);   // Dashed
         
         mGestureSelections.put(Gesture.DOWN_LEFT, 12);  // Fine
         mGestureSelections.put(Gesture.DOWN_UP, 13);    // Thin
-        mGestureSelections.put(Gesture.DOWN, 14);       // Normal
+        mGestureSelections.put(Gesture.DOWN, 14);       // Medium
         mGestureSelections.put(Gesture.DOWN_RIGHT, 15); // Wide
         
         // Default to thin black paintbrush
@@ -221,7 +225,7 @@ public class DrawView extends View {
         mMainButtonNames = new HashMap<Gesture, String>();
         mMainButtonNames.put(Gesture.UP, "Tools");
         mMainButtonNames.put(Gesture.LEFT, "Colors");
-        mMainButtonNames.put(Gesture.RIGHT, "Colors");
+        mMainButtonNames.put(Gesture.RIGHT, "Effects");
         mMainButtonNames.put(Gesture.DOWN, "Widths");
         
         Timer timer = new Timer();
@@ -421,11 +425,11 @@ public class DrawView extends View {
             mPaint.setColor(0x44666666);
 
             for (int i = 0; i < mRows; i++) {
-                float top = i * mRowHeight;            
+                float top = i * mRowHeight;
                 canvas.drawLine(0, top, mColWidth * mCols, top, mPaint);
             }
             for (int i = 0; i < mCols; i++) {
-                float left = i * mColWidth;            
+                float left = i * mColWidth;
                 canvas.drawLine(left, 0, left, mRowHeight * mRows, mPaint);
             }
         }
@@ -1017,6 +1021,9 @@ public class DrawView extends View {
                         }
                         break;
                 }
+                break;
+               
+            case EFFECT:
                 break;
         }
         
