@@ -141,6 +141,7 @@ public class DrawView extends View {
         mPaint = new Paint();
         mPaint.setTextSize(26);
         mPaint.setTextAlign(Align.CENTER);
+        mPaint.setAntiAlias(true);
         mSelected = -1;
         mFingerInside = -1;
         mCheckOverlay = true;
