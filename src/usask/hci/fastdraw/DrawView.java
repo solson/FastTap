@@ -117,11 +117,13 @@ public class DrawView extends View {
         public Object object;
         public String name;
         public SelectionType type;
+        public Bitmap icon;
         
-        public Selection(Object object, String name, SelectionType type) {
+        public Selection(Object object, String name, int iconResource, SelectionType type) {
             this.object = object;
             this.name = name;
             this.type = type;
+            this.icon = BitmapFactory.decodeResource(getResources(), iconResource);
         }
     }
 
@@ -165,30 +167,30 @@ public class DrawView extends View {
         mSubSelection = Gesture.UNKNOWN;
         
         mSelections = new Selection[] {
-            new Selection(new PaintTool(this), "Paintbrush", SelectionType.TOOL),
-            new Selection(new LineTool(this), "Line", SelectionType.TOOL),
-            new Selection(new CircleTool(this), "Circle", SelectionType.TOOL),
-            new Selection(new RectangleTool(this), "Rectangle", SelectionType.TOOL),
+            new Selection(new PaintTool(this), "Paintbrush", R.drawable.paintbrush, SelectionType.TOOL),
+            new Selection(new LineTool(this), "Line", R.drawable.trans, SelectionType.TOOL),
+            new Selection(new CircleTool(this), "Circle", R.drawable.circle, SelectionType.TOOL),
+            new Selection(new RectangleTool(this), "Rectangle", R.drawable.trans, SelectionType.TOOL),
             
-            new Selection(Color.BLACK, "Black", SelectionType.COLOR),
-            new Selection(Color.WHITE, "White", SelectionType.COLOR),
-            new Selection(Color.RED, "Red", SelectionType.COLOR),
-            new Selection(Color.BLUE, "Blue", SelectionType.COLOR),
+            new Selection(Color.BLACK, "Black", R.drawable.trans, SelectionType.COLOR),
+            new Selection(Color.WHITE, "White", R.drawable.trans, SelectionType.COLOR),
+            new Selection(Color.RED, "Red", R.drawable.trans, SelectionType.COLOR),
+            new Selection(Color.BLUE, "Blue", R.drawable.trans, SelectionType.COLOR),
             
-            new Selection(Effect.PLAIN, "Plain", SelectionType.EFFECT),
-            new Selection(Effect.GLOWING, "Glowing", SelectionType.EFFECT),
-            new Selection(Effect.BLURRED, "Blurred", SelectionType.EFFECT),
-            new Selection(Effect.DASHED, "Dashed", SelectionType.EFFECT),
+            new Selection(Effect.PLAIN, "Plain", R.drawable.trans, SelectionType.EFFECT),
+            new Selection(Effect.GLOWING, "Glowing", R.drawable.trans, SelectionType.EFFECT),
+            new Selection(Effect.BLURRED, "Blurred", R.drawable.trans, SelectionType.EFFECT),
+            new Selection(Effect.DASHED, "Dashed", R.drawable.trans, SelectionType.EFFECT),
 
-            new Selection(1, "Fine", SelectionType.THICKNESS),
-            new Selection(6, "Thin", SelectionType.THICKNESS),
-            new Selection(16, "Medium", SelectionType.THICKNESS),
-            new Selection(50, "Wide", SelectionType.THICKNESS),
+            new Selection(1, "Fine", R.drawable.trans, SelectionType.THICKNESS),
+            new Selection(6, "Thin", R.drawable.trans, SelectionType.THICKNESS),
+            new Selection(16, "Medium", R.drawable.trans, SelectionType.THICKNESS),
+            new Selection(50, "Wide", R.drawable.trans, SelectionType.THICKNESS),
             
             null, // The position of the command map button
-            new Selection(Action.SAVE, "Save", SelectionType.ACTION),
-            new Selection(Action.CLEAR, "Clear", SelectionType.ACTION),
-            new Selection(Action.UNDO, "Undo", SelectionType.ACTION)
+            new Selection(Action.SAVE, "Save", R.drawable.trans, SelectionType.ACTION),
+            new Selection(Action.CLEAR, "Clear", R.drawable.trans, SelectionType.ACTION),
+            new Selection(Action.UNDO, "Undo", R.drawable.trans, SelectionType.ACTION)
         };
         
         mGestureSelections = new HashMap<Gesture, Integer>();
@@ -437,7 +439,7 @@ public class DrawView extends View {
                         float centerX = (x + 0.5f) * mColWidth;
                         float centerY = (y + 0.5f) * mRowHeight;
                         
-                        Bitmap icon = BitmapFactory.decodeResource(getResources(), R.drawable.paintbrush);
+                        Bitmap icon = mSelections[i].icon;
                         float iconWidth = icon.getWidth();
                         float iconHeight = icon.getHeight();
                         
@@ -472,7 +474,7 @@ public class DrawView extends View {
                         canvas.drawRect(buttonBounds, mPaint);
                         mPaint.setStyle(Style.FILL);
                         
-                        Bitmap icon = BitmapFactory.decodeResource(getResources(), R.drawable.paintbrush);
+                        Bitmap icon = selection.icon;
                         float iconWidth = icon.getWidth();
                         float iconHeight = icon.getHeight();
                         float centerX = buttonBounds.left + 0.5f * mColWidth;
