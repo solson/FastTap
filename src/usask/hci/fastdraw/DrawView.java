@@ -281,7 +281,6 @@ public class DrawView extends View {
         gestureCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                leftHandedCheckBox.setEnabled(!isChecked);
                 permanentGridCheckBox.setEnabled(!isChecked);
             }
         });
