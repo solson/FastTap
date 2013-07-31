@@ -18,9 +18,6 @@
 		            android:text="ID"
 		            android:gravity="center_horizontal" />
 		        <TextView
-		            android:text="Set"
-		            android:gravity="center_horizontal" />
-		        <TextView
 		            android:text="Block"
 		            android:gravity="center_horizontal" />
 		    </TableRow>
@@ -29,9 +26,6 @@
 			    <NumberPicker 
 			        android:id="@+id/subject_id_picker"
 				    android:layout_marginLeft="5dp"
-				    android:layout_marginRight="5dp" />
-			    <NumberPicker 
-			        android:id="@+id/set_num_picker"
 				    android:layout_marginRight="5dp" />
 			    <NumberPicker 
 			        android:id="@+id/block_num_picker"
