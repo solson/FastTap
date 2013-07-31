@@ -1,5 +1,6 @@
 package usask.hci.fastdraw;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
@@ -78,6 +79,8 @@ public class DrawView extends View {
     private Gesture mActiveCategory;
     private PointF mActiveCategoryOrigin;
     private Gesture mSubSelection;
+    private ArrayList<Gesture> mButtonDirections;
+    private HashMap<Gesture, String> mMainButtonNames;
     private UI mUI;
     private final Handler mHandler = new Handler();
     private static final int mChordDelay = 1000 * 1000 * 200; // 200 ms in ns
@@ -204,6 +207,18 @@ public class DrawView extends View {
         changeSelection(0, false);
         changeSelection(4, false);
         changeSelection(13, false);
+        
+        mButtonDirections = new ArrayList<Gesture>();
+        mButtonDirections.add(Gesture.UP);
+        mButtonDirections.add(Gesture.LEFT);
+        mButtonDirections.add(Gesture.RIGHT);
+        mButtonDirections.add(Gesture.DOWN);
+        
+        mMainButtonNames = new HashMap<Gesture, String>();
+        mMainButtonNames.put(Gesture.UP, "Tools");
+        mMainButtonNames.put(Gesture.LEFT, "Colors");
+        mMainButtonNames.put(Gesture.RIGHT, "Colors");
+        mMainButtonNames.put(Gesture.DOWN, "Widths");
         
         Timer timer = new Timer();
         timer.schedule(new TimerTask() {
@@ -473,66 +488,95 @@ public class DrawView extends View {
             Gesture mainGesture = gestures.first;
             Gesture subGesture = gestures.second;
 
-            if (isInCircle(mGestureFingerPos, origin.x, origin.y - mGestureButtonDist, mGestureButtonSize)) {
-                mActiveCategoryOrigin.x = origin.x;
-                mActiveCategoryOrigin.y = origin.y - mGestureButtonDist;
-                mActiveCategory = Gesture.UP;
-            } else if (isInCircle(mGestureFingerPos, origin.x - mGestureButtonDist, origin.y, mGestureButtonSize)) {
-                mActiveCategoryOrigin.x = origin.x - mGestureButtonDist;
-                mActiveCategoryOrigin.y = origin.y;
-                mActiveCategory = Gesture.LEFT;
-            } else if (isInCircle(mGestureFingerPos, origin.x + mGestureButtonDist, origin.y, mGestureButtonSize)) {
-                mActiveCategoryOrigin.x = origin.x + mGestureButtonDist;
-                mActiveCategoryOrigin.y = origin.y;
-                mActiveCategory = Gesture.RIGHT;
-            } else if (isInCircle(mGestureFingerPos, origin.x, origin.y + mGestureButtonDist, mGestureButtonSize)) {
-                mActiveCategoryOrigin.x = origin.x;
-                mActiveCategoryOrigin.y = origin.y + mGestureButtonDist;
-                mActiveCategory = Gesture.DOWN;
+            for (Gesture buttonDirection : mButtonDirections) {
+                PointF position = mainButtonPosition(origin, buttonDirection);
+                
+                if (isInCircle(mGestureFingerPos, position, mGestureButtonSize)) {
+                    mActiveCategoryOrigin = position;
+                    mActiveCategory = buttonDirection;
+                    break;
+                }
             }
             
             boolean greyoutInactive = mActiveCategory != Gesture.UNKNOWN;
             
             mPaint.setTextSize(22);
-            int size = mGestureButtonSize;
-            
-            drawGestureButton(canvas, "Tools", origin.x, origin.y - mGestureButtonDist, size, mPaint, mActiveCategory == Gesture.UP, greyoutInactive);
-            drawGestureButton(canvas, "Colors", origin.x - mGestureButtonDist, origin.y, size, mPaint, mActiveCategory == Gesture.LEFT, greyoutInactive);
-            drawGestureButton(canvas, "Colors", origin.x + mGestureButtonDist, origin.y, size, mPaint, mActiveCategory == Gesture.RIGHT, greyoutInactive);
-            drawGestureButton(canvas, "Widths", origin.x, origin.y + mGestureButtonDist, size, mPaint, mActiveCategory == Gesture.DOWN, greyoutInactive);
-            
-            mPaint.setTextSize(18);
-            int subSize = (int)(size * 0.70);
-            int subDist = size + subSize;
-            float subOriginX = mActiveCategoryOrigin.x;
-            float subOriginY = mActiveCategoryOrigin.y;
-            
-            if (isInCircle(mGestureFingerPos, subOriginX, subOriginY - subDist, subSize)) {
-                mSubSelection = Gesture.UP;
-            } else if (isInCircle(mGestureFingerPos, subOriginX - subDist, subOriginY, subSize)) {
-                mSubSelection = Gesture.LEFT;
-            } else if (isInCircle(mGestureFingerPos, subOriginX + subDist, subOriginY, subSize)) {
-                mSubSelection = Gesture.RIGHT;
-            } else if (isInCircle(mGestureFingerPos, subOriginX, subOriginY + subDist, subSize)) {
-                mSubSelection = Gesture.DOWN;
-            } else if (mainGesture == mActiveCategory) {
-                mSubSelection = subGesture;
-            } else {
-                mSubSelection = Gesture.UNKNOWN;
+
+            for (Gesture buttonDirection : mButtonDirections) {
+                PointF position = mainButtonPosition(origin, buttonDirection);
+                boolean active = mActiveCategory == buttonDirection;
+                String name = mMainButtonNames.get(buttonDirection);
+                
+                drawGestureButton(canvas, name, position, mGestureButtonSize, mPaint, active, greyoutInactive);
             }
             
+            mPaint.setTextSize(18);
+            int subSize = (int)(mGestureButtonSize * 0.70);
+            mSubSelection = Gesture.UNKNOWN;
+
+            for (Gesture buttonDirection : mButtonDirections) {
+                PointF position = subButtonPosition(mActiveCategoryOrigin, subSize, buttonDirection);
+                
+                if (isInCircle(mGestureFingerPos, position, subSize)) {
+                    mSubSelection = buttonDirection;
+                    break;
+                }
+            }
+            
+            if (mSubSelection == Gesture.UNKNOWN && mainGesture == mActiveCategory)
+                mSubSelection = subGesture;
+            
             if (mActiveCategory != Gesture.UNKNOWN) {
-                drawGestureButton(canvas, toolNameForGesture(combineGestures(mActiveCategory, Gesture.UP)),
-                        subOriginX, subOriginY - subDist, subSize, mPaint, mSubSelection == Gesture.UP, false);
-                drawGestureButton(canvas, toolNameForGesture(combineGestures(mActiveCategory, Gesture.LEFT)),
-                        subOriginX - subDist, subOriginY, subSize, mPaint, mSubSelection == Gesture.LEFT, false);
-                drawGestureButton(canvas, toolNameForGesture(combineGestures(mActiveCategory, Gesture.RIGHT)),
-                        subOriginX + subDist, subOriginY, subSize, mPaint, mSubSelection == Gesture.RIGHT, false);
-                drawGestureButton(canvas, toolNameForGesture(combineGestures(mActiveCategory, Gesture.DOWN)),
-                        subOriginX, subOriginY + subDist, subSize, mPaint, mSubSelection == Gesture.DOWN, false);
+                for (Gesture buttonDirection : mButtonDirections) {
+                    PointF position = subButtonPosition(mActiveCategoryOrigin, subSize, buttonDirection);
+                    boolean active = mSubSelection == buttonDirection;
+                    String name = toolNameForGesture(combineGestures(mActiveCategory, buttonDirection));
+                    
+                    drawGestureButton(canvas, name, position, subSize, mPaint, active, false);
+                }
             }
             
             mPaint.setTextSize(26);
+        }
+    }
+    
+    private PointF mainButtonPosition(PointF origin, Gesture gesture) {
+        switch (gesture) {
+            case UP:
+                return new PointF(origin.x, origin.y - mGestureButtonDist);
+                
+            case LEFT:
+                return new PointF(origin.x - mGestureButtonDist, origin.y);
+                
+            case RIGHT:
+                return new PointF(origin.x + mGestureButtonDist, origin.y);
+                
+            case DOWN:
+                return new PointF(origin.x, origin.y + mGestureButtonDist);
+                
+            default:
+                throw new IllegalArgumentException("Main button gesture must be up, left, right, or down.");
+        }
+    }
+    
+    private PointF subButtonPosition(PointF subOrigin, int subSize, Gesture gesture) {
+        int subDist = mGestureButtonSize + subSize;
+        
+        switch (gesture) {
+            case UP:
+                return new PointF(subOrigin.x, subOrigin.y - subDist);
+                
+            case LEFT:
+                return new PointF(subOrigin.x - subDist, subOrigin.y);
+                
+            case RIGHT:
+                return new PointF(subOrigin.x + subDist, subOrigin.y);
+                
+            case DOWN:
+                return new PointF(subOrigin.x, subOrigin.y + subDist);
+                
+            default:
+                throw new IllegalArgumentException("Sub-button gesture must be up, left, right, or down.");
         }
     }
     
@@ -626,15 +670,15 @@ public class DrawView extends View {
         return new Pair<Gesture, Gesture>(mainGesture, subGesture);
     }
     
-    private boolean isInCircle(PointF point, float cx, float cy, float radius) {
-        float dx = point.x - cx;
-        float dy = point.y - cy;
+    private boolean isInCircle(PointF point, PointF center, float radius) {
+        float dx = point.x - center.x;
+        float dy = point.y - center.y;
         double distance = Math.sqrt(dx*dx + dy*dy);
         
         return distance < radius;
     }
     
-    private void drawGestureButton(Canvas canvas, String text, float x, float y, int size, Paint paint, boolean highlight, boolean greyout) {
+    private void drawGestureButton(Canvas canvas, String text, PointF position, int size, Paint paint, boolean highlight, boolean greyout) {
         paint.getTextBounds(text, 0, text.length(), mTextBounds);
         
         if (highlight)
@@ -644,7 +688,7 @@ public class DrawView extends View {
         else
             mPaint.setColor(0xFFCCCCCC);
         
-        canvas.drawCircle(x, y, size, paint);
+        canvas.drawCircle(position.x, position.y, size, paint);
 
         if (greyout && !highlight) {
             mPaint.setColor(0xEE777777);
@@ -653,7 +697,7 @@ public class DrawView extends View {
             mPaint.setShadowLayer(2, 1, 1, 0x33000000);
         }
             
-        canvas.drawText(text, x, y + mTextBounds.height() / 2, mPaint);
+        canvas.drawText(text, position.x, position.y + mTextBounds.height() / 2, mPaint);
         mPaint.setShadowLayer(0, 0, 0, 0);
     }
     
