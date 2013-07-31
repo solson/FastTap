@@ -13,62 +13,54 @@ import android.text.style.ForegroundColorSpan;
 import android.text.style.StrikethroughSpan;
 
 public class StudyController {
-    private final String[][][] mTrials;
+    private final String[][] mTrials;
     private final StudyLogger mLog;
     private int mTrialNum;
     private int mTrialIndex;
     private int mBlockNum;
-    private int mSetIndex;
     private Set<String> mToSelect;
     private Set<String> mSelected;
     private Integer[] mTrialOrder;
     private long mTrialStart;
     private int mNumErrors;
     private StringBuilder mErrors;
-    private int[] mBlocksPerSet;
     private int mTimesPainted;
     private boolean mFinished;
     private long mUITime;
     private boolean mWaiting;
     private int mNumWaitDots;
     private boolean mHideTargets;
+    private final int mNumBlocks = 6;
     
     public StudyController(StudyLogger logger) {
         mLog = logger;
 
-        mTrials = new String[][][] {
-            {{"Paintbrush"}, {"Line"}, {"Circle"}, {"Rectangle"},
-            {"Black"}, {"Red"}, {"White"}, {"Blue"},
-            {"Plain"}, {"Glowing"}, {"Blurred"}, {"Dashed"},
-            {"Fine"}, {"Thin"}, {"Medium"}, {"Wide"}},
+        mTrials = new String[][] {
+            {"Paintbrush"}, {"Rectangle"},
+            {"Black"}, {"Red"},
+            {"Glowing"}, {"Blurred"},
+            {"Thin"}, {"Wide"},
             
-            {{"Medium", "Circle"},
-            {"Blue", "Rectangle"},
-            {"Fine", "White"},
-            {"Wide", "Line"},
+            {"Glowing", "Rectangle"},
+            {"Black", "Paintbrush"},
+            {"Thin", "Blurred"},
             {"Blurred", "Paintbrush"},
-            {"Fine", "Plain"},
-            {"Glowing", "Paintbrush"},
-            {"Dashed", "Circle"},
-            {"Medium", "Red"},
-            {"Thin", "Black"}},
+            {"Red", "Rectangle"},
+            {"Thin", "Red"},
+            {"Wide", "Glowing"},
+            {"Wide", "Black"},
             
-            {{"Medium", "Red", "Line"},
-            {"Thin", "Glowing", "Rectangle"},
-            {"Fine", "White", "Circle"},
-            {"Wide", "Dashed", "Line"},
-            {"Medium", "Blurred", "Paintbrush"},
-            {"Fine", "Plain", "Rectangle"},
-            {"Wide", "White", "Paintbrush"},
-            {"Medium", "Blue", "Circle"},
-            {"Wide", "Glowing", "Line"},
-            {"Thin", "Black", "Paintbrush"}}
+            {"Glowing", "Red", "Rectangle"},
+            {"Wide", "Black", "Paintbrush"},
+            {"Thin", "Blurred", "Rectangle"},
+            {"Blurred", "Black", "Paintbrush"},
+            {"Thin", "Red", "Rectangle"},
+            {"Thin", "Glowing", "Red"},
+            {"Wide", "Glowing", "Paintbrush"},
+            {"Wide", "Blurred", "Black"}
         };
-        
-        mBlocksPerSet = new int[] { 5, 5, 5 };
 
         mSelected = new HashSet<String>();
-        mSetIndex = 0;
         mBlockNum = 0;
         mFinished = false;
         mWaiting = false;
@@ -111,17 +103,8 @@ public class StudyController {
         return mTrialStart;
     }
     
-    public int getNumSets() {
-        return mTrials.length;
-    }
-    
-    public int getNumBlocks(int set) {
-        return mBlocksPerSet[set - 1];
-    }
-    
-    public void setSetNum(int set) {
-        mSetIndex = set - 2;
-        nextSet();
+    public int getNumBlocks() {
+        return mNumBlocks;
     }
     
     public void setBlockNum(int block) {
@@ -144,20 +127,20 @@ public class StudyController {
             if (mToSelect.size() == mSelected.size()) {
                 long now = System.nanoTime();
 
-                int numTargets = mTrials[mSetIndex][mTrialIndex].length;
+                int numTargets = mTrials[mTrialIndex].length;
                 StringBuilder targetString = new StringBuilder();
                 for (int i = 0; i < numTargets; i++) {
                     if (i != 0)
                         targetString.append(",");
-                    targetString.append(mTrials[mSetIndex][mTrialIndex][i]);
+                    targetString.append(mTrials[mTrialIndex][i]);
                 }
 
                 if (gesture) {
-                    mLog.gestureTrial(now, mSetIndex + 1, mBlockNum, mTrialNum, mTrials[mSetIndex][mTrialIndex].length,
+                    mLog.gestureTrial(now,  mBlockNum, mTrialNum, mTrials[mTrialIndex].length,
                             targetString.toString(), mNumErrors, mErrors.toString(),
                             mTimesPainted, mUITime, now - mTrialStart);
                 } else {
-                    mLog.chordTrial(now, mSetIndex + 1, mBlockNum, mTrialNum, mTrials[mSetIndex][mTrialIndex].length,
+                    mLog.chordTrial(now, mBlockNum, mTrialNum, mTrials[mTrialIndex].length,
                             targetString.toString(), mNumErrors, mErrors.toString(),
                             mTimesPainted, mUITime, now - mTrialStart);
                 }
@@ -184,7 +167,7 @@ public class StudyController {
         if (mFinished)
             return "You are finished!";
         
-        String progress = "#" + mBlockNum + " (" + mTrialNum + "/" + mTrials[mSetIndex].length + ")";
+        String progress = "#" + mBlockNum + " (" + mTrialNum + "/" + mTrials.length + ")";
         
         SpannableStringBuilder title = new SpannableStringBuilder(progress + " Please select: ");
         
@@ -225,19 +208,13 @@ public class StudyController {
         return title;
     }
     
-    private void nextSet() {
-        mSetIndex++;
-        mBlockNum = 0;
-        nextBlock();
-    }
-    
     private void nextBlock() {
-        if (mBlockNum >= mBlocksPerSet[mSetIndex]) {
-            nextSet();
+        if (mBlockNum >= mNumBlocks) {
+            mFinished = true;
             return;
         }
         
-        mTrialOrder = new Integer[mTrials[mSetIndex].length];
+        mTrialOrder = new Integer[mTrials.length];
         for (int i = 0; i < mTrialOrder.length; i++)
             mTrialOrder[i] = i;
         Collections.shuffle(Arrays.asList(mTrialOrder));
@@ -248,7 +225,7 @@ public class StudyController {
     }
     
     public void nextTrial() {
-        if (mTrialNum >= mTrials[mSetIndex].length) {
+        if (mTrialNum >= mTrials.length) {
             nextBlock();
             return;
         }
@@ -262,7 +239,7 @@ public class StudyController {
         mTrialIndex = mTrialOrder[mTrialNum];
         mTrialNum++;
         
-        mToSelect = new LinkedHashSet<String>(Arrays.asList(mTrials[mSetIndex][mTrialIndex]));
+        mToSelect = new LinkedHashSet<String>(Arrays.asList(mTrials[mTrialIndex]));
         mSelected.clear();
     }
 
@@ -271,14 +248,10 @@ public class StudyController {
     }
 
     public boolean isOnLastTrial() {
-        return mTrialNum == mTrials[mSetIndex].length;
+        return mTrialNum == mTrials.length;
     }
 
     public boolean isOnLastBlock() {
-        return mBlockNum == mBlocksPerSet[mSetIndex];
-    }
-
-    public boolean isOnLastSet() {
-        return mSetIndex == mTrials.length - 1;
+        return mBlockNum == mNumBlocks;
     }
 }

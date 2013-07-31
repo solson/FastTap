@@ -290,22 +290,10 @@ public class DrawView extends View {
         subjectIdPicker.setMaxValue(99);
         subjectIdPicker.setDescendantFocusability(NumberPicker.FOCUS_BLOCK_DESCENDANTS); // Remove the virtual keyboard
         
-        final NumberPicker setNumPicker = (NumberPicker) studySetupLayout.findViewById(R.id.set_num_picker);
-        setNumPicker.setMinValue(1);
-        setNumPicker.setMaxValue(mStudyCtl.getNumSets());
-        setNumPicker.setDescendantFocusability(NumberPicker.FOCUS_BLOCK_DESCENDANTS); // Remove the virtual keyboard
-        
         final NumberPicker blockNumPicker = (NumberPicker) studySetupLayout.findViewById(R.id.block_num_picker);
         blockNumPicker.setMinValue(1);
-        blockNumPicker.setMaxValue(mStudyCtl.getNumBlocks(1));
+        blockNumPicker.setMaxValue(mStudyCtl.getNumBlocks());
         blockNumPicker.setDescendantFocusability(NumberPicker.FOCUS_BLOCK_DESCENDANTS); // Remove the virtual keyboard
-        
-        setNumPicker.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
-            @Override
-            public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
-                blockNumPicker.setMaxValue(mStudyCtl.getNumBlocks(newVal));
-            }
-        });
 
         new AlertDialog.Builder(mainActivity)
             .setMessage(R.string.dialog_study_mode)
@@ -315,7 +303,6 @@ public class DrawView extends View {
                     mStudyMode = studyCheckBox.isChecked();
                     
                     if (mStudyMode) {
-                        mStudyCtl.setSetNum(setNumPicker.getValue());
                         mStudyCtl.setBlockNum(blockNumPicker.getValue());
                         mMainActivity.setTitle("Your targets will appear here.");
                         pauseStudy("Press OK when you are ready to begin.");
@@ -1031,7 +1018,7 @@ public class DrawView extends View {
             boolean gesture = mUI == UI.GESTURE;
             boolean wasLastTarget = mStudyCtl.isOnLastTarget();
             boolean wasLastTrial = mStudyCtl.isOnLastTrial();
-            boolean ending = mStudyCtl.isOnLastBlock() && mStudyCtl.isOnLastSet();
+            boolean wasLastBlock = mStudyCtl.isOnLastBlock();
             
             if (mUI == UI.CHORD && mShowOverlay && wasLastTarget) {
                 long now = System.nanoTime();
@@ -1060,7 +1047,7 @@ public class DrawView extends View {
                 mMainActivity.getActionBar().setIcon(R.drawable.check);
                 
                 if (wasLastTrial) {
-                    if (ending) {
+                    if (wasLastBlock) {
                         mStudyCtl.finish();
                         mMainActivity.getActionBar().setIcon(R.drawable.trans);
                         mMainActivity.setTitle(mStudyCtl.getPrompt());
