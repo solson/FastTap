@@ -170,7 +170,7 @@ public class DrawView extends View {
             new Selection(new PaintTool(this), "Paintbrush", R.drawable.paintbrush, SelectionType.TOOL),
             new Selection(new LineTool(this), "Line", R.drawable.trans, SelectionType.TOOL),
             new Selection(new CircleTool(this), "Circle", R.drawable.circle, SelectionType.TOOL),
-            new Selection(new RectangleTool(this), "Rectangle", R.drawable.trans, SelectionType.TOOL),
+            new Selection(new RectangleTool(this), "Rectangle", R.drawable.rectangle, SelectionType.TOOL),
             
             new Selection(Color.BLACK, "Black", R.drawable.trans, SelectionType.COLOR),
             new Selection(Color.WHITE, "White", R.drawable.trans, SelectionType.COLOR),
