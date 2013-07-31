@@ -12,6 +12,7 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -433,7 +434,15 @@ public class DrawView extends View {
                     if (mSelections[i] != null) {
                         String name = mSelections[i].name;
                         int heightAdj = getTextHeight(name, mPaint) / 2;
-                        canvas.drawText(name, (x + 0.5f) * mColWidth, (y + 0.5f) * mRowHeight + heightAdj, mPaint);
+                        float centerX = (x + 0.5f) * mColWidth;
+                        float centerY = (y + 0.5f) * mRowHeight;
+                        
+                        Bitmap icon = BitmapFactory.decodeResource(getResources(), R.drawable.fastdraw);
+                        float iconWidth = icon.getWidth();
+                        float iconHeight = icon.getHeight();
+                        
+                        canvas.drawBitmap(icon, centerX - iconWidth / 2, centerY - iconHeight * 3 / 4, mPaint);
+                        canvas.drawText(name, centerX, centerY + iconHeight / 2 + heightAdj, mPaint);
                     }
                 }
             }
@@ -463,10 +472,18 @@ public class DrawView extends View {
                         canvas.drawRect(buttonBounds, mPaint);
                         mPaint.setStyle(Style.FILL);
                         
+                        Bitmap icon = BitmapFactory.decodeResource(getResources(), R.drawable.fastdraw);
+                        float iconWidth = icon.getWidth();
+                        float iconHeight = icon.getHeight();
+                        float centerX = buttonBounds.left + 0.5f * mColWidth;
+                        float centerY = buttonBounds.top + 0.5f * mRowHeight;
+                        
                         mPaint.setColor(0xFF000000);
                         String name = selection.name;
                         int heightAdj = getTextHeight(name, mPaint) / 2;
-                        canvas.drawText(name, buttonBounds.left + 0.5f * mColWidth, buttonBounds.top + 0.5f * mRowHeight + heightAdj, mPaint);
+                        
+                        canvas.drawBitmap(icon, centerX - iconWidth / 2, centerY - iconHeight * 3 / 4, mPaint);
+                        canvas.drawText(name, centerX, centerY + iconHeight / 2 + heightAdj, mPaint);
                     }
                 }
             }
