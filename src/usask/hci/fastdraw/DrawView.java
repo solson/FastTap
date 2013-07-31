@@ -431,7 +431,7 @@ public class DrawView extends View {
                         realX = mCols - x - 1;
                     
                     int i = y * mCols + realX;
-                    if (mSelections[i] != null) {
+                    if (mSelections[i] != null && mFlashTimes.get(i) == null) {
                         String name = mSelections[i].name;
                         int heightAdj = getTextHeight(name, mPaint) / 2;
                         float centerX = (x + 0.5f) * mColWidth;
