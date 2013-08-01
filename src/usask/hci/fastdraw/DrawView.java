@@ -106,7 +106,7 @@ public class DrawView extends View {
     }
     
     private enum Effect {
-        PLAIN, GLOWING, BLURRED, DASHED
+        NO_EFFECT, GLOWING, BLURRED, DASHED
     }
 
     private enum SelectionType {
@@ -177,7 +177,7 @@ public class DrawView extends View {
             new Selection(Color.RED, "Red", R.drawable.trans, SelectionType.COLOR),
             new Selection(Color.BLUE, "Blue", R.drawable.trans, SelectionType.COLOR),
             
-            new Selection(Effect.PLAIN, "Plain", R.drawable.trans, SelectionType.EFFECT),
+            new Selection(Effect.NO_EFFECT, "No Effect", R.drawable.trans, SelectionType.EFFECT),
             new Selection(Effect.GLOWING, "Glowing", R.drawable.trans, SelectionType.EFFECT),
             new Selection(Effect.BLURRED, "Blurred", R.drawable.trans, SelectionType.EFFECT),
             new Selection(Effect.DASHED, "Dashed", R.drawable.trans, SelectionType.EFFECT),
