@@ -172,10 +172,10 @@ public class DrawView extends View {
             new Selection(new CircleTool(this), "Circle", R.drawable.circle, SelectionType.TOOL),
             new Selection(new RectangleTool(this), "Rectangle", R.drawable.rectangle, SelectionType.TOOL),
             
-            new Selection(Color.BLACK, "Black", R.drawable.trans, SelectionType.COLOR),
-            new Selection(Color.WHITE, "White", R.drawable.trans, SelectionType.COLOR),
-            new Selection(Color.RED, "Red", R.drawable.trans, SelectionType.COLOR),
-            new Selection(Color.BLUE, "Blue", R.drawable.trans, SelectionType.COLOR),
+            new Selection(Color.BLACK, "Black", R.drawable.black, SelectionType.COLOR),
+            new Selection(Color.WHITE, "White", R.drawable.white, SelectionType.COLOR),
+            new Selection(Color.RED, "Red", R.drawable.red, SelectionType.COLOR),
+            new Selection(Color.BLUE, "Blue", R.drawable.blue, SelectionType.COLOR),
             
             new Selection(Effect.NO_EFFECT, "No Effect", R.drawable.trans, SelectionType.EFFECT),
             new Selection(Effect.GLOWING, "Glowing", R.drawable.trans, SelectionType.EFFECT),
@@ -188,9 +188,9 @@ public class DrawView extends View {
             new Selection(50, "Wide", R.drawable.trans, SelectionType.THICKNESS),
             
             null, // The position of the command map button
-            new Selection(Action.SAVE, "Save", R.drawable.trans, SelectionType.ACTION),
-            new Selection(Action.CLEAR, "Clear", R.drawable.trans, SelectionType.ACTION),
-            new Selection(Action.UNDO, "Undo", R.drawable.trans, SelectionType.ACTION)
+            new Selection(Action.SAVE, "Save", R.drawable.save, SelectionType.ACTION),
+            new Selection(Action.CLEAR, "Clear", R.drawable.clear, SelectionType.ACTION),
+            new Selection(Action.UNDO, "Undo", R.drawable.undo, SelectionType.ACTION)
         };
         
         mGestureSelections = new HashMap<Gesture, Integer>();
