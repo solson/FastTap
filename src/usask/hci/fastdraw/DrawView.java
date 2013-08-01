@@ -777,7 +777,6 @@ public class DrawView extends View {
                         
                         if ((now - time < mChordDelay && now - mPressedInsideTime < mChordDelay) || mShowOverlay) {
                             changeSelection(selection);
-                            mCheckOverlay = false;
                             mRecentTouches.removeAt(i);
                             i--;
                         } else if (now - time > mChordDelay) {
@@ -1065,6 +1064,7 @@ public class DrawView extends View {
                 mUndo = mBitmap.copy(mBitmap.getConfig(), true);
                 
                 // Forcibly unpost the command map overlay
+                mCheckOverlay = false;
                 if (mShowOverlay) {
                     mShowOverlay = false;
                     long duration = System.nanoTime() - mOverlayStart;
