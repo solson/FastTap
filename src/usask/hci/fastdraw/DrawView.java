@@ -88,7 +88,7 @@ public class DrawView extends View {
     private UI mUI;
     private final Handler mHandler = new Handler();
     private static final int mChordDelay = 1000 * 1000 * 200; // 200 ms in ns
-    private static final int mFlashDelay = 1000 * 1000 * 400; // 400 ms in ns
+    private static final int mFlashDelay = 1000 * 1000 * 500; // 500 ms in ns
     private static final int mGestureMenuDelay = 1000 * 1000 * 200; // 200 ms in ns
     private static final int mTrialDelay = 500; // 500 ms
     private static final int mBlockDelay = 1000; // 1 sec
