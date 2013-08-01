@@ -168,7 +168,7 @@ public class DrawView extends View {
         
         mSelections = new Selection[] {
             new Selection(new PaintTool(this), "Paintbrush", R.drawable.paintbrush, SelectionType.TOOL),
-            new Selection(new LineTool(this), "Line", R.drawable.trans, SelectionType.TOOL),
+            new Selection(new LineTool(this), "Line", R.drawable.line, SelectionType.TOOL),
             new Selection(new CircleTool(this), "Circle", R.drawable.circle, SelectionType.TOOL),
             new Selection(new RectangleTool(this), "Rectangle", R.drawable.rectangle, SelectionType.TOOL),
             
@@ -177,15 +177,15 @@ public class DrawView extends View {
             new Selection(Color.RED, "Red", R.drawable.red, SelectionType.COLOR),
             new Selection(Color.BLUE, "Blue", R.drawable.blue, SelectionType.COLOR),
             
-            new Selection(Effect.NO_EFFECT, "No Effect", R.drawable.trans, SelectionType.EFFECT),
-            new Selection(Effect.GLOWING, "Glowing", R.drawable.trans, SelectionType.EFFECT),
-            new Selection(Effect.BLURRED, "Blurred", R.drawable.trans, SelectionType.EFFECT),
-            new Selection(Effect.DASHED, "Dashed", R.drawable.trans, SelectionType.EFFECT),
+            new Selection(Effect.NO_EFFECT, "No Effect", R.drawable.no_effect, SelectionType.EFFECT),
+            new Selection(Effect.GLOWING, "Glowing", R.drawable.glowing, SelectionType.EFFECT),
+            new Selection(Effect.BLURRED, "Blurred", R.drawable.blurred, SelectionType.EFFECT),
+            new Selection(Effect.DASHED, "Dashed", R.drawable.dashed, SelectionType.EFFECT),
 
-            new Selection(1, "Fine", R.drawable.trans, SelectionType.THICKNESS),
-            new Selection(6, "Thin", R.drawable.trans, SelectionType.THICKNESS),
-            new Selection(16, "Medium", R.drawable.trans, SelectionType.THICKNESS),
-            new Selection(50, "Wide", R.drawable.trans, SelectionType.THICKNESS),
+            new Selection(1, "Fine", R.drawable.fine, SelectionType.THICKNESS),
+            new Selection(6, "Thin", R.drawable.thin, SelectionType.THICKNESS),
+            new Selection(16, "Medium", R.drawable.medium, SelectionType.THICKNESS),
+            new Selection(50, "Wide", R.drawable.wide, SelectionType.THICKNESS),
             
             null, // The position of the command map button
             new Selection(Action.SAVE, "Save", R.drawable.save, SelectionType.ACTION),
