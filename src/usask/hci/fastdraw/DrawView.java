@@ -84,7 +84,7 @@ public class DrawView extends View {
     private HashMap<Gesture, String> mMainButtonNames;
     private PointF mGestureFlashLocation;
     private long mGestureFlashTime;
-    private String mGestureFlashText;
+    private Selection mGestureFlashSelection;
     private UI mUI;
     private final Handler mHandler = new Handler();
     private static final int mChordDelay = 1000 * 1000 * 200; // 200 ms in ns
@@ -492,7 +492,7 @@ public class DrawView extends View {
         } else if (mUI == UI.GESTURE) {
             if (mGestureFlashLocation != null) {
                 mPaint.setTextSize(18);
-                drawGestureButton(canvas, mGestureFlashText, mGestureFlashLocation, mGestureSubButtonSize, mPaint, true, false);
+                drawGestureButton(canvas, mGestureFlashSelection.name, mGestureFlashSelection.icon, mGestureFlashLocation, mGestureSubButtonSize, mPaint, true, false);
                 mPaint.setTextSize(26);
             }
         }
@@ -533,7 +533,7 @@ public class DrawView extends View {
                 boolean active = mActiveCategory == buttonDirection;
                 String name = mMainButtonNames.get(buttonDirection);
                 
-                drawGestureButton(canvas, name, position, mGestureButtonSize, mPaint, active, greyoutInactive);
+                drawGestureButton(canvas, name, null, position, mGestureButtonSize, mPaint, active, greyoutInactive);
             }
             
             mPaint.setTextSize(18);
@@ -555,9 +555,9 @@ public class DrawView extends View {
                 for (Gesture buttonDirection : mButtonDirections) {
                     PointF position = subButtonPosition(mActiveCategoryOrigin, buttonDirection);
                     boolean active = mSubSelection == buttonDirection;
-                    String name = toolNameForGesture(combineGestures(mActiveCategory, buttonDirection));
+                    Selection selection = mSelections[mGestureSelections.get(combineGestures(mActiveCategory, buttonDirection))];
                     
-                    drawGestureButton(canvas, name, position, mGestureSubButtonSize, mPaint, active, false);
+                    drawGestureButton(canvas, selection.name, selection.icon, position, mGestureSubButtonSize, mPaint, active, false);
                 }
             }
             
@@ -603,13 +603,6 @@ public class DrawView extends View {
             default:
                 throw new IllegalArgumentException("Sub-button gesture must be up, left, right, or down.");
         }
-    }
-    
-    private String toolNameForGesture(Gesture gesture) {
-        if (!mGestureSelections.containsKey(gesture))
-            return "";
-        
-        return mSelections[mGestureSelections.get(gesture)].name;
     }
     
     private Gesture combineGestures(Gesture mainGesture, Gesture subGesture) {
@@ -703,7 +696,7 @@ public class DrawView extends View {
         return distance < radius;
     }
     
-    private void drawGestureButton(Canvas canvas, String text, PointF position, int size, Paint paint, boolean highlight, boolean greyout) {
+    private void drawGestureButton(Canvas canvas, String text, Bitmap icon, PointF position, int size, Paint paint, boolean highlight, boolean greyout) {
         paint.getTextBounds(text, 0, text.length(), mTextBounds);
         
         if (highlight)
@@ -715,14 +708,27 @@ public class DrawView extends View {
         
         canvas.drawCircle(position.x, position.y, size, paint);
 
+        final float verticalShift;
+        
+        if (icon != null) {
+            final int iconSize = (int)(size * 0.9);
+            verticalShift = size * 0.3f;
+            
+            Bitmap scaledIcon = Bitmap.createScaledBitmap(icon, iconSize, iconSize, true);
+            
+            canvas.drawBitmap(scaledIcon, position.x - iconSize / 2, position.y - iconSize / 2 - verticalShift, mPaint);
+        } else {
+            verticalShift = 0;
+        }
+
         if (greyout && !highlight) {
             mPaint.setColor(0xEE777777);
         } else {
             mPaint.setColor(0xEE000000);
             mPaint.setShadowLayer(2, 1, 1, 0x33000000);
         }
-            
-        canvas.drawText(text, position.x, position.y + mTextBounds.height() / 2, mPaint);
+
+        canvas.drawText(text, position.x, position.y + mTextBounds.height() / 2 + verticalShift, mPaint);
         mPaint.setShadowLayer(0, 0, 0, 0);
     }
     
@@ -902,10 +908,12 @@ public class DrawView extends View {
                         
                         Pair<Gesture, Gesture> gestures = splitGesture(gesture);
                         PointF subOrigin = mainButtonPosition(origin, gestures.first);
-                        
-                        mGestureFlashLocation = subButtonPosition(subOrigin, gestures.second);
-                        mGestureFlashTime = now;
-                        mGestureFlashText = toolNameForGesture(gesture);
+
+                        if (mGestureSelections.containsKey(gesture)) {
+                            mGestureFlashLocation = subButtonPosition(subOrigin, gestures.second);
+                            mGestureFlashTime = now;
+                            mGestureFlashSelection = mSelections[mGestureSelections.get(gesture)];
+                        }
                     } else {
                         mLog.event("Menu closed without selection: " + menuOpenMs + " ms");
                     }
