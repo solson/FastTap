@@ -469,7 +469,7 @@ public class DrawView extends View {
                     if (selection != null) {
                         RectF buttonBounds = getButtonBounds(selectionNum);
                         
-                        mPaint.setColor(0xBBF5F5F5);
+                        mPaint.setColor(0xCCE5E5E5);
                         canvas.drawRect(buttonBounds, mPaint);
                         
                         mPaint.setColor(0x44666666);
