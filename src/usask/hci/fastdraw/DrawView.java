@@ -404,7 +404,7 @@ public class DrawView extends View {
         if (mShowOverlay)
             canvas.drawARGB(0xAA, 0xFF, 0xFF, 0xFF);
         
-        if (mShowOverlay || mFlashTimes.size() > 0 || mInstantMenu)
+        if (mFingerInside != -1 || mFlashTimes.size() > 0)
             mPaint.setColor(0xEEEEEE99);
         else
             mPaint.setColor(0xEEFFFFAA);
