@@ -30,34 +30,30 @@ public class StudyController {
     private boolean mWaiting;
     private int mNumWaitDots;
     private boolean mHideTargets;
-    private final int mNumBlocks = 6;
+    private final int mNumBlocks = 10;
     
     public StudyController(StudyLogger logger) {
         mLog = logger;
 
         mTrials = new String[][] {
-            {"Paintbrush"}, {"Rectangle"},
-            {"Black"}, {"Red"},
-            {"Glowing"}, {"Blurred"},
-            {"Thin"}, {"Wide"},
+            {"Paintbrush"},
+            {"Rectangle"},
+            {"Black"},
+            {"Red"},
+            {"Glowing"},
+            {"Blurred"},
+            {"Thin"},
+            {"Wide"},
             
-            {"Glowing", "Rectangle"},
             {"Black", "Paintbrush"},
-            {"Thin", "Blurred"},
             {"Blurred", "Paintbrush"},
-            {"Red", "Rectangle"},
             {"Thin", "Red"},
-            {"Wide", "Glowing"},
             {"Wide", "Black"},
             
             {"Glowing", "Red", "Rectangle"},
-            {"Wide", "Black", "Paintbrush"},
             {"Thin", "Blurred", "Rectangle"},
-            {"Blurred", "Black", "Paintbrush"},
             {"Thin", "Red", "Rectangle"},
-            {"Thin", "Glowing", "Red"},
             {"Wide", "Glowing", "Paintbrush"},
-            {"Wide", "Blurred", "Black"}
         };
 
         mSelected = new HashSet<String>();
