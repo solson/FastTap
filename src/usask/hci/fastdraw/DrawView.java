@@ -1070,8 +1070,15 @@ public class DrawView extends View {
                 mCheckOverlay = false;
                 if (mShowOverlay) {
                     mShowOverlay = false;
+                    mFingerInside = -1;
                     long duration = System.nanoTime() - mOverlayStart;
                     mLog.event("Overlay automatically hidden at end of trial after " + duration / 1000000 + " ms");
+                }
+                
+                // Forcibly unpost the marking menu activation button overlay
+                if (mInstantMenu) {
+                    mInstantMenu = false;
+                    mFingerInside = -1;
                 }
                 
                 mMainActivity.getActionBar().setIcon(R.drawable.check);
