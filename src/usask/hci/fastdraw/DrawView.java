@@ -408,7 +408,7 @@ public class DrawView extends View {
             canvas.drawARGB(0xAA, 0xDD, 0xDD, 0xDD);
 
         if (mFingerInside != -1 || mFlashTimes.size() > 0)
-            mPaint.setColor(0xEEEEEE99);
+            mPaint.setColor(0xEEDDDD88);
         else
             mPaint.setColor(0xEEFFFFAA);
         
