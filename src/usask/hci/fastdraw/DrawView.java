@@ -405,7 +405,7 @@ public class DrawView extends View {
             canvas.drawARGB(0xAA, 0xFF, 0xFF, 0xFF);
         
         if (mUI == UI.GESTURE && mFingerInside != -1)
-            canvas.drawARGB(0xAA, 0xDD, 0xDD, 0xDD);
+            canvas.drawARGB(0xAA, 0xD4, 0xD4, 0xD4);
 
         if (mFingerInside != -1 || mFlashTimes.size() > 0)
             mPaint.setColor(0xEEDDDD88);
