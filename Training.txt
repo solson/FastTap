@@ -1,0 +1,58 @@
+Training
+========
+
+1. For each interface, demonstrate beginner mode and then expert mode as described below.
+2. Each time introduce the subject to every category and target in the interface and give them a chance to memorize it.
+3. Each time tell the subject to learn the layout of the item in beginner mode, but strongly 
+   encourage them to use expert mode as they learn to achieve greater speed.
+4. Each time explain that the canvas will be cleared and the overlay will be hidden after each trial.
+   Explain that the subject must lift their fingers and touch again to re-enable the overlay for the next trial.
+
+
+Chording Interface (Grid)
+-------------------------
+
+Beginner mode
+
+1. Demonstrate how holding the activation button brings up the overlay after a delay.
+2. Show how you can select targets by holding the button and tapping items in the overlay.
+3. Show that you can do this multiple times without closing the overlay.
+4. Let the subject try it for themself and ensure they are able to do all of the above. Repeat any step as necessary.
+
+Expert mode
+
+1. Demonstrate how a two-finger tap can be used to select a memorized target quickly.
+2. Show how you can do multiple two-finger taps in quick succession for rapid selection.
+3. Show how you can even use three fingers to quickly select 2 items.
+4. Let the subject try it for themself and ensure they are able to do all of the above. Repeat any step as necessary.
+
+
+Marking Menu Interface (Gestures)
+---------------------------------
+
+Beginner mode
+
+1. Demonstrate the touch-and-hold method of opening the marking menu.
+2. Show how you can explore the menu by dragging your finger around and hovering over the different categories.
+3. Show how to make a selection by placing your finger directly on a target and releasing.
+4. Show the alternative, faster method of opening the interface by holding the button and placing a second finger down.
+5. Note that the finger on the thumb can be lifted or not at subject's preference once the menu is open.
+6. Note that once the menu is open, it is otherwise identical to the touch-and-hold method.
+7. Let the subject try it for themself and ensure they are able to do all of the above. Repeat any step as necessary.
+
+Expert mode
+
+1. Demonstrate how you can select a memorized target quickly by opening the menu either of the two ways and making a quick gesture.
+2. Warn that you can only gesture right after opening the menu. If you explore first, you must select the novice way.
+3. Note that keeping the thumb on the button allows you to select multiple targets quickly with gestures.
+4. Let the subject try it for themself and ensure they are able to do all of the above. Repeat any step as necessary.
+
+
+Study
+-----
+
+1. Tell subject they will be doing 10 sets of trials and each trial will have 1, 2, or 3 targets. They must select all targets to complete the trial.
+2. Show user where targets will appear at the top of the screen.
+3. Tell user to ignore the current tool display on the activation button.
+4. Explain the popup breaks between each block.
+5. Explain that the subject will do one practice block before the 10 main blocks.
