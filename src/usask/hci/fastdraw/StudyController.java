@@ -30,7 +30,7 @@ public class StudyController {
     private boolean mWaiting;
     private int mNumWaitDots;
     private boolean mHideTargets;
-    private final int mNumBlocks = 10;
+    private final int mNumBlocks = 11;
     
     public StudyController(StudyLogger logger) {
         mLog = logger;
@@ -134,11 +134,11 @@ public class StudyController {
                 if (gesture) {
                     mLog.gestureTrial(now,  mBlockNum, mTrialNum, mTrials[mTrialIndex].length,
                             targetString.toString(), mNumErrors, mErrors.toString(),
-                            mTimesPainted, mUITime, now - mTrialStart);
+                            mTimesPainted, mUITime, now - mTrialStart, mBlockNum == 1);
                 } else {
                     mLog.chordTrial(now, mBlockNum, mTrialNum, mTrials[mTrialIndex].length,
                             targetString.toString(), mNumErrors, mErrors.toString(),
-                            mTimesPainted, mUITime, now - mTrialStart);
+                            mTimesPainted, mUITime, now - mTrialStart, mBlockNum == 1);
                 }
             }
             

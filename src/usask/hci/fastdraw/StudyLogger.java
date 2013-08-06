@@ -38,29 +38,29 @@ public class StudyLogger {
     // Log format:
     // sid, timestamp, ui type, block, trial, #targets, targets, #errors, errors, #times painted, time ui shown, duration of trial
     public void chordTrial(long timeNs, int blockNum, int trialNum, int numTargets, String targets, int numErrors,
-            String errors, int timesPainted, long uiTimeNs, long durationNs) {
+            String errors, int timesPainted, long uiTimeNs, long durationNs, boolean practice) {
         long durationMs = durationNs / 1000000;
         long timeMs = timeNs / 1000000;
         long uiTimeMs = uiTimeNs / 1000000;
         char s = columnSeparator;
         
-        log("ChordTrial", "s" + mSubjectId + s + timeMs + s + "chord" + s +
-                blockNum + s + trialNum + s + numTargets + s + targets + s + numErrors +
-                s + errors + s + timesPainted + s + uiTimeMs + s + durationMs);
+        log("ChordTrial", "s" + mSubjectId + s + timeMs + s + "chord" + s + blockNum + s +
+                trialNum + s + numTargets + s + targets + s + numErrors + s + errors + s +
+                timesPainted + s + uiTimeMs + s + durationMs + s + (practice ? "1" : "0"));
     }
     
     // Log format:
     // sid, timestamp, ui type, block, trial, #targets, targets, #errors, errors, #times painted, time ui shown, duration of trial
     public void gestureTrial(long timeNs, int blockNum, int trialNum, int numTargets, String targets, int numErrors,
-            String errors, int timesPainted, long uiTimeNs, long durationNs) {
+            String errors, int timesPainted, long uiTimeNs, long durationNs, boolean practice) {
         long durationMs = durationNs / 1000000;
         long timeMs = timeNs / 1000000;
         long uiTimeMs = uiTimeNs / 1000000;
         char s = columnSeparator;
 
-        log("GestureTrial", "s" + mSubjectId + s + timeMs + s + "gesture" + s +
-                blockNum + s + trialNum + s + numTargets + s + targets + s + numErrors + s +
-                errors + s + timesPainted + s + uiTimeMs + s + durationMs);
+        log("GestureTrial", "s" + mSubjectId + s + timeMs + s + "gesture" + s + blockNum + s +
+                trialNum + s + numTargets + s + targets + s + numErrors + s + errors + s +
+                timesPainted + s + uiTimeMs + s + durationMs + s + (practice ? "1" : "0"));
     }
 
     // Log format:
