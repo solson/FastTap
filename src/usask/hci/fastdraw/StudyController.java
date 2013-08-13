@@ -76,6 +76,7 @@ public class StudyController {
         } else if (mNumWaitDots == 3) {
             mWaiting = false;
             mNumWaitDots = 0;
+            mTrialStart = System.nanoTime();
             
             if (mHideTargets)
                 mHideTargets = false;
