@@ -894,13 +894,13 @@ public class DrawView extends View {
                         gesture = mGestureDetector.recognize();
                     }
 
-                    long menuOpenNs = now - mGestureMenuTime;
-                    long menuOpenMs = menuOpenNs / 1000000;
-                    
                     if (mStudyMode)
-                        mStudyCtl.addUITime(menuOpenNs);
+                        mStudyCtl.addUITime(mGestureMenuTime);
+
+                    long menuOpenMs = (now - mGestureMenuTime) / 1000000;
                     
                     if (mGestureSelections.containsKey(gesture)) {
+                        
                         if (gestureSelection)
                             mLog.event("Menu closed with gesture selection: " + menuOpenMs + " ms");
                         else
@@ -935,12 +935,8 @@ public class DrawView extends View {
                         long duration = now - mOverlayStart;
                         mLog.event("Overlay hidden after " + duration / 1000000 + " ms");
                         
-                        if (mStudyMode) {
-                            if (mOverlayStart > mStudyCtl.getTrialStart())
-                                mStudyCtl.addUITime(duration);
-                            else
-                                mStudyCtl.addUITime(now - mStudyCtl.getTrialStart());
-                        }
+                        if (mStudyMode)
+                            mStudyCtl.addUITime(mOverlayStart);
                     }
                 } else if (draw) {
                     if (event.getPointerCount() == 1 && mChanged) {
@@ -1049,14 +1045,8 @@ public class DrawView extends View {
             boolean wasLastTrial = mStudyCtl.isOnLastTrial();
             boolean wasLastBlock = mStudyCtl.isOnLastBlock();
             
-            if (mUI == UI.CHORD && mShowOverlay && wasLastTarget) {
-                long now = System.nanoTime();
-                
-                if (mOverlayStart > mStudyCtl.getTrialStart())
-                    mStudyCtl.addUITime(now - mOverlayStart);
-                else
-                    mStudyCtl.addUITime(now - mStudyCtl.getTrialStart());
-            }
+            if (mUI == UI.CHORD && mShowOverlay && wasLastTarget)
+                mStudyCtl.addUITime(mOverlayStart);
             
             boolean correctSelection = mStudyCtl.handleSelected(selection.name, gesture);
             

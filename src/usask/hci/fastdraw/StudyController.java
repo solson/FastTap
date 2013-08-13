@@ -155,9 +155,15 @@ public class StudyController {
         }
     }
     
-    public void addUITime(long duration) {
-        if (!mWaiting)
-            mUITime += duration;
+    public void addUITime(long startTimeNs) {
+        if (mWaiting)
+            return;
+        
+        if (startTimeNs < mTrialStart)
+            startTimeNs = mTrialStart;
+        
+        long duration = System.nanoTime() - startTimeNs;
+        mUITime += duration;
     }
     
     public CharSequence getPrompt() {
