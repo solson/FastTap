@@ -1,13 +1,10 @@
 package usask.hci.fastdraw;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import usask.hci.fastdraw.GestureDetector.Gesture;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -22,12 +19,10 @@ import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.util.Log;
-import android.util.Pair;
 import android.util.SparseArray;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.CheckBox;
-import android.widget.CompoundButton;
 import android.widget.NumberPicker;
 
 public class DrawView extends View {
@@ -49,7 +44,6 @@ public class DrawView extends View {
     private Set<Integer> mFingers;
     private Set<Integer> mIgnoredFingers;
     private Selection[] mSelections;
-    private HashMap<Gesture, Integer> mGestureSelections;
     private Tool mTool;
     private int mColor;
     private int mThickness;
@@ -66,34 +60,9 @@ public class DrawView extends View {
     private SparseArray<Long> mFlashTimes;
     private SparseArray<Long> mRecentTouches;
     private boolean mChanged;
-    private GestureDetector mGestureDetector;
-    private int mPossibleGestureFinger;
-    private long mPossibleGestureFingerTime;
-    private int mGestureFinger;
-    private long mGestureMenuTime;
-    private PointF mGestureFingerPos;
-    private boolean mInstantMenu;
-    private boolean mShowGestureMenu;
-    private Gesture mActiveCategory;
-    private PointF mActiveCategoryOrigin;
-    private Gesture mSubSelection;
-    private ArrayList<Gesture> mButtonDirections;
-    private HashMap<Gesture, String> mMainButtonNames;
-    private PointF mGestureFlashLocation;
-    private long mGestureFlashTime;
-    private Selection mGestureFlashSelection;
-    private UI mUI;
     private static final int mChordDelay = 1000 * 1000 * 200; // 200 ms in ns
     private static final int mFlashDelay = 1000 * 1000 * 500; // 500 ms in ns
-    private static final int mGestureMenuDelay = 1000 * 1000 * 200; // 200 ms in ns
     private static final int mOverlayButtonIndex = 16;
-    private static final int mGestureButtonDist = 150;
-    private static final int mGestureButtonSize = 75;
-    private static final int mGestureSubButtonSize = (int)(mGestureButtonSize * 0.70);
-    
-    private enum UI {
-        CHORD, GESTURE
-    }
     
     private enum Action {
         SAVE, CLEAR, UNDO
@@ -125,7 +94,6 @@ public class DrawView extends View {
             return;
         }
 
-        mUI = UI.CHORD;
         mMainActivity = (MainActivity) mainActivity;
         mLog = new StudyLogger(mainActivity);
         mBitmapPaint = new Paint(Paint.DITHER_FLAG);
@@ -145,14 +113,6 @@ public class DrawView extends View {
         mFlashTimes = new SparseArray<Long>();
         mRecentTouches = new SparseArray<Long>();
         mChanged = false;
-        mGestureDetector = new GestureDetector();
-        mGestureFinger = -1;
-        mPossibleGestureFinger = -1;
-        mInstantMenu = false;
-        mShowGestureMenu = false;
-        mActiveCategory = Gesture.UNKNOWN;
-        mActiveCategoryOrigin = new PointF();
-        mSubSelection = Gesture.UNKNOWN;
         
         mSelections = new Selection[] {
             new Selection(new PaintTool(this), "Paintbrush", R.drawable.paintbrush, SelectionType.TOOL),
@@ -181,44 +141,10 @@ public class DrawView extends View {
             new Selection(Action.UNDO, "Undo", R.drawable.undo, SelectionType.ACTION)
         };
         
-        mGestureSelections = new HashMap<Gesture, Integer>();
-        
-        mGestureSelections.put(Gesture.UP, 0);          // Paintbrush
-        mGestureSelections.put(Gesture.UP_RIGHT, 1);    // Line
-        mGestureSelections.put(Gesture.UP_DOWN, 2);     // Circle
-        mGestureSelections.put(Gesture.UP_LEFT, 3);     // Rectangle
-
-        mGestureSelections.put(Gesture.LEFT, 4);        // Black
-        mGestureSelections.put(Gesture.LEFT_RIGHT, 5);  // White
-        mGestureSelections.put(Gesture.LEFT_UP, 6);     // Red
-        mGestureSelections.put(Gesture.LEFT_DOWN, 7);   // Blue
-        
-        mGestureSelections.put(Gesture.RIGHT, 8);       // Plain
-        mGestureSelections.put(Gesture.RIGHT_DOWN, 9);  // Glowing
-        mGestureSelections.put(Gesture.RIGHT_LEFT, 10); // Blurred
-        mGestureSelections.put(Gesture.RIGHT_UP, 11);   // Dashed
-        
-        mGestureSelections.put(Gesture.DOWN_LEFT, 12);  // Fine
-        mGestureSelections.put(Gesture.DOWN_UP, 13);    // Thin
-        mGestureSelections.put(Gesture.DOWN, 14);       // Medium
-        mGestureSelections.put(Gesture.DOWN_RIGHT, 15); // Wide
-        
         // Default to thin black paintbrush
         changeSelection(0, false);
         changeSelection(4, false);
         changeSelection(13, false);
-        
-        mButtonDirections = new ArrayList<Gesture>();
-        mButtonDirections.add(Gesture.UP);
-        mButtonDirections.add(Gesture.LEFT);
-        mButtonDirections.add(Gesture.RIGHT);
-        mButtonDirections.add(Gesture.DOWN);
-        
-        mMainButtonNames = new HashMap<Gesture, String>();
-        mMainButtonNames.put(Gesture.UP, "Tools");
-        mMainButtonNames.put(Gesture.LEFT, "Colors");
-        mMainButtonNames.put(Gesture.RIGHT, "Effects");
-        mMainButtonNames.put(Gesture.DOWN, "Widths");
         
         Timer timer = new Timer();
         timer.schedule(new TimerTask() {
@@ -226,54 +152,29 @@ public class DrawView extends View {
             public void run() {
                 long now = System.nanoTime();
                 
-                if (mUI == UI.CHORD) {
-                    synchronized (mFlashTimes) {
-                        for (int i = 0; i < mFlashTimes.size(); i++) {
-                            long time = mFlashTimes.valueAt(i);
-                            if (now - time > mFlashDelay) {
-                                mFlashTimes.removeAt(i);
-                                postInvalidate();
-                            }
+                synchronized (mFlashTimes) {
+                    for (int i = 0; i < mFlashTimes.size(); i++) {
+                        long time = mFlashTimes.valueAt(i);
+                        if (now - time > mFlashDelay) {
+                            mFlashTimes.removeAt(i);
+                            postInvalidate();
                         }
                     }
-                    
-                    if (mFingerInside != -1 && now - mPressedInsideTime > mChordDelay && mCheckOverlay && !mShowOverlay) {
-                        mOverlayStart = now;
-                        mShowOverlay = true;
-                        mLog.event("Overlay shown");
-                        mTool.clearFingers();
-                        postInvalidate();
-                    }
-                } else if (mUI == UI.GESTURE) {
-                    if (now - mGestureFlashTime > mFlashDelay) {
-                        mGestureFlashLocation = null;
-                        postInvalidate();
-                    }
-                    
-                    if (mPossibleGestureFinger != -1 && now - mPossibleGestureFingerTime > mGestureMenuDelay && !mChanged) {
-                        mGestureFinger = mPossibleGestureFinger;
-                        mIgnoredFingers.add(mGestureFinger);
-                        mPossibleGestureFinger = -1;
-                        mShowGestureMenu = true;
-                        mGestureFlashLocation = null;
-                        mGestureMenuTime = now;
-                        postInvalidate();
-                    }
+                }
+                
+                if (mFingerInside != -1 && now - mPressedInsideTime > mChordDelay && mCheckOverlay && !mShowOverlay) {
+                    mOverlayStart = now;
+                    mShowOverlay = true;
+                    mLog.event("Overlay shown");
+                    mTool.clearFingers();
+                    postInvalidate();
                 }
             }
         }, 25, 25);
         
         View studySetupLayout = mMainActivity.getLayoutInflater().inflate(R.layout.study_setup, null);
-        final CheckBox gestureCheckBox = (CheckBox) studySetupLayout.findViewById(R.id.gesture_mode_checkbox);
         final CheckBox leftHandedCheckBox = (CheckBox) studySetupLayout.findViewById(R.id.left_handed_checkbox);
         final CheckBox permanentGridCheckBox = (CheckBox) studySetupLayout.findViewById(R.id.permanent_grid_checkbox);
-        
-        gestureCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                permanentGridCheckBox.setEnabled(!isChecked);
-            }
-        });
         
         final NumberPicker subjectIdPicker = (NumberPicker) studySetupLayout.findViewById(R.id.subject_id_picker);
         subjectIdPicker.setMinValue(0);
@@ -296,7 +197,6 @@ public class DrawView extends View {
                         .show();
                     
                     mLog.setSubjectId(subjectIdPicker.getValue());
-                    mUI = gestureCheckBox.isChecked() ? UI.GESTURE : UI.CHORD;
                     mLeftHanded = leftHandedCheckBox.isChecked();
                     mPermanentGrid = permanentGridCheckBox.isChecked();
                     DrawView.this.invalidate();
@@ -362,9 +262,6 @@ public class DrawView extends View {
         
         if (mShowOverlay)
             canvas.drawARGB(0xAA, 0xFF, 0xFF, 0xFF);
-        
-        if (mUI == UI.GESTURE && mFingerInside != -1)
-            canvas.drawARGB(0xAA, 0xD4, 0xD4, 0xD4);
 
         if (mFingerInside != -1 || mFlashTimes.size() > 0)
             mPaint.setColor(0xEEDDDD88);
@@ -373,7 +270,7 @@ public class DrawView extends View {
         
         canvas.drawRect(bounds, mPaint);
         
-        if (mUI == UI.CHORD && (mShowOverlay || mPermanentGrid || mFlashTimes.size() > 0)) {
+        if (mShowOverlay || mPermanentGrid || mFlashTimes.size() > 0) {
             mPaint.setColor(0x44666666);
 
             for (int i = 0; i < mRows; i++) {
@@ -420,42 +317,34 @@ public class DrawView extends View {
                 canvas.drawLine(bounds.right, bounds.top, bounds.right, bounds.bottom, mPaint);
         }
         
-        if (mUI == UI.CHORD) { 
-            synchronized (mFlashTimes) {
-                for (int i = 0; i < mFlashTimes.size(); i++) {
-                    int selectionNum = mFlashTimes.keyAt(i);
-                    Selection selection = mSelections[selectionNum];
-                    if (selection != null) {
-                        RectF buttonBounds = getButtonBounds(selectionNum);
-                        
-                        mPaint.setColor(0xCCE5E5E5);
-                        canvas.drawRect(buttonBounds, mPaint);
-                        
-                        mPaint.setColor(0x44666666);
-                        mPaint.setStyle(Style.STROKE);
-                        canvas.drawRect(buttonBounds, mPaint);
-                        mPaint.setStyle(Style.FILL);
-                        
-                        Bitmap icon = selection.icon;
-                        float iconWidth = icon.getWidth();
-                        float iconHeight = icon.getHeight();
-                        float centerX = buttonBounds.left + 0.5f * mColWidth;
-                        float centerY = buttonBounds.top + 0.5f * mRowHeight;
-                        
-                        mPaint.setColor(0xFF000000);
-                        String name = selection.name;
-                        int heightAdj = getTextHeight(name, mPaint) / 2;
-                        
-                        canvas.drawBitmap(icon, centerX - iconWidth / 2, centerY - iconHeight * 3 / 4, mPaint);
-                        canvas.drawText(name, centerX, centerY + iconHeight / 2 + heightAdj, mPaint);
-                    }
+        synchronized (mFlashTimes) {
+            for (int i = 0; i < mFlashTimes.size(); i++) {
+                int selectionNum = mFlashTimes.keyAt(i);
+                Selection selection = mSelections[selectionNum];
+                if (selection != null) {
+                    RectF buttonBounds = getButtonBounds(selectionNum);
+                    
+                    mPaint.setColor(0xCCE5E5E5);
+                    canvas.drawRect(buttonBounds, mPaint);
+                    
+                    mPaint.setColor(0x44666666);
+                    mPaint.setStyle(Style.STROKE);
+                    canvas.drawRect(buttonBounds, mPaint);
+                    mPaint.setStyle(Style.FILL);
+                    
+                    Bitmap icon = selection.icon;
+                    float iconWidth = icon.getWidth();
+                    float iconHeight = icon.getHeight();
+                    float centerX = buttonBounds.left + 0.5f * mColWidth;
+                    float centerY = buttonBounds.top + 0.5f * mRowHeight;
+                    
+                    mPaint.setColor(0xFF000000);
+                    String name = selection.name;
+                    int heightAdj = getTextHeight(name, mPaint) / 2;
+                    
+                    canvas.drawBitmap(icon, centerX - iconWidth / 2, centerY - iconHeight * 3 / 4, mPaint);
+                    canvas.drawText(name, centerX, centerY + iconHeight / 2 + heightAdj, mPaint);
                 }
-            }
-        } else if (mUI == UI.GESTURE) {
-            if (mGestureFlashLocation != null) {
-                mPaint.setTextSize(18);
-                drawGestureButton(canvas, mGestureFlashSelection.name, mGestureFlashSelection.icon, mGestureFlashLocation, mGestureSubButtonSize, mPaint, true, false);
-                mPaint.setTextSize(26);
             }
         }
         
@@ -467,231 +356,6 @@ public class DrawView extends View {
                 bounds.top + mRowHeight / 2 + getTextHeight(mColorName, mPaint) / 2, mPaint);
         canvas.drawText(mToolName, bounds.left + mColWidth / 2,
                 bounds.top + mRowHeight / 2 + getTextHeight(mToolName, mPaint) / 2 + 30, mPaint);
-        
-        if (mShowGestureMenu) {
-            PointF origin = mOrigins.get(mGestureFinger);
-            Gesture gesture = mGestureDetector.recognize();
-            
-            Pair<Gesture, Gesture> gestures = splitGesture(gesture);
-            Gesture mainGesture = gestures.first;
-            Gesture subGesture = gestures.second;
-
-            for (Gesture buttonDirection : mButtonDirections) {
-                PointF position = mainButtonPosition(origin, buttonDirection);
-                
-                if (isInCircle(mGestureFingerPos, position, mGestureButtonSize)) {
-                    mActiveCategoryOrigin = position;
-                    mActiveCategory = buttonDirection;
-                    break;
-                }
-            }
-            
-            boolean greyoutInactive = mActiveCategory != Gesture.UNKNOWN;
-            
-            mPaint.setTextSize(22);
-
-            for (Gesture buttonDirection : mButtonDirections) {
-                PointF position = mainButtonPosition(origin, buttonDirection);
-                boolean active = mActiveCategory == buttonDirection;
-                String name = mMainButtonNames.get(buttonDirection);
-                
-                drawGestureButton(canvas, name, null, position, mGestureButtonSize, mPaint, active, greyoutInactive);
-            }
-            
-            mPaint.setTextSize(18);
-            mSubSelection = Gesture.UNKNOWN;
-
-            for (Gesture buttonDirection : mButtonDirections) {
-                PointF position = subButtonPosition(mActiveCategoryOrigin, buttonDirection);
-                
-                if (isInCircle(mGestureFingerPos, position, mGestureSubButtonSize)) {
-                    mSubSelection = buttonDirection;
-                    break;
-                }
-            }
-            
-            if (mSubSelection == Gesture.UNKNOWN && mainGesture == mActiveCategory)
-                mSubSelection = subGesture;
-            
-            if (mActiveCategory != Gesture.UNKNOWN) {
-                for (Gesture buttonDirection : mButtonDirections) {
-                    PointF position = subButtonPosition(mActiveCategoryOrigin, buttonDirection);
-                    boolean active = mSubSelection == buttonDirection;
-                    Selection selection = mSelections[mGestureSelections.get(combineGestures(mActiveCategory, buttonDirection))];
-                    
-                    drawGestureButton(canvas, selection.name, selection.icon, position, mGestureSubButtonSize, mPaint, active, false);
-                }
-            }
-            
-            mPaint.setTextSize(26);
-        }
-    }
-    
-    private PointF mainButtonPosition(PointF origin, Gesture gesture) {
-        switch (gesture) {
-            case UP:
-                return new PointF(origin.x, origin.y - mGestureButtonDist);
-                
-            case LEFT:
-                return new PointF(origin.x - mGestureButtonDist, origin.y);
-                
-            case RIGHT:
-                return new PointF(origin.x + mGestureButtonDist, origin.y);
-                
-            case DOWN:
-                return new PointF(origin.x, origin.y + mGestureButtonDist);
-                
-            default:
-                throw new IllegalArgumentException("Main button gesture must be up, left, right, or down.");
-        }
-    }
-    
-    private PointF subButtonPosition(PointF subOrigin, Gesture gesture) {
-        int dist = mGestureButtonSize + mGestureSubButtonSize;
-        
-        switch (gesture) {
-            case UP:
-                return new PointF(subOrigin.x, subOrigin.y - dist);
-                
-            case LEFT:
-                return new PointF(subOrigin.x - dist, subOrigin.y);
-                
-            case RIGHT:
-                return new PointF(subOrigin.x + dist, subOrigin.y);
-                
-            case DOWN:
-                return new PointF(subOrigin.x, subOrigin.y + dist);
-                
-            default:
-                throw new IllegalArgumentException("Sub-button gesture must be up, left, right, or down.");
-        }
-    }
-    
-    private Gesture combineGestures(Gesture mainGesture, Gesture subGesture) {
-        switch (mainGesture) {
-        case UP:
-            switch (subGesture) {
-                case UP: return Gesture.UP;
-                case LEFT: return Gesture.UP_LEFT;
-                case RIGHT: return Gesture.UP_RIGHT; 
-                case DOWN: return Gesture.UP_DOWN; 
-                default: break;
-            }
-            break;
-            
-        case LEFT:
-            switch (subGesture) {
-                case UP: return Gesture.LEFT_UP;
-                case LEFT: return Gesture.LEFT;
-                case RIGHT: return Gesture.LEFT_RIGHT;
-                case DOWN: return Gesture.LEFT_DOWN;
-                default: break;
-            }
-            break;
-    
-        case RIGHT:
-            switch (subGesture) {
-                case UP: return Gesture.RIGHT_UP;
-                case LEFT: return Gesture.RIGHT_LEFT;
-                case RIGHT: return Gesture.RIGHT;
-                case DOWN: return Gesture.RIGHT_DOWN;
-                default: break;
-            }
-            break;
-    
-        case DOWN:
-            switch (subGesture) {
-                case UP: return Gesture.DOWN_UP;
-                case LEFT: return Gesture.DOWN_LEFT;
-                case RIGHT: return Gesture.DOWN_RIGHT;
-                case DOWN: return Gesture.DOWN;
-                default: break;
-            }
-            break;
-            
-        default:
-            break;
-        }
-        
-        return Gesture.UNKNOWN;
-    }
-    
-    private Pair<Gesture, Gesture> splitGesture(Gesture gesture) {
-        Gesture mainGesture = Gesture.UNKNOWN;
-        Gesture subGesture = Gesture.UNKNOWN;
-
-        if (gesture != Gesture.UNKNOWN) {
-            switch (gesture) {
-                case UP: mainGesture = Gesture.UP; subGesture = Gesture.UP; break;
-                case UP_LEFT: mainGesture = Gesture.UP; subGesture = Gesture.LEFT; break;
-                case UP_RIGHT: mainGesture = Gesture.UP; subGesture = Gesture.RIGHT; break;
-                case UP_DOWN: mainGesture = Gesture.UP; subGesture = Gesture.DOWN; break;
-                
-                case LEFT: mainGesture = Gesture.LEFT; subGesture = Gesture.LEFT; break;
-                case LEFT_RIGHT: mainGesture = Gesture.LEFT; subGesture = Gesture.RIGHT; break;
-                case LEFT_UP: mainGesture = Gesture.LEFT; subGesture = Gesture.UP; break;
-                case LEFT_DOWN: mainGesture = Gesture.LEFT; subGesture = Gesture.DOWN; break;
-                
-                case RIGHT: mainGesture = Gesture.RIGHT; subGesture = Gesture.RIGHT; break;
-                case RIGHT_LEFT: mainGesture = Gesture.RIGHT; subGesture = Gesture.LEFT; break;
-                case RIGHT_UP: mainGesture = Gesture.RIGHT; subGesture = Gesture.UP; break;
-                case RIGHT_DOWN: mainGesture = Gesture.RIGHT; subGesture = Gesture.DOWN; break;
-                
-                case DOWN: mainGesture = Gesture.DOWN; subGesture = Gesture.DOWN; break;
-                case DOWN_LEFT: mainGesture = Gesture.DOWN; subGesture = Gesture.LEFT; break;
-                case DOWN_RIGHT: mainGesture = Gesture.DOWN; subGesture = Gesture.RIGHT; break;
-                case DOWN_UP: mainGesture = Gesture.DOWN; subGesture = Gesture.UP; break;
-                
-                default:
-                    break;
-            }
-        }
-        
-        return new Pair<Gesture, Gesture>(mainGesture, subGesture);
-    }
-    
-    private boolean isInCircle(PointF point, PointF center, float radius) {
-        float dx = point.x - center.x;
-        float dy = point.y - center.y;
-        double distance = Math.sqrt(dx*dx + dy*dy);
-        
-        return distance < radius;
-    }
-    
-    private void drawGestureButton(Canvas canvas, String text, Bitmap icon, PointF position, int size, Paint paint, boolean highlight, boolean greyout) {
-        paint.getTextBounds(text, 0, text.length(), mTextBounds);
-        
-        if (highlight)
-            mPaint.setColor(0xFFAAAAAA);
-        else if (greyout)
-            mPaint.setColor(0xFFDDDDDD);
-        else
-            mPaint.setColor(0xFFCCCCCC);
-        
-        canvas.drawCircle(position.x, position.y, size, paint);
-
-        final float verticalShift;
-        
-        if (icon != null) {
-            final int iconSize = (int)(size * 0.9);
-            verticalShift = size * 0.3f;
-            
-            Bitmap scaledIcon = Bitmap.createScaledBitmap(icon, iconSize, iconSize, true);
-            
-            canvas.drawBitmap(scaledIcon, position.x - iconSize / 2, position.y - iconSize / 2 - verticalShift, mPaint);
-        } else {
-            verticalShift = 0;
-        }
-
-        if (greyout && !highlight) {
-            mPaint.setColor(0xEE777777);
-        } else {
-            mPaint.setColor(0xEE000000);
-            mPaint.setShadowLayer(2, 1, 1, 0x33000000);
-        }
-
-        canvas.drawText(text, position.x, position.y + mTextBounds.height() / 2 + verticalShift, mPaint);
-        mPaint.setShadowLayer(0, 0, 0, 0);
     }
     
     private int getTextHeight(String text, Paint paint) {
@@ -714,67 +378,39 @@ public class DrawView extends View {
                 
                 mFingers.add(id);
                 
-                if (mUI == UI.CHORD) { 
-                    if (event.getPointerCount() == 1)
-                        mCheckOverlay = true;
+                if (event.getPointerCount() == 1)
+                    mCheckOverlay = true;
+                
+                if (getOverlayButtonBounds().contains(x, y)) {
+                    mFingerInside = id;
+                    mPressedInsideTime = now;
+                    mIgnoredFingers.add(mFingerInside);
+                } else {
+                    int col = (int) (x / mColWidth);
+                    int row = (int) (y / mRowHeight);
                     
-                    if (getOverlayButtonBounds().contains(x, y)) {
-                        mFingerInside = id;
-                        mPressedInsideTime = now;
-                        mIgnoredFingers.add(mFingerInside);
-                    } else {
-                        int col = (int) (x / mColWidth);
-                        int row = (int) (y / mRowHeight);
-                        
-                        if (mLeftHanded)
-                            col = mCols - col - 1;
-                        
-                        mSelected = row * mCols + col;
-                        mRecentTouches.put(mSelected, now);
-                    }
+                    if (mLeftHanded)
+                        col = mCols - col - 1;
                     
-                    for (int i = 0; i < mRecentTouches.size(); i++) {
-                        int selection = mRecentTouches.keyAt(i);
-                        long time = mRecentTouches.valueAt(i);
-                        
-                        if ((now - time < mChordDelay && now - mPressedInsideTime < mChordDelay) || mShowOverlay) {
-                            changeSelection(selection);
-                            mRecentTouches.removeAt(i);
-                            i--;
-                        } else if (now - time > mChordDelay) {
-                            mRecentTouches.removeAt(i);
-                            i--;
-                        }
-                    }
-                } else if (mUI == UI.GESTURE) {
-                    if (mInstantMenu && !getOverlayButtonBounds().contains(x, y) && !mShowGestureMenu) {
-                        mGestureFinger = id;
-                        mGestureMenuTime = now;
-                        mShowGestureMenu = true;
-                        mGestureFlashLocation = null;
-                        mIgnoredFingers.add(id);
-                        mGestureFingerPos = new PointF(x, y);
-                        mOrigins.put(id, mGestureFingerPos);
-                        mGestureDetector.clear();
-                    } else if (event.getPointerCount() == 1) {
-                        mGestureDetector.clear();
-                        
-                        if (getOverlayButtonBounds().contains(x, y)) {
-                            mIgnoredFingers.add(id);
-                            mInstantMenu = true;
-                            mFingerInside = id;
-                        } else {
-                            mPossibleGestureFinger = id;
-                            mGestureFingerPos = new PointF(x, y);
-                            mPossibleGestureFingerTime = now;
-                        }
-                    }
-                    
-                    if (mShowGestureMenu)
-                        mIgnoredFingers.add(id);
+                    mSelected = row * mCols + col;
+                    mRecentTouches.put(mSelected, now);
                 }
                 
-                if (!mShowOverlay && !mShowGestureMenu) {
+                for (int i = 0; i < mRecentTouches.size(); i++) {
+                    int selection = mRecentTouches.keyAt(i);
+                    long time = mRecentTouches.valueAt(i);
+                    
+                    if ((now - time < mChordDelay && now - mPressedInsideTime < mChordDelay) || mShowOverlay) {
+                        changeSelection(selection);
+                        mRecentTouches.removeAt(i);
+                        i--;
+                    } else if (now - time > mChordDelay) {
+                        mRecentTouches.removeAt(i);
+                        i--;
+                    }
+                }
+                
+                if (!mShowOverlay) {
                     mOrigins.put(id, new PointF(x, y));
                     mTool.touchStart(id, x, y);
                 }
@@ -790,11 +426,6 @@ public class DrawView extends View {
                     int fingerId = event.getPointerId(i);
                     float x2 = event.getX(i);
                     float y2 = event.getY(i);
-                    
-                    if (fingerId == mGestureFinger && !mGestureFingerPos.equals(x2, y2)) {
-                        mGestureFingerPos = new PointF(x2, y2);
-                        mGestureDetector.addPoint(x2, y2);
-                    }
                     
                     if(mIgnoredFingers.contains(fingerId))
                         continue;
@@ -828,57 +459,14 @@ public class DrawView extends View {
             case MotionEvent.ACTION_POINTER_UP:
                 mLog.event("Touch up: " + id);
 
-                PointF origin = mOrigins.get(id);
                 mOrigins.delete(id);
                 mFingers.remove(id);
 
                 if (id == mFingerInside) {
-                    mInstantMenu = false;
                     mFingerInside = -1;
                 }
-                
-                if (id == mPossibleGestureFinger)
-                    mPossibleGestureFinger = -1;
 
                 boolean draw = true;
-                
-                if (id == mGestureFinger) {
-                    mGestureFinger = -1;
-                    mShowGestureMenu = false;
-                    boolean gestureSelection = false;
-                    Gesture gesture = combineGestures(mActiveCategory, mSubSelection);
-                    
-                    if (gesture == Gesture.UNKNOWN) {
-                        gestureSelection = true;
-                        gesture = mGestureDetector.recognize();
-                    }
-
-                    long menuOpenMs = (now - mGestureMenuTime) / 1000000;
-                    
-                    if (mGestureSelections.containsKey(gesture)) {
-                        
-                        if (gestureSelection)
-                            mLog.event("Menu closed with gesture selection: " + menuOpenMs + " ms");
-                        else
-                            mLog.event("Menu closed with exact selection: " + menuOpenMs + " ms");
-                        
-                        changeSelection(mGestureSelections.get(gesture));
-                        
-                        Pair<Gesture, Gesture> gestures = splitGesture(gesture);
-                        PointF subOrigin = mainButtonPosition(origin, gestures.first);
-
-                        if (mGestureSelections.containsKey(gesture)) {
-                            mGestureFlashLocation = subButtonPosition(subOrigin, gestures.second);
-                            mGestureFlashTime = now;
-                            mGestureFlashSelection = mSelections[mGestureSelections.get(gesture)];
-                        }
-                    } else {
-                        mLog.event("Menu closed without selection: " + menuOpenMs + " ms");
-                    }
-
-                    mActiveCategory = Gesture.UNKNOWN;
-                    draw = false;
-                }
                 
                 if (mIgnoredFingers.contains(id)) {
                     mIgnoredFingers.remove(id);
@@ -929,10 +517,8 @@ public class DrawView extends View {
             return;
         
         if (fromUser) {
-            if (mUI == UI.CHORD) {
-                synchronized (mFlashTimes) {
-                    mFlashTimes.put(selected, System.nanoTime());
-                }
+            synchronized (mFlashTimes) {
+                mFlashTimes.put(selected, System.nanoTime());
             }
             
             invalidate();

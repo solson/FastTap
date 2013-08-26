@@ -26,13 +26,6 @@
 				    android:layout_marginRight="5dp" />
 		    </TableRow>
 		</TableLayout>
-	    
-	    <CheckBox
-	        android:id="@+id/gesture_mode_checkbox"
-	        android:text="Use the gesture interface"
-	        android:checked="false"
-		    android:layout_width="fill_parent"
-		    android:layout_height="wrap_content" />
         
         <CheckBox
             android:id="@+id/left_handed_checkbox"
