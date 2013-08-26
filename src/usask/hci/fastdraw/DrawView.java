@@ -21,7 +21,6 @@ import android.graphics.Paint.Style;
 import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.RectF;
-import android.os.Handler;
 import android.util.Log;
 import android.util.Pair;
 import android.util.SparseArray;
@@ -34,8 +33,6 @@ import android.widget.NumberPicker;
 public class DrawView extends View {
     private MainActivity mMainActivity;
     private StudyLogger mLog;
-    private StudyController mStudyCtl;
-    private boolean mStudyMode;
     private Bitmap mBitmap;
     private Paint mBitmapPaint;
     private final int mCols = 4;
@@ -86,12 +83,9 @@ public class DrawView extends View {
     private long mGestureFlashTime;
     private Selection mGestureFlashSelection;
     private UI mUI;
-    private final Handler mHandler = new Handler();
     private static final int mChordDelay = 1000 * 1000 * 200; // 200 ms in ns
     private static final int mFlashDelay = 1000 * 1000 * 500; // 500 ms in ns
     private static final int mGestureMenuDelay = 1000 * 1000 * 200; // 200 ms in ns
-    private static final int mTrialDelay = 500; // 500 ms
-    private static final int mBlockDelay = 1000; // 1 sec
     private static final int mOverlayButtonIndex = 16;
     private static final int mGestureButtonDist = 150;
     private static final int mGestureButtonSize = 75;
@@ -133,9 +127,7 @@ public class DrawView extends View {
 
         mUI = UI.CHORD;
         mMainActivity = (MainActivity) mainActivity;
-        mStudyMode = false;
         mLog = new StudyLogger(mainActivity);
-        mStudyCtl = new StudyController(mLog);
         mBitmapPaint = new Paint(Paint.DITHER_FLAG);
         mPaint = new Paint();
         mPaint.setTextSize(26);
@@ -272,7 +264,6 @@ public class DrawView extends View {
         }, 25, 25);
         
         View studySetupLayout = mMainActivity.getLayoutInflater().inflate(R.layout.study_setup, null);
-        final CheckBox studyCheckBox = (CheckBox) studySetupLayout.findViewById(R.id.study_mode_checkbox);
         final CheckBox gestureCheckBox = (CheckBox) studySetupLayout.findViewById(R.id.gesture_mode_checkbox);
         final CheckBox leftHandedCheckBox = (CheckBox) studySetupLayout.findViewById(R.id.left_handed_checkbox);
         final CheckBox permanentGridCheckBox = (CheckBox) studySetupLayout.findViewById(R.id.permanent_grid_checkbox);
@@ -288,24 +279,21 @@ public class DrawView extends View {
         subjectIdPicker.setMinValue(0);
         subjectIdPicker.setMaxValue(99);
         subjectIdPicker.setDescendantFocusability(NumberPicker.FOCUS_BLOCK_DESCENDANTS); // Remove the virtual keyboard
-        
-        final NumberPicker blockNumPicker = (NumberPicker) studySetupLayout.findViewById(R.id.block_num_picker);
-        blockNumPicker.setMinValue(1);
-        blockNumPicker.setMaxValue(mStudyCtl.getNumBlocks());
-        blockNumPicker.setDescendantFocusability(NumberPicker.FOCUS_BLOCK_DESCENDANTS); // Remove the virtual keyboard
 
         new AlertDialog.Builder(mainActivity)
             .setMessage(R.string.dialog_study_mode)
             .setCancelable(false)
             .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int which) {
-                    mStudyMode = studyCheckBox.isChecked();
-                    
-                    if (mStudyMode) {
-                        mStudyCtl.setBlockNum(blockNumPicker.getValue());
-                        mMainActivity.setTitle("Your targets will appear here.");
-                        pauseStudy("Press OK when you are ready to begin.");
-                    }
+                    new AlertDialog.Builder(mMainActivity)
+                        .setMessage("Press OK when you are ready to begin.")
+                        .setCancelable(false)
+                        .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                                mLog.event("New session started");
+                            }
+                        })
+                        .show();
                     
                     mLog.setSubjectId(subjectIdPicker.getValue());
                     mUI = gestureCheckBox.isChecked() ? UI.GESTURE : UI.CHORD;
@@ -318,31 +306,6 @@ public class DrawView extends View {
             .show();
 
         mMainActivity.getActionBar().setIcon(R.drawable.trans);
-    }
-    
-    public void pauseStudy(String message) {
-        new AlertDialog.Builder(mMainActivity)
-            .setMessage(message)
-            .setCancelable(false)
-            .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int which) {
-                    Runnable waitStep = new Runnable() {
-                        @Override
-                        public void run() {
-                            mStudyCtl.waitStep(false);
-                            mMainActivity.setTitle(mStudyCtl.getPrompt());
-                        }
-                    };
-                    
-                    mStudyCtl.hideTargets();
-                    waitStep.run();
-                    mHandler.postDelayed(waitStep, mBlockDelay / 4);
-                    mHandler.postDelayed(waitStep, mBlockDelay / 2);
-                    mHandler.postDelayed(waitStep, mBlockDelay * 3 / 4);
-                    mHandler.postDelayed(waitStep, mBlockDelay);
-                }
-            })
-            .show();
     }
     
     public void alert(String message) {
@@ -890,9 +853,6 @@ public class DrawView extends View {
                         gesture = mGestureDetector.recognize();
                     }
 
-                    if (mStudyMode)
-                        mStudyCtl.addUITime(mGestureMenuTime);
-
                     long menuOpenMs = (now - mGestureMenuTime) / 1000000;
                     
                     if (mGestureSelections.containsKey(gesture)) {
@@ -930,13 +890,9 @@ public class DrawView extends View {
                         mShowOverlay = false;
                         long duration = now - mOverlayStart;
                         mLog.event("Overlay hidden after " + duration / 1000000 + " ms");
-                        
-                        if (mStudyMode)
-                            mStudyCtl.addUITime(mOverlayStart);
                     }
                 } else if (draw) {
                     if (event.getPointerCount() == 1 && mChanged) {
-                        mStudyCtl.incrementTimesPainted();
                         mUndo = mNextUndo;
                     }
                     
@@ -1030,81 +986,6 @@ public class DrawView extends View {
                         break;
                 }
                 break;
-        }
-        
-        if (fromUser && mStudyMode && !mStudyCtl.isFinished()) {
-            boolean gesture = mUI == UI.GESTURE;
-            boolean wasLastTarget = mStudyCtl.isOnLastTarget();
-            boolean wasLastTrial = mStudyCtl.isOnLastTrial();
-            boolean wasLastBlock = mStudyCtl.isOnLastBlock();
-            
-            if (mUI == UI.CHORD && mShowOverlay && wasLastTarget)
-                mStudyCtl.addUITime(mOverlayStart);
-            
-            boolean correctSelection = mStudyCtl.handleSelected(selection.name, gesture);
-            
-            if (correctSelection && wasLastTarget) {
-                // Clear screen and undo history
-                Canvas canvas = new Canvas(mBitmap);
-                canvas.drawRGB(0xFF, 0xFF, 0xFF);
-                mUndo = mBitmap.copy(mBitmap.getConfig(), true);
-                
-                // Forcibly unpost the command map overlay
-                mCheckOverlay = false;
-                if (mShowOverlay) {
-                    mShowOverlay = false;
-                    mFingerInside = -1;
-                    long duration = System.nanoTime() - mOverlayStart;
-                    mLog.event("Overlay automatically hidden at end of trial after " + duration / 1000000 + " ms");
-                }
-                
-                // Forcibly unpost the marking menu activation button overlay
-                if (mInstantMenu) {
-                    mInstantMenu = false;
-                    mFingerInside = -1;
-                }
-                
-                mMainActivity.getActionBar().setIcon(R.drawable.check);
-                
-                if (wasLastTrial) {
-                    if (wasLastBlock) {
-                        mStudyCtl.finish();
-                        mMainActivity.getActionBar().setIcon(R.drawable.trans);
-                        mMainActivity.setTitle(mStudyCtl.getPrompt());
-                        alert("You are finished!\n\nThank you for participating!");
-                    } else {
-                        mMainActivity.setTitle(mStudyCtl.getPrompt());
-                        mStudyCtl.nextTrial();
-                        pauseStudy("Press OK when you are ready to continue.");
-                    }
-                } else {
-                    Runnable waitStep = new Runnable() {
-                        @Override
-                        public void run() {
-                            mStudyCtl.waitStep(true);
-                            mMainActivity.setTitle(mStudyCtl.getPrompt());
-                        }
-                    };
-                    
-                    waitStep.run();
-                    mHandler.postDelayed(waitStep, mTrialDelay / 4);
-                    mHandler.postDelayed(waitStep, mTrialDelay / 2);
-                    mHandler.postDelayed(waitStep, mTrialDelay * 3 / 4);
-                    mHandler.postDelayed(waitStep, mTrialDelay);
-    
-                    mHandler.postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            mMainActivity.getActionBar().setIcon(R.drawable.trans);
-                        }
-                    }, mTrialDelay);
-                }
-            } else if (!correctSelection) {
-                mMainActivity.getActionBar().setIcon(R.drawable.x);
-            } else {
-                mMainActivity.getActionBar().setIcon(R.drawable.trans);
-                mMainActivity.setTitle(mStudyCtl.getPrompt());
-            }
         }
     }
 }
