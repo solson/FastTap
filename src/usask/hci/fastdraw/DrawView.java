@@ -440,6 +440,7 @@ public class DrawView extends View {
                         if (dist > mThreshold) {
                             mOrigins.delete(fingerId);
                             origin = null;
+                            mLog.event("Started using tool: " + mThicknessName + " " + mColorName + " " + mToolName + ", " + fingerId);
                         }
                     }
                     
@@ -483,8 +484,9 @@ public class DrawView extends View {
                     if (event.getPointerCount() == 1 && mChanged) {
                         mUndo = mNextUndo;
                     }
-                    
+
                     mTool.touchStop(id, x, y, new Canvas(mBitmap));
+                    mLog.event("Finished using tool: " + mThicknessName + " " + mColorName + " " + mToolName + ", " + id);
                 }
 
                 if (event.getPointerCount() == 1)
