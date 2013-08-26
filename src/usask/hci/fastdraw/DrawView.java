@@ -104,13 +104,9 @@ public class DrawView extends View {
     private enum Action {
         SAVE, CLEAR, UNDO
     }
-    
-    private enum Effect {
-        NO_EFFECT, GLOWING, BLURRED, DASHED
-    }
 
     private enum SelectionType {
-        TOOL, COLOR, THICKNESS, ACTION, EFFECT
+        TOOL, COLOR, THICKNESS, ACTION
     }
     
     private class Selection {
@@ -173,14 +169,14 @@ public class DrawView extends View {
             new Selection(new RectangleTool(this), "Rectangle", R.drawable.rectangle, SelectionType.TOOL),
             
             new Selection(Color.BLACK, "Black", R.drawable.black, SelectionType.COLOR),
-            new Selection(Color.WHITE, "White", R.drawable.white, SelectionType.COLOR),
             new Selection(Color.RED, "Red", R.drawable.red, SelectionType.COLOR),
+            new Selection(Color.GREEN, "Green", R.drawable.green, SelectionType.COLOR),
             new Selection(Color.BLUE, "Blue", R.drawable.blue, SelectionType.COLOR),
             
-            new Selection(Effect.NO_EFFECT, "No Effect", R.drawable.no_effect, SelectionType.EFFECT),
-            new Selection(Effect.GLOWING, "Glowing", R.drawable.glowing, SelectionType.EFFECT),
-            new Selection(Effect.BLURRED, "Blurred", R.drawable.blurred, SelectionType.EFFECT),
-            new Selection(Effect.DASHED, "Dashed", R.drawable.dashed, SelectionType.EFFECT),
+            new Selection(Color.WHITE, "White", R.drawable.white, SelectionType.COLOR),
+            new Selection(Color.YELLOW, "Yellow", R.drawable.yellow, SelectionType.COLOR),
+            new Selection(Color.CYAN, "Cyan", R.drawable.cyan, SelectionType.COLOR),
+            new Selection(Color.MAGENTA, "Magenta", R.drawable.magenta, SelectionType.COLOR),
 
             new Selection(1, "Fine", R.drawable.fine, SelectionType.THICKNESS),
             new Selection(6, "Thin", R.drawable.thin, SelectionType.THICKNESS),
@@ -1033,9 +1029,6 @@ public class DrawView extends View {
                         }
                         break;
                 }
-                break;
-               
-            case EFFECT:
                 break;
         }
         
