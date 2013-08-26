@@ -29,6 +29,7 @@ public class DrawView extends View {
     private MainActivity mMainActivity;
     private StudyLogger mLog;
     private Bitmap mBitmap;
+    private Object mBitmapLock;
     private Paint mBitmapPaint;
     private final int mCols = 4;
     private final int mRows = 5;
@@ -96,6 +97,7 @@ public class DrawView extends View {
 
         mMainActivity = (MainActivity) mainActivity;
         mLog = new StudyLogger(mainActivity);
+        mBitmapLock = new Object();
         mBitmapPaint = new Paint(Paint.DITHER_FLAG);
         mPaint = new Paint();
         mPaint.setTextSize(26);
@@ -227,9 +229,13 @@ public class DrawView extends View {
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
-        mBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
-        Canvas canvas = new Canvas(mBitmap);
-        canvas.drawRGB(0xFF, 0xFF, 0xFF);
+
+        synchronized (mBitmapLock) {
+            mBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
+            Canvas canvas = new Canvas(mBitmap);
+            canvas.drawRGB(0xFF, 0xFF, 0xFF);
+        }
+        
         mColWidth = (float)w / mCols;
         mRowHeight = (float)h / mRows;
     }
@@ -485,7 +491,10 @@ public class DrawView extends View {
                         mUndo = mNextUndo;
                     }
 
-                    mTool.touchStop(id, x, y, new Canvas(mBitmap));
+                    synchronized (mBitmapLock) {
+                        mTool.touchStop(id, x, y, new Canvas(mBitmap));
+                    }
+                    
                     mLog.event("Finished using tool: " + mThicknessName + " " + mColorName + " " + mToolName + ", " + id);
                 }
 
@@ -548,19 +557,30 @@ public class DrawView extends View {
             case ACTION:
                 switch ((Action) selection.object) {
                     case SAVE:
+                        new Thread() {
+                            public void run() {
+                                synchronized (mBitmapLock) {
+                                    mLog.savePicture(mBitmap);
+                                }
+                            }
+                        }.start();
                         break;
                 
                     case CLEAR:
-                        mUndo = mBitmap.copy(mBitmap.getConfig(), true);
-                        Canvas canvas = new Canvas(mBitmap);
-                        canvas.drawRGB(0xFF, 0xFF, 0xFF);
+                        synchronized (mBitmapLock) {
+                            mUndo = mBitmap.copy(mBitmap.getConfig(), true);
+                            Canvas canvas = new Canvas(mBitmap);
+                            canvas.drawRGB(0xFF, 0xFF, 0xFF);
+                        }
                         break;
                         
                     case UNDO:
-                        if (mUndo != null) {
-                            Bitmap temp = mBitmap;
-                            mBitmap = mUndo;
-                            mUndo = temp;
+                        synchronized (mBitmapLock) {
+                            if (mUndo != null) {
+                                Bitmap temp = mBitmap;
+                                mBitmap = mUndo;
+                                mUndo = temp;
+                            }
                         }
                         break;
                 }

@@ -14,6 +14,7 @@ import java.util.Locale;
 
 import android.app.AlertDialog;
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.os.Environment;
 import android.util.Log;
 
@@ -39,6 +40,24 @@ public class StudyLogger {
     public void event(String message) {
         long timeMs = System.nanoTime() / 1000000;
         log("Event", mSubjectId + "," + timeMs + "," + message);
+    }
+    
+    public void savePicture(Bitmap bmp) {
+        event("Saved picture");
+
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy.MM.dd HH.mm.ss", Locale.US);
+        File dir = new File(mLogDir, mSubjectId + " - " + formatter.format(mStart));
+        dir.mkdirs();
+        
+        formatter = new SimpleDateFormat("yyyy.MM.dd HH.mm.ss", Locale.US);
+        File file = new File(dir, mSubjectId + " - " + formatter.format(new Date()) + ".png");
+        
+        try {
+            FileOutputStream out = new FileOutputStream(file);
+            bmp.compress(Bitmap.CompressFormat.PNG, 90, out);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private void log(String type, String message) {
