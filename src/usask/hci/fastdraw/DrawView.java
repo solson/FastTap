@@ -524,35 +524,26 @@ public class DrawView extends View {
             invalidate();
         }
         
+        if (fromUser)
+            mLog.event("Target selected: " + selectionTypeName(selection.type) + " / " + selection.name);
+        
         switch (selection.type) {
             case TOOL:
-                if (fromUser)
-                    mLog.event("Tool selected: " + selection.name);
-                
                 mTool = (Tool) selection.object;
                 mToolName = selection.name;
                 break;
                 
             case COLOR:
-                if (fromUser)
-                    mLog.event("Color selected: " + selection.name);
-                
                 mColor = (Integer) selection.object;
                 mColorName = selection.name;
                 break;
                 
             case THICKNESS:
-                if (fromUser)
-                    mLog.event("Thickness selected: " + selection.name);
-                
                 mThickness = (Integer) selection.object;
                 mThicknessName = selection.name;
                 break;
                 
             case ACTION:
-                if (fromUser)
-                    mLog.event("Action selected: " + selection.name);
-                
                 switch ((Action) selection.object) {
                     case SAVE:
                         break;
@@ -572,6 +563,16 @@ public class DrawView extends View {
                         break;
                 }
                 break;
+        }
+    }
+    
+    private String selectionTypeName(SelectionType type) {
+        switch (type) {
+            case TOOL: return "Tool";
+            case COLOR: return "Color";
+            case ACTION: return "Action";
+            case THICKNESS: return "Thickness";
+            default: return "Unknown";
         }
     }
 }
